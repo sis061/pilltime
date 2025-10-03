@@ -1,3 +1,5 @@
+//TODO 퍼블리싱 필요
+
 import SocialLogin from "./SocialLogin";
 
 export default function LoginPage() {

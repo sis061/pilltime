@@ -1,7 +1,10 @@
+//TODO 동적 메타데이터 구현하기
+
 import type { Metadata } from "next";
 
 import localFont from "next/font/local";
 import "./globals.css";
+import { UserProvider } from "@/components/providers/UserProvider";
 
 export const metadata: Metadata = {
   title: "PillTime",
@@ -32,7 +35,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko" className={`${pretendard.variable}  antialiased`}>
-      <body>{children}</body>
+      <body>
+        <UserProvider>{children}</UserProvider>
+      </body>
     </html>
   );
 }

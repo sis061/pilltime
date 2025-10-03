@@ -1,6 +1,12 @@
+// TODO 빌드 전에 필요없는 라이브러리 삭제 필요
+// TODO 아무 약도 없는 경우에 렌더할 페이지 필요
+// TODO 약 리스트 컴포넌트 만들어서 로직 분리
+// TODO 리얼타임 구현 데이터 추가 삭제 변경 될 시 바로 반영되게
+
 import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/utils/supabase/server";
-import MedicineCard from "@/components/feature/medicines/MedicineCard";
+import HomeProfile from "@/components/feature/profiles/HomeProfile";
+import MedicineList from "@/components/feature/medicines/MedicineList";
 
 export default async function Home() {
   const supabase = await createServerSupabaseClient();
@@ -13,6 +19,12 @@ export default async function Home() {
   if (!user) {
     redirect("/login"); // 로그인 안 된 경우 로그인 페이지로 이동
   }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("nickname")
+    .eq("id", user.id)
+    .single();
 
   const { data: medicines, error } = await supabase
     .from("medicines")
@@ -49,24 +61,14 @@ export default async function Home() {
 
   return (
     <section className="inner !text-pilltime-blue text-3xl !mx-auto !w-full h-full !mt-12 !p-2">
-      <div>
-        <h1>안녕하세요, {user.email} 님</h1>
-      </div>
-      <div>
-        {new Date().getMonth() + 1}월 {new Date().getDate()}일{" "}
-        {new Date().toLocaleDateString("ko-KR", { weekday: "long" })}
-      </div>
-
-      {medicines?.map((m) => (
-        <MedicineCard
-          key={m.id.toString()}
-          id={m.id.toString()}
-          name={m.name}
-          imageUrl={m.image_url ?? ""}
-          description={m.description ?? []}
-          schedules={m.medicine_schedules ?? []}
-        />
-      ))}
+      <HomeProfile
+      // user={{
+      //   id: user.id,
+      //   email: user.email,
+      //   nickname: profile?.nickname ?? "",
+      // }}
+      />
+      <MedicineList medicines={medicines} />
     </section>
   );
 }

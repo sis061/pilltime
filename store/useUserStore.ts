@@ -3,7 +3,7 @@ import { create } from "zustand";
 interface User {
   id: string;
   email?: string;
-  // 필요하면 더 추가: nickname, avatar 등
+  nickname?: string | null;
 }
 
 interface UserState {

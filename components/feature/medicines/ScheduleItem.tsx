@@ -1,3 +1,6 @@
+// TODO 알람 기능 구현
+// TODO 타입 지정 및 타입 폴더 분리 필요
+
 import { Switch } from "@/components/ui/switch";
 
 function formatTime(time: string) {

@@ -1,5 +1,8 @@
 "use client";
 
+//TODO 특정 필드만 수정하면 다시 최종페이지로 돌아오는 기능 구현
+//TODO formatTime 여기도 가져오기, 유틸함수 분리
+
 import { useWizard } from "react-use-wizard";
 import { useFormContext } from "react-hook-form";
 import { Button } from "@/components/ui/button";

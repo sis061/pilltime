@@ -6,7 +6,7 @@ import MedicineNewDrawer from "@/components/feature/medicines/MedicineNewDrawer"
 export default function NewMedicinePage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
   const router = useRouter();
 

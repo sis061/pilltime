@@ -1,4 +1,7 @@
 // app/api/medicines/[id]/route.ts
+
+//TODO supabase 리얼타임 구현, 다른 라우트에도
+
 import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/utils/supabase/server";
 

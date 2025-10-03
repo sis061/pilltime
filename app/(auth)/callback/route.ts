@@ -16,6 +16,24 @@ export async function GET(request: Request) {
       console.error("세션 교환 실패:", error.message);
       return NextResponse.redirect(new URL("/login", request.url), 303);
     }
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (user) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("id", user.id)
+        .single();
+
+      if (!profile) {
+        await supabase
+          .from("profiles")
+          .insert({ id: user?.id, nickname: null });
+      }
+    }
   }
 
   return res;
