@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useFormContext, useFieldArray } from "react-hook-form";
 
 export function MedicineDescriptionField() {
-  const { control, register } = useFormContext();
+  const { control, register, watch } = useFormContext();
   const { fields, append, remove } = useFieldArray({
     control,
     name: "description",

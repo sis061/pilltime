@@ -3,13 +3,24 @@
 import { useWizard } from "react-use-wizard";
 import { useFormContext } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { MedicineFormValues } from "../MedicineEditDrawer";
+import { MedicineFormValues } from "@/lib/schemas/medicine";
+import { DAYS } from "../form/MedicineSchedulesField";
 
 export function Step05Review() {
   const { goToStep } = useWizard();
   const { getValues } = useFormContext<MedicineFormValues>();
 
   const values = getValues();
+
+  const sortedSchedules = [...values.schedules].sort((a, b) =>
+    a.time.localeCompare(b.time)
+  );
+  const sortedDaysOfWeek = [
+    ...(values.repeated_pattern.days_of_week ?? []),
+  ].sort((a, b) => a - b);
+  const sortedDaysOfMonth = [
+    ...(values.repeated_pattern.days_of_month ?? []),
+  ].sort((a, b) => a - b);
 
   return (
     <div className="flex flex-col gap-6 !pb-8 !-mt-4">
@@ -23,6 +34,7 @@ export function Step05Review() {
           <strong>이름</strong> {values.name}
         </div>
         <Button
+          type="button"
           size="sm"
           variant="ghost"
           className="!text-pilltime-violet"
@@ -43,10 +55,34 @@ export function Step05Review() {
           </ul>
         </div>
         <Button
+          type="button"
           size="sm"
           variant="ghost"
           className="!text-pilltime-violet"
           onClick={() => goToStep(1)} // Step2로 이동
+        >
+          수정
+        </Button>
+      </div>
+
+      {/* 복용 주기 */}
+      <div className="flex items-start justify-between shadow-2xs !pb-2">
+        <div className="flex flex-col gap-2">
+          <strong>복용 주기</strong>
+          <p className="text-sm">
+            {values.repeated_pattern?.type === "DAILY" && "매일"}
+            {values.repeated_pattern?.type === "WEEKLY" &&
+              `매주 ${sortedDaysOfWeek?.map((d) => DAYS[d]).join(", ")}`}
+            {values.repeated_pattern?.type === "MONTHLY" &&
+              `매달 ${sortedDaysOfMonth?.map((d) => `${d}일`).join(", ")}`}
+          </p>
+        </div>
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          className="!text-pilltime-violet"
+          onClick={() => goToStep(2)} // Step3로 이동
         >
           수정
         </Button>
@@ -57,12 +93,13 @@ export function Step05Review() {
         <div className="flex flex-col gap-2">
           <strong>복용 시간</strong>
           <ul className="list-disc list-inside text-sm flex flex-col gap-1">
-            {values.schedules?.map((s, i) => (
+            {sortedSchedules?.map((s, i) => (
               <li key={i}>{s.time}</li>
             ))}
           </ul>
         </div>
         <Button
+          type="button"
           size="sm"
           variant="ghost"
           className="!text-pilltime-violet"
@@ -85,6 +122,7 @@ export function Step05Review() {
           )}
         </div>
         <Button
+          type="button"
           size="sm"
           variant="ghost"
           className="!text-pilltime-violet"

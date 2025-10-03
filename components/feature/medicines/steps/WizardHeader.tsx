@@ -3,9 +3,39 @@
 import { useWizard } from "react-use-wizard";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
+import { RefObject } from "react";
+import { useFormContext } from "react-hook-form";
 
-export function WizardHeader({ onClose }: { onClose: () => void }) {
-  const { previousStep, nextStep, isFirstStep, isLastStep } = useWizard();
+export function WizardHeader({
+  submitBtnRef,
+  onClose,
+}: {
+  submitBtnRef: RefObject<HTMLButtonElement | null>;
+  onClose: () => void;
+}) {
+  const { previousStep, nextStep, isFirstStep, isLastStep, activeStep } =
+    useWizard();
+  const { trigger } = useFormContext();
+
+  // 스텝별 검증 필드 매핑
+  const stepValidationMap: Record<number, string[] | undefined> = {
+    0: ["name"], // Step01: 약 이름
+    1: ["repeated_pattern.type"], // Step02: 주기 선택
+    2: ["schedules"], // Step03: 스케줄 시간
+    // 필요 시 더 추가
+  };
+
+  const handleNext = async () => {
+    const fields = stepValidationMap[activeStep];
+    if (!fields) {
+      nextStep();
+      return;
+    }
+    const ok = await trigger(fields);
+    if (ok) {
+      nextStep();
+    }
+  };
 
   return (
     <div className="flex w-full flex-col shadow-xs">
@@ -13,6 +43,7 @@ export function WizardHeader({ onClose }: { onClose: () => void }) {
         {/* 왼쪽 버튼 */}
         {isFirstStep ? (
           <Button
+            type="button"
             onClick={onClose}
             variant="ghost"
             className="!text-pilltime-violet font-bold"
@@ -21,6 +52,7 @@ export function WizardHeader({ onClose }: { onClose: () => void }) {
           </Button>
         ) : (
           <Button
+            type="button"
             onClick={previousStep}
             variant="ghost"
             className="!text-pilltime-violet font-bold"
@@ -35,16 +67,19 @@ export function WizardHeader({ onClose }: { onClose: () => void }) {
         {/* 오른쪽 버튼 */}
         {isLastStep ? (
           <Button
-            type="submit"
+            type="button"
             variant="ghost"
-            onClick={onClose}
+            onClick={() =>
+              submitBtnRef?.current && submitBtnRef.current?.click()
+            }
             className="!text-pilltime-violet font-bold"
           >
             저장
           </Button>
         ) : (
           <Button
-            onClick={nextStep}
+            type="button"
+            onClick={handleNext}
             variant="ghost"
             className="!text-pilltime-violet font-bold"
           >

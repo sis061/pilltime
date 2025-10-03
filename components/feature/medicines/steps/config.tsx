@@ -50,9 +50,18 @@ export const steps: StepConfig[] = [
     subtitle: ["예) 하루 두 번, 식후 30분", "예) 물과 함께 섭취할 것"],
     Component: MedicineDescriptionField,
   },
+  // {
+  //   id: "period",
+  //   title: "복용 기간을 입력하세요 (시작일 필수)",
+  //   Component: MedicinePeriodField,
+  // },
   {
     id: "schedules",
-    title: "복용 시간을 입력하세요 (필수)",
+    title: "복용 주기와 시간을 입력하세요 (필수)",
+    subtitle: [
+      "매일 / 매주 특정 요일 / 매월 1, 10, 20, 30일 중 선택 가능",
+      "일일 복용 시간은 자유롭게 추가할 수 있어요",
+    ],
     Component: MedicineSchedulesField,
   },
   {

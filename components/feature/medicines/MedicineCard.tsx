@@ -16,8 +16,8 @@ export default function MedicineCard({
         <div className="flex items-center gap-4 w-full">
           <div>
             <Image
-              // src={imageUrl}
-              src={"/fallback-medicine.png"}
+              src={imageUrl}
+              // src={"/fallback-medicine.png"}
               alt="fallback-medicine"
               width={100}
               height={100}
@@ -40,12 +40,11 @@ export default function MedicineCard({
         </div>
         <div className="!py-4 !px-2">
           <ul className="flex flex-col gap-4">
-            <li>
-              <ScheduleItem />
-            </li>
-            <li>
-              <ScheduleItem />
-            </li>
+            {schedules.map((schedule) => (
+              <li key={schedule?.id}>
+                <ScheduleItem schedule={schedule} />
+              </li>
+            ))}
           </ul>
         </div>
       </div>

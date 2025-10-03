@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 
 import localFont from "next/font/local";
 import "./globals.css";
-import { Plus } from "lucide-react";
-import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "PillTime",

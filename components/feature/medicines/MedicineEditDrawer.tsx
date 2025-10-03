@@ -8,11 +8,10 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useForm, useFieldArray, FormProvider } from "react-hook-form";
-import { useRef, useState } from "react";
+
+import { useForm, FormProvider } from "react-hook-form";
+import { useEffect, useRef, useState } from "react";
 import { useMediaQuery } from "react-responsive";
-import ImageUploader from "./ImageUploader"; // ✅ 크롭 포함 업로더
 
 import {
   MedicineNameField,
@@ -21,11 +20,38 @@ import {
   MedicineImageField,
 } from "@/components/feature/medicines/form";
 
-export interface MedicineFormValues {
-  name: string;
-  description?: { value: string }[];
-  schedules: { time: string }[];
-  imageUrl?: string;
+import { zodResolver } from "@hookform/resolvers/zod";
+import { MedicineSchema, MedicineFormValues } from "@/lib/schemas/medicine";
+import { useParams, useRouter } from "next/navigation";
+
+async function fetchMedicine(id: string) {
+  const res = await fetch(`/api/medicines/${id}`);
+  if (!res.ok) throw new Error("Failed to fetch medicine");
+  return res.json();
+}
+
+async function updateMedicine(id: string, values: any) {
+  const res = await fetch(`/api/medicines/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(values),
+  });
+
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error);
+  }
+}
+
+async function deleteMedicine(id: string) {
+  const res = await fetch(`/api/medicines/${id}`, { method: "DELETE" });
+
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error);
+  }
+
+  return res.json();
 }
 
 export default function MedicineEditDrawer({
@@ -35,23 +61,71 @@ export default function MedicineEditDrawer({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const { id } = useParams();
+
   const methods = useForm<MedicineFormValues>({
+    resolver: zodResolver(MedicineSchema),
     defaultValues: {
-      name: "혈압약",
-      description: [{ value: "아침 저녁 복용" }],
-      schedules: [{ time: "08:00" }],
+      name: "",
+      description: [{ value: "" }],
+      schedules: [{ time: "" }],
+      repeated_pattern: { type: "DAILY" },
       imageUrl: "/fallback-medicine.png",
     },
   });
 
-  const onSubmit = (data: MedicineFormValues) => {
-    console.log("최종 저장 데이터:", data);
-    onOpenChange(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!id || !open) return;
+
+    (async () => {
+      try {
+        setLoading(true);
+        const data = await fetchMedicine(String(id));
+
+        // ✅ react-hook-form 값 업데이트
+        methods.reset({
+          name: data.name,
+          description:
+            data.description?.map((d: string) => ({ value: d })) ?? [],
+          schedules: data.medicine_schedules?.map((s: any) => ({
+            time: s.time,
+          })) ?? [{ time: "" }],
+          repeated_pattern: data.medicine_schedules?.[0]?.repeated_pattern ?? {
+            type: "DAILY",
+          },
+          imageUrl: data.image_url ?? "/fallback-medicine.png",
+        });
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [id, open, methods]);
+
+  const onSubmit = async (data: MedicineFormValues) => {
+    const sortedSchedules = [...(data.schedules ?? [])].sort((a, b) =>
+      a.time.localeCompare(b.time)
+    );
+
+    const _data = {
+      ...data,
+      schedules: sortedSchedules,
+    };
+    console.log("최종 저장 데이터:", _data);
+    try {
+      await updateMedicine(String(id), _data);
+      onOpenChange(false);
+    } catch (err: any) {
+      console.log(err.message);
+    }
   };
 
   const submitBtnRef = useRef<HTMLButtonElement>(null);
-
   const minTablet = useMediaQuery({ minWidth: 768 });
+  const router = useRouter();
 
   return (
     <>
@@ -104,6 +178,12 @@ export default function MedicineEditDrawer({
               type="button"
               variant="destructive"
               className="!text-red-700"
+              onClick={async () => {
+                if (!confirm("정말 삭제하시겠습니까?")) return;
+                await deleteMedicine(String(id));
+                router.push("/");
+                onOpenChange(false);
+              }}
             >
               정보 삭제
             </Button>

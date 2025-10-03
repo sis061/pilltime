@@ -6,16 +6,34 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import { Button } from "@/components/ui/button";
+
 import { FormProvider, useForm } from "react-hook-form";
-import { Wizard, useWizard } from "react-use-wizard";
+import { Wizard } from "react-use-wizard";
 
 import { Step05Review } from "@/components/feature/medicines/steps/Step05Review";
-import { MedicineFormValues } from "./MedicineEditDrawer";
+
 import { useRef } from "react";
 import { useMediaQuery } from "react-responsive";
 import { WizardHeader } from "./steps/WizardHeader";
 import { steps, StepWrapper } from "./steps/config";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { MedicineSchema, MedicineFormValues } from "@/lib/schemas/medicine";
+
+async function createMedicine(values: MedicineFormValues) {
+  const res = await fetch("/api/medicines", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(values),
+  });
+
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.error);
+  }
+
+  return res.json();
+}
 
 export default function MedicineNewDrawer({
   open,
@@ -25,23 +43,32 @@ export default function MedicineNewDrawer({
   onOpenChange: (open: boolean) => void;
 }) {
   const methods = useForm<MedicineFormValues>({
+    resolver: zodResolver(MedicineSchema),
     defaultValues: {
       name: "",
       description: [{ value: "" }],
       schedules: [{ time: "" }],
+      repeated_pattern: { type: "DAILY" },
       imageUrl: "/fallback-medicine.png",
     },
   });
 
   const onSubmit = (data: MedicineFormValues) => {
-    console.log("최종 저장 데이터:", data);
-    // 여기서 supabase insert 호출하면 됨
+    const sortedSchedules = [...(data.schedules ?? [])].sort((a, b) =>
+      a.time.localeCompare(b.time)
+    );
+
+    const _data = {
+      ...data,
+      schedules: sortedSchedules,
+    };
+    console.log("최종 저장 데이터:", _data);
+    createMedicine(_data);
+    onOpenChange(false);
   };
 
   const submitBtnRef = useRef<HTMLButtonElement>(null);
-
   const minTablet = useMediaQuery({ minWidth: 768 });
-  //   const { nextStep, isFirstStep, isLastStep } = useWizard();
 
   return (
     <Drawer
@@ -60,7 +87,12 @@ export default function MedicineNewDrawer({
             className="flex flex-col gap-8 max-h-[80vh] md:h-screen overflow-y-auto px-2"
           >
             <Wizard
-              header={<WizardHeader onClose={() => onOpenChange(false)} />}
+              header={
+                <WizardHeader
+                  onClose={() => onOpenChange(false)}
+                  submitBtnRef={submitBtnRef}
+                />
+              }
             >
               {steps.map(({ id, title, subtitle, Component }) => (
                 <StepWrapper
@@ -73,6 +105,9 @@ export default function MedicineNewDrawer({
               ))}
               <Step05Review />
             </Wizard>
+            <button ref={submitBtnRef} type="submit" hidden>
+              저장
+            </button>
           </form>
         </FormProvider>
       </DrawerContent>
