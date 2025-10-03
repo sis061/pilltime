@@ -27,6 +27,7 @@ export const MedicineSchema = z.object({
     )
     .min(1, "시간은 최소 1개 이상 입력해주세요."),
   imageUrl: z.string().optional(),
+  imageFilePath: z.string().optional().nullable(),
 });
 
 export type MedicineFormValues = z.infer<typeof MedicineSchema>;

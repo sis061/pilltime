@@ -9,9 +9,11 @@ import { useFormContext } from "react-hook-form";
 export function WizardHeader({
   submitBtnRef,
   onClose,
+  onImageUploadCancel,
 }: {
   submitBtnRef: RefObject<HTMLButtonElement | null>;
   onClose: () => void;
+  onImageUploadCancel?: () => void;
 }) {
   const { previousStep, nextStep, isFirstStep, isLastStep, activeStep } =
     useWizard();

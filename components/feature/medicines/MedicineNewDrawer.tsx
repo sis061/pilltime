@@ -21,6 +21,7 @@ import { steps, StepWrapper } from "./steps/config";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { MedicineSchema, MedicineFormValues } from "@/lib/schemas/medicine";
+import { deleteMedicineImage } from "@/utils/supabase/upload";
 
 async function createMedicine(values: MedicineFormValues) {
   const res = await fetch("/api/medicines", {
@@ -52,8 +53,21 @@ export default function MedicineNewDrawer({
       schedules: [{ time: "" }],
       repeated_pattern: { type: "DAILY" },
       imageUrl: "/fallback-medicine.png",
+      imageFilePath: null,
     },
   });
+
+  // supabase storage 에 orphan 파일 삭제용
+  async function handleCancel() {
+    const filePath = methods.getValues("imageFilePath");
+    if (filePath) {
+      try {
+        await deleteMedicineImage(filePath);
+      } catch (e) {
+        console.error("이미지 삭제 실패:", e);
+      }
+    }
+  }
 
   const onSubmit = (data: MedicineFormValues) => {
     const sortedSchedules = [...(data.schedules ?? [])].sort((a, b) =>
@@ -75,7 +89,15 @@ export default function MedicineNewDrawer({
   return (
     <Drawer
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={async (nextOpen) => {
+        if (!nextOpen) {
+          // Drawer가 닫힐 때 → 취소 로직 실행
+          await handleCancel();
+          onOpenChange(false);
+        } else {
+          onOpenChange(true);
+        }
+      }}
       direction={minTablet ? "right" : "bottom"}
       repositionInputs={false}
     >
@@ -91,6 +113,7 @@ export default function MedicineNewDrawer({
             <Wizard
               header={
                 <WizardHeader
+                  // onImageUploadCancel={handleCancel}
                   onClose={() => onOpenChange(false)}
                   submitBtnRef={submitBtnRef}
                 />

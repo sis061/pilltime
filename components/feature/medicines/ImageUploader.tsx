@@ -1,7 +1,5 @@
 "use client";
 
-//TODO supabase에서 이미지 업로드 구현
-
 import { useEffect, useRef, useState } from "react";
 import ReactCrop, { PercentCrop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
