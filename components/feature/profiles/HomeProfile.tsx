@@ -5,11 +5,19 @@ import NicknameDrawer from "@/components/feature/profiles/NicknameDrawer";
 import { useUserStore } from "@/store/useUserStore";
 
 interface ProfileSectionProps {
-  user: { id: string; email?: string; nickname: string };
+  id: string;
+  email?: string;
+  nickname?: string | null;
 }
 
-export default function HomeProfile() {
-  const user = useUserStore((s) => s.user); // ← 여기서 읽음
+export default function HomeProfile({
+  initialUser,
+}: {
+  initialUser: ProfileSectionProps;
+}) {
+  const storedUser = useUserStore((s) => s.user);
+  const user = initialUser ?? storedUser;
+  // const user = storedUser;
   const [openDrawer, setOpenDrawer] = useState(false);
 
   useEffect(() => {

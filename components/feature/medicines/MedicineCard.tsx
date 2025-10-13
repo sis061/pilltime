@@ -1,5 +1,3 @@
-// TODO 타입 지정 및 타입 폴더 분리 필요
-
 import { Info, Settings } from "lucide-react";
 import Image from "next/image";
 import ScheduleItem from "./ScheduleItem";

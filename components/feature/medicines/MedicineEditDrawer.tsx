@@ -72,6 +72,8 @@ export default function MedicineEditDrawer({
   const router = useRouter();
   const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null);
 
+  console.log(loading);
+
   const methods = useForm<MedicineFormValues>({
     resolver: zodResolver(MedicineSchema),
     defaultValues: {

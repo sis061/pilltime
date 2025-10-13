@@ -116,7 +116,7 @@ export default function NicknameDrawer({
 
             <Input
               value={nickname}
-              //   required
+              required
               onChange={(e) => setNickname(e.target.value)}
               placeholder="닉네임을 입력하세요"
               autoFocus

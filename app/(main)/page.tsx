@@ -61,11 +61,11 @@ export default async function Home() {
   return (
     <section className="inner !text-pilltime-blue text-3xl !mx-auto !w-full h-full !mt-12 !p-2">
       <HomeProfile
-      // user={{
-      //   id: user.id,
-      //   email: user.email,
-      //   nickname: profile?.nickname ?? "",
-      // }}
+        initialUser={{
+          id: user.id,
+          email: user.email,
+          nickname: profile?.nickname ?? null,
+        }}
       />
       <MedicineList medicines={medicines} />
     </section>
