@@ -59,7 +59,7 @@ export default async function Home() {
   }
 
   return (
-    <section className="inner !text-pilltime-blue text-3xl !mx-auto !w-full h-full !mt-12 !p-2">
+    <section className="inner !text-pilltime-blue text-3xl !mx-auto !w-full h-full !mb-8 !p-2">
       <HomeProfile
         initialUser={{
           id: user.id,

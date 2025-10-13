@@ -39,7 +39,7 @@ export default function MedicineList({ medicines }: { medicines: any[] }) {
   const items = sortMedicinesByToday(medicines.map(mapToCardModel));
 
   return (
-    <div className="flex flex-col gap-4 mt-6">
+    <div className="flex flex-col gap-8 mt-6">
       {items.map((m) => (
         <MedicineCard
           key={m.id.toString()}

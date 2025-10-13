@@ -14,7 +14,7 @@ const config: Config = {
         "pilltime-teal": "#14B8A6",
         "pilltime-orange": "#F97316",
         "pilltime-yellow": "#EAB308",
-        "pilltime-grayLight": "#F9FAFB",
+        "pilltime-grayLight": "#FAFAFA",
         "pilltime-grayDark": "#1F2937",
       },
       fontFamily: {

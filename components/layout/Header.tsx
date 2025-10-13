@@ -8,11 +8,11 @@ import { useRouter } from "next/navigation";
 import { useUserStore } from "@/store/useUserStore";
 import { useState } from "react";
 import NicknameDrawer from "../feature/profiles/NicknameDrawer";
+import Image from "next/image";
 
 export default function Header({ user }: { user: any }) {
   const router = useRouter();
   const supabase = createClient();
-  const profile = useUserStore((s) => s.user);
   const clearUser = useUserStore((s) => s.clearUser);
   const [open, setOpen] = useState(false);
 
@@ -23,16 +23,28 @@ export default function Header({ user }: { user: any }) {
   }
 
   return (
-    <header className="h-24 bg-blue-100 flex items-center justify-between px-4">
-      <div>헤더</div>
-      <div className="flex items-center gap-3">
+    <header className="h-20 bg-pilltime-blue/75 flex items-center justify-between !px-4 shadow-sm">
+      <div>
+        <Image
+          src="/pilltime_logo.svg"
+          alt="logo"
+          width={60}
+          height={60}
+          className="-rotate-12"
+        />
+      </div>
+      <div className="flex items-center gap-3 ">
         <Link href={`/medicines/new`} id="create_new_medicine">
-          <Plus size={20} />
+          <Plus size={20} color="#fff" />
         </Link>
-        {profile && (
+        {user && (
           <>
             {/* <span className="mr-4">{profile.nickname || profile.email}</span> */}
-            <Button variant="ghost" onClick={() => setOpen(true)}>
+            <Button
+              variant="ghost"
+              onClick={() => setOpen(true)}
+              className="!font-bold !p-2 cursor-pointer !text-white"
+            >
               프로필 편집
             </Button>
             <NicknameDrawer open={open} onOpenChange={setOpen} mode="edit" />
@@ -41,7 +53,11 @@ export default function Header({ user }: { user: any }) {
         {user ? (
           <>
             {/* <span>{user.email}</span> */}
-            <Button onClick={logout} className="!p-2" variant={"ghost"}>
+            <Button
+              onClick={logout}
+              className="!p-2 !font-bold cursor-pointer !text-white"
+              variant={"ghost"}
+            >
               로그아웃
             </Button>
           </>

@@ -52,30 +52,40 @@ export default function MedicineCard(medicine: MedicineDetail) {
 
   return (
     <>
-      <div className="border border-pilltime-teal rounded-md !px-4 !py-8 flex flex-col gap-4">
-        <div className="flex items-center gap-4 w-full">
-          <div>
+      <div className="border-2 bg-white border-pilltime-blue/50 rounded-md !px-4 !py-8 flex flex-col gap-4 shadow-md">
+        <div className="flex items-center gap-4 w-full relative">
+          <div className="rounded-md overflow-hidden border border-pilltime-violet/50 shadow-sm">
             <Image
               src={imageUrl}
               // src={"/fallback-medicine.png"}
               alt="fallback-medicine"
-              width={100}
-              height={100}
+              width={120}
+              height={120}
             />
           </div>
           <div className="grow">
-            <ul className="flex items-center gap-2">
-              <li className="font-bold ">{name}</li>
-              <li>
-                <Info size={20} />
-              </li>
-            </ul>
+            <div className="flex flex-col items-center justify-center gap-2">
+              <span className="font-bold !text-pilltime-grayDark">{name}</span>
+            </div>
           </div>
 
-          <div className="self-start">
-            <Link href={`/medicines/${id}/edit`}>
-              <Settings size={20} className="cursor-pointer" />
-            </Link>
+          <div className="absolute -top-4 right-0">
+            <div className="flex items-center justify-between gap-2">
+              <Info
+                size={20}
+                className="cursor-pointer"
+                strokeWidth={2.5}
+                color="#F9731690"
+              />
+              <Link href={`/medicines/${id}/edit`}>
+                <Settings
+                  size={20}
+                  className="cursor-pointer"
+                  strokeWidth={2.5}
+                  color="#F97316"
+                />
+              </Link>
+            </div>
           </div>
         </div>
         <div className="!py-4 !px-2 relative">
