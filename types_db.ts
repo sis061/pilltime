@@ -180,7 +180,22 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      delete_future_logs_for_schedule: {
+        Args: { p_schedule_id: number };
+        Returns: undefined;
+      };
+      generate_logs_for_all_schedules: {
+        Args: Record<PropertyKey, never>;
+        Returns: undefined;
+      };
+      generate_logs_for_schedule: {
+        Args: { p_from_date: string; p_schedule_id: number; p_to_date: string };
+        Returns: undefined;
+      };
+      reset_future_logs_for_schedule: {
+        Args: { p_schedule_id: number };
+        Returns: undefined;
+      };
     };
     Enums: {
       intake_source: "manual" | "auto";

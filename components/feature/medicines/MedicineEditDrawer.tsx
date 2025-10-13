@@ -1,6 +1,7 @@
 "use client";
 
 //TODO 로딩 컴포넌트 구현
+//TODO 캐싱
 
 import {
   Drawer,
@@ -143,7 +144,7 @@ export default function MedicineEditDrawer({
       ...data,
       schedules: sortedSchedules,
     };
-    console.log("최종 저장 데이터:", _data);
+    console.log("최종 수정 데이터:", _data);
     try {
       await updateMedicine(String(id), _data);
 
