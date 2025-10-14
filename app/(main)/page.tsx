@@ -1,48 +1,74 @@
-import MedicineCard from "@/components/feature/medicines/MedicineCard";
+// TODO 빌드 전에 필요없는 라이브러리 삭제 필요
 
-const medicines = [
-  {
-    id: "1",
-    name: "혈압약",
-    imageUrl: "",
-    description: ["주 1회", "아침 저녁"],
-    schedules: [
-      {
-        time: "08:00",
-      },
-      {
-        time: "15:00",
-      },
-    ],
-  },
-  {
-    id: "2",
-    name: "비타민D",
-    imageUrl: "",
-    description: ["주 1회", "아침 점심 저녁"],
-    schedules: [
-      {
-        time: "08:00",
-      },
-      {
-        time: "15:00",
-      },
-      {
-        time: "19:00",
-      },
-    ],
-  },
-];
+import { redirect } from "next/navigation";
+import { toast } from "sonner";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
+import HomeProfile from "@/components/feature/profiles/HomeProfile";
+import MedicineList from "@/components/feature/medicines/MedicineList";
 
-export default function Home() {
+export default async function Home() {
+  const supabase = await createServerSupabaseClient();
+
+  // ✅ 로그인 유저 확인
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login"); // 로그인 안 된 경우 로그인 페이지로 이동
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("nickname")
+    .eq("id", user.id)
+    .single();
+
+  const { data: medicines, error } = await supabase
+    .from("medicines")
+    .select(
+      `
+      id,
+      name,
+      description,
+      image_url,
+      created_at,
+      medicine_schedules (
+        id,
+        time,
+        repeated_pattern,
+        is_notify,
+        intake_logs (
+          id,
+          date,
+          time,
+          status,
+          checked_at
+        )
+      )
+    `
+    )
+    .eq("user_id", user.id)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false })
+    .filter("medicine_schedules.deleted_at", "is", null);
+
+  if (error) {
+    console.error("DB Error:", error.message);
+    toast.error("정보를 불러오는 중 문제가 발생했어요");
+    return <p>데이터 불러오기 실패</p>;
+  }
+
   return (
-    <section className="inner !text-pilltime-blue text-3xl !mx-auto !w-full h-full !mt-12 !p-2">
-      <div>
-        {new Date().getMonth() + 1}월 {new Date().getDate()}일 수요일
-      </div>
-      {medicines.map((m) => (
-        <MedicineCard key={m.id} {...m} />
-      ))}
+    <section className="inner min-h-[calc(100dvh-11.5rem)] !text-pilltime-blue text-3xl !mx-auto !w-full h-full !mb-8 !p-2">
+      <HomeProfile
+        initialUser={{
+          id: user.id,
+          email: user.email,
+          nickname: profile?.nickname ?? null,
+        }}
+      />
+      <MedicineList initialMedicines={medicines} userId={user.id} />
     </section>
   );
 }

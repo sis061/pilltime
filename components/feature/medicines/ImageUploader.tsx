@@ -156,7 +156,7 @@ export default function ImageUploader({ file, onCropped }: Props) {
           type="button"
           variant={"ghost"}
           onClick={handleCropAndUpload}
-          className="font-bold !text-pilltime-violet"
+          className="font-bold !text-pilltime-violet cursor-pointer"
         >
           완료
         </Button>

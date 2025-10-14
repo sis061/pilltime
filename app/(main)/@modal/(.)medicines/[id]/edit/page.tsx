@@ -6,7 +6,7 @@ import MedicineEditDrawer from "@/components/feature//medicines/MedicineEditDraw
 export default function EditMedicinePage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
   const router = useRouter();
 

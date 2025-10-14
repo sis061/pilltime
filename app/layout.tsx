@@ -1,9 +1,12 @@
+//TODO 동적 메타데이터 구현하기
+
 import type { Metadata } from "next";
+import { Toaster } from "@/components/ui/sonner";
 
 import localFont from "next/font/local";
 import "./globals.css";
-import { Plus } from "lucide-react";
-import Link from "next/link";
+import { UserProvider } from "@/components/providers/UserProvider";
+import GlobalLoading from "@/components/layout/GlobalLoading";
 
 export const metadata: Metadata = {
   title: "PillTime",
@@ -34,7 +37,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko" className={`${pretendard.variable}  antialiased`}>
-      <body>{children}</body>
+      <body>
+        <UserProvider>{children}</UserProvider>
+        <GlobalLoading />
+        <Toaster
+          position="top-center"
+          duration={3000}
+          closeButton
+          theme="light"
+        />
+      </body>
     </html>
   );
 }
