@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createServerSupabaseClient } from "@/utils/supabase/server";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { Database } from "@/types_db";
 type Tables = Database["public"]["Tables"];
 

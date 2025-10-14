@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { MedicineFormValues } from "@/lib/schemas/medicine";
 import { DAYS } from "../form/MedicineSchedulesField";
 import { useReturnToStore } from "@/store/returnTo";
-import { formatTime } from "@/utils/date";
+import { formatTime } from "@/lib/date";
 
 export function Step05Review() {
   const { activeStep, goToStep } = useWizard();

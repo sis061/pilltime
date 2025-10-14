@@ -25,7 +25,7 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { MedicineSchema, MedicineFormValues } from "@/lib/schemas/medicine";
 import { useParams, useRouter } from "next/navigation";
-import { deleteMedicineImage } from "@/utils/supabase/upload";
+import { deleteMedicineImage } from "@/lib/supabase/upload";
 import { useGlobalLoading } from "@/store/useGlobalLoading";
 
 async function fetchMedicine(id: string) {

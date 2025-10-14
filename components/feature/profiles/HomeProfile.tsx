@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import NicknameDrawer from "@/components/feature/profiles/NicknameDrawer";
 import { useUserStore } from "@/store/useUserStore";
-import { User } from "@/app/types/profile";
+import { User } from "@/types/profile";
 
 export default function HomeProfile({ initialUser }: { initialUser: User }) {
   const { user, setUser } = useUserStore();

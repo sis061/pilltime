@@ -13,7 +13,7 @@ import { useMediaQuery } from "react-responsive";
 import ImageUploader from "../ImageUploader";
 import { usePathname } from "next/navigation";
 import { useUserStore } from "@/store/useUserStore";
-import { uploadMedicineImage } from "@/utils/supabase/upload";
+import { uploadMedicineImage } from "@/lib/supabase/upload";
 
 export function MedicineImageField() {
   const minTablet = useMediaQuery({ minWidth: 768 });

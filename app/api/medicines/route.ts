@@ -1,9 +1,9 @@
 // app/api/medicines/route.ts
 import { NextResponse } from "next/server";
-import { createServerSupabaseClient } from "@/utils/supabase/server";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { Database, TablesInsert } from "@/types_db";
 import { MedicineSchema } from "@/lib/schemas/medicine";
-import { sevenDayWindow } from "@/utils/date";
+import { sevenDayWindow } from "@/lib/date";
 
 export async function POST(req: Request) {
   try {

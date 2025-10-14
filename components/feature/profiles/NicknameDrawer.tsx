@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 import { useState, useEffect, useRef } from "react";
-import { createClient } from "@/utils/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import { useUserStore } from "@/store/useUserStore";
 import { useMediaQuery } from "react-responsive";
 import { useGlobalLoading } from "@/store/useGlobalLoading";

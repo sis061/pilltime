@@ -14,7 +14,7 @@ import { steps, StepWrapper } from "./steps/config";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { MedicineSchema, MedicineFormValues } from "@/lib/schemas/medicine";
-import { deleteMedicineImage } from "@/utils/supabase/upload";
+import { deleteMedicineImage } from "@/lib/supabase/upload";
 import { useGlobalLoading } from "@/store/useGlobalLoading";
 
 async function createMedicine(values: MedicineFormValues) {

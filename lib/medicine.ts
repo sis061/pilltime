@@ -2,7 +2,7 @@ import {
   MedicineDetail,
   MedicineSchedule,
   RepeatedPattern,
-} from "@/app/types/medicines";
+} from "@/types/medicines";
 
 /**
  * 오늘 복용해야 하는 약인지 여부를 반환

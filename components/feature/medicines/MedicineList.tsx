@@ -1,11 +1,11 @@
 "use client";
 
-import { MedicineDetail } from "@/app/types/medicines";
+import { MedicineDetail } from "@/types/medicines";
 import MedicineCard from "@/components/feature/medicines/MedicineCard";
 import EmptyMedicine from "./EmptyMedicine";
-import { createClient } from "@/utils/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import { useEffect, useRef, useState } from "react";
-import { mapToCardModel, sortMedicinesByToday } from "@/utils/medicine";
+import { mapToCardModel, sortMedicinesByToday } from "@/lib/medicine";
 
 async function fetchMedicines(supabase: any, userId: string) {
   const { data, error } = await supabase

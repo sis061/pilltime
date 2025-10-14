@@ -2,14 +2,14 @@ import { Info, Settings } from "lucide-react";
 // import Image from "next/image";
 import ScheduleItem from "./ScheduleItem";
 import Link from "next/link";
-import { MedicineDetail } from "@/app/types/medicines";
+import { MedicineDetail } from "@/types/medicines";
 import {
   Popover,
   PopoverTrigger,
   PopoverContent,
 } from "@/components/ui/popover";
 import { ZoomableImage } from "@/components/layout/ZoomableImage";
-import { RenderTodaysMedicine } from "@/utils/medicine";
+import { RenderTodaysMedicine } from "@/lib/medicine";
 
 export default function MedicineCard(medicine: MedicineDetail) {
   const { id, name, imageUrl, description, schedules } = medicine;

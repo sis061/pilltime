@@ -1,12 +1,11 @@
 "use client";
 
 // TODO 알람 기능 구현
-// TODO 타입 지정 및 타입 폴더 분리 필요
 
-import { IntakeLog, MedicineSchedule } from "@/app/types/medicines";
+import { IntakeLog, MedicineSchedule } from "@/types/medicines";
 import { Switch } from "@/components/ui/switch";
-import { formatTime } from "@/utils/date";
-import { getTodayIntakeLog } from "@/utils/medicine";
+import { formatTime } from "@/lib/date";
+import { getTodayIntakeLog } from "@/lib/medicine";
 import { useEffect, useMemo, useState, useTransition } from "react";
 
 export default function ScheduleItem(schedule: MedicineSchedule) {

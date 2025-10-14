@@ -1,4 +1,4 @@
-import { User } from "@/app/types/profile";
+import { User } from "@/types/profile";
 import { create } from "zustand";
 
 interface UserState {
