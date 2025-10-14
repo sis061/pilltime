@@ -1,6 +1,7 @@
 "use client";
 
 // TODO 알람 기능 구현
+// TODO 복용 로그에 따라 스티커 붙이기
 
 import { IntakeLog, MedicineSchedule } from "@/types/medicines";
 import { Switch } from "@/components/ui/switch";

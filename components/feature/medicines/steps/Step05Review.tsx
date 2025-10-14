@@ -7,10 +7,11 @@ import { MedicineFormValues } from "@/lib/schemas/medicine";
 import { DAYS } from "../form/MedicineSchedulesField";
 import { useReturnToStore } from "@/store/returnTo";
 import { formatTime } from "@/lib/date";
+import { useEffect } from "react";
 
 export function Step05Review() {
   const { activeStep, goToStep } = useWizard();
-  const { getValues } = useFormContext<MedicineFormValues>();
+  const { getValues, setValue } = useFormContext<MedicineFormValues>();
   const { setReturnTo } = useReturnToStore();
 
   const values = getValues();
@@ -18,6 +19,15 @@ export function Step05Review() {
   const sortedSchedules = [...values.schedules].sort((a, b) =>
     a.time.localeCompare(b.time)
   );
+
+  const filteredEmptyDescription =
+    values.description &&
+    [...values.description].filter((v) => v.value?.length > 0);
+
+  useEffect(() => {
+    setValue("description", filteredEmptyDescription);
+  }, [values.description]);
+
   const sortedDaysOfWeek = [
     ...(values.repeated_pattern.days_of_week ?? []),
   ].sort((a, b) => a - b);
@@ -54,11 +64,17 @@ export function Step05Review() {
       <div className="flex items-start justify-between shadow-2xs !pb-2">
         <div className="flex flex-col gap-2">
           <strong>상세 정보</strong>
-          <ul className="list-disc list-inside text-sm flex flex-col gap-1">
-            {values.description?.map((d, i) => (
-              <li key={i}>{d.value}</li>
-            ))}
-          </ul>
+          {filteredEmptyDescription!.length > 0 ? (
+            <ul className="list-disc list-inside text-sm flex flex-col gap-1">
+              {filteredEmptyDescription?.map((d, i) => (
+                <li key={i}>{d.value}</li>
+              ))}
+            </ul>
+          ) : (
+            <span className="text-sm !text-pilltime-grayDark/40">
+              상세 정보가 없습니다
+            </span>
+          )}
         </div>
         <Button
           type="button"

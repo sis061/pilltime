@@ -1,9 +1,10 @@
 "use client";
 
+//TODO 시간 인풋 라이브러리 찾아서 적용. 안이쁘고 시간 뒤죽박죽.
+
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
 import { useFormContext, useFieldArray } from "react-hook-form";
-import { useState } from "react";
 import { MedicineFormValues } from "@/lib/schemas/medicine";
 
 export const DAYS = ["일", "월", "화", "수", "목", "금", "토"];

@@ -70,8 +70,13 @@ export default function MedicineNewDrawer({
       a.time.localeCompare(b.time)
     );
 
+    const filteredEmptyDescription =
+      data.description &&
+      [...data.description].filter((v) => v.value?.length > 0);
+
     const _data = {
       ...data,
+      description: filteredEmptyDescription,
       schedules: sortedSchedules,
     };
     console.log("최종 저장 데이터:", _data);

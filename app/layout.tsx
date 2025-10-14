@@ -1,4 +1,5 @@
 //TODO 동적 메타데이터 구현하기
+//TODO 토스트 라이브러리 적용.
 
 import type { Metadata } from "next";
 

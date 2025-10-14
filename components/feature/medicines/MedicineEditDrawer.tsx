@@ -140,9 +140,13 @@ export default function MedicineEditDrawer({
     const sortedSchedules = [...(data.schedules ?? [])].sort((a, b) =>
       a.time.localeCompare(b.time)
     );
+    const filteredEmptyDescription =
+      data.description &&
+      [...data.description].filter((v) => v.value?.length > 0);
 
     const _data = {
       ...data,
+      description: filteredEmptyDescription,
       schedules: sortedSchedules,
     };
     console.log("최종 수정 데이터:", _data);

@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const MedicineSchema = z.object({
   name: z.string().min(1, "약 이름은 필수입니다."),
-  description: z.array(z.object({ value: z.string().optional() })).optional(),
+  description: z.array(z.object({ value: z.string() })).optional(),
   repeated_pattern: z
     .object({
       type: z.enum(["DAILY", "WEEKLY", "MONTHLY"], {
