@@ -1,10 +1,10 @@
 import { create } from "zustand";
 
-type ReturnToStore = {
+interface ReturnToStore {
   returnToStep: number | null;
   setReturnTo: (step: number) => void;
   popReturnTo: () => number | null; // 읽고 즉시 비우기
-};
+}
 
 export const useReturnToStore = create<ReturnToStore>((set, get) => ({
   returnToStep: null,

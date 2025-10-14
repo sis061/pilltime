@@ -3,7 +3,6 @@
 import { createClient } from "@/utils/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { PacmanLoader } from "react-spinners";
 import { useGlobalLoading } from "@/store/useGlobalLoading";
 
 export default function SocialLogin() {

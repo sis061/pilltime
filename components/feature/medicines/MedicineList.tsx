@@ -1,12 +1,11 @@
 "use client";
 
 import { MedicineDetail } from "@/app/types/medicines";
-import MedicineCard, {
-  RenderTodaysMedicine,
-} from "@/components/feature/medicines/MedicineCard";
+import MedicineCard from "@/components/feature/medicines/MedicineCard";
 import EmptyMedicine from "./EmptyMedicine";
 import { createClient } from "@/utils/supabase/client";
 import { useEffect, useRef, useState } from "react";
+import { mapToCardModel, sortMedicinesByToday } from "@/utils/medicine";
 
 async function fetchMedicines(supabase: any, userId: string) {
   const { data, error } = await supabase
@@ -37,32 +36,6 @@ async function fetchMedicines(supabase: any, userId: string) {
 
   if (error) throw error;
   return data as MedicineDetail[];
-}
-
-function mapToCardModel(m: any): MedicineDetail {
-  return {
-    id: m.id,
-    name: m.name,
-    imageUrl: m.image_url ?? "",
-    description: m.description ?? [],
-    schedules: m.medicine_schedules ?? [],
-  };
-}
-
-export function sortMedicinesByToday(
-  medicines: MedicineDetail[]
-): MedicineDetail[] {
-  return [...medicines].sort((a, b) => {
-    const aHasToday = a.schedules.some((s) =>
-      RenderTodaysMedicine(s.repeated_pattern)
-    );
-    const bHasToday = b.schedules.some((s) =>
-      RenderTodaysMedicine(s.repeated_pattern)
-    );
-
-    if (aHasToday === bHasToday) return 0;
-    return aHasToday ? -1 : 1; // 오늘 복용하는 약 → 앞으로
-  });
 }
 
 export default function MedicineList({

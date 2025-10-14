@@ -5,8 +5,8 @@ import { useFormContext } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { MedicineFormValues } from "@/lib/schemas/medicine";
 import { DAYS } from "../form/MedicineSchedulesField";
-import { formatTime } from "../ScheduleItem";
 import { useReturnToStore } from "@/store/returnTo";
+import { formatTime } from "@/utils/date";
 
 export function Step05Review() {
   const { activeStep, goToStep } = useWizard();

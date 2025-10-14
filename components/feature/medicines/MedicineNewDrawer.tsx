@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
+import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 
 import { FormProvider, useForm } from "react-hook-form";
 import { Wizard } from "react-use-wizard";

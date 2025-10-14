@@ -5,31 +5,9 @@
 
 import { IntakeLog, MedicineSchedule } from "@/app/types/medicines";
 import { Switch } from "@/components/ui/switch";
+import { formatTime } from "@/utils/date";
+import { getTodayIntakeLog } from "@/utils/medicine";
 import { useEffect, useMemo, useState, useTransition } from "react";
-
-export function formatTime(time: string) {
-  // time = "08:00"
-  const [hours, minutes] = time.split(":").map(Number);
-  const date = new Date();
-  date.setHours(hours, minutes);
-
-  return date.toLocaleTimeString("ko-KR", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true, // 오전/오후 표기
-  });
-}
-
-function getTodayIntakeLog(data: MedicineSchedule) {
-  const today = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Seoul",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date());
-
-  return data.intake_logs.find((log) => log.date === today);
-}
 
 export default function ScheduleItem(schedule: MedicineSchedule) {
   const todayLog = useMemo(() => getTodayIntakeLog(schedule), [schedule]);
