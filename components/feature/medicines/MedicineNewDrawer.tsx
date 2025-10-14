@@ -16,6 +16,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { MedicineSchema, MedicineFormValues } from "@/lib/schemas/medicine";
 import { deleteMedicineImage } from "@/lib/supabase/upload";
 import { useGlobalLoading } from "@/store/useGlobalLoading";
+import { toast } from "sonner";
 
 async function createMedicine(values: MedicineFormValues) {
   const res = await fetch("/api/medicines", {
@@ -25,10 +26,12 @@ async function createMedicine(values: MedicineFormValues) {
   });
 
   if (!res.ok) {
+    toast.error("정보를 등록하는 중 문제가 발생했어요");
     const error = await res.json();
     throw new Error(error.error);
   }
 
+  toast.success(`[${values.name}]의 정보를 등록했어요`);
   return res.json();
 }
 
@@ -85,6 +88,7 @@ export default function MedicineNewDrawer({
       await createMedicine(_data);
       onOpenChange(false);
     } catch (error) {
+      toast.error("정보를 등록하는 중 문제가 발생했어요");
       console.log(error);
     } finally {
       setGLoading(false);

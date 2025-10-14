@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useUserStore } from "@/store/useUserStore";
+import { toast } from "sonner";
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const supabase = createClient();
@@ -28,6 +29,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
       if (error) {
         console.log("프로필 불러오기 실패", error.message);
+        toast.error("프로필을 불러오는 중 문제가 발생했어요");
         return;
       }
 

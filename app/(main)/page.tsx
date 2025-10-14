@@ -1,6 +1,7 @@
 // TODO 빌드 전에 필요없는 라이브러리 삭제 필요
 
 import { redirect } from "next/navigation";
+import { toast } from "sonner";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import HomeProfile from "@/components/feature/profiles/HomeProfile";
 import MedicineList from "@/components/feature/medicines/MedicineList";
@@ -54,6 +55,7 @@ export default async function Home() {
 
   if (error) {
     console.error("DB Error:", error.message);
+    toast.error("정보를 불러오는 중 문제가 발생했어요");
     return <p>데이터 불러오기 실패</p>;
   }
 

@@ -32,7 +32,7 @@ export default function HomeProfile({ initialUser }: { initialUser: User }) {
   return (
     <div className="!mb-12 flex flex-col items-center gap-4 justify-center max-md:!pt-4">
       <div className="flex items-center justify-center md:justify-end w-full [&_*]:!text-pilltime-grayDark/50">
-        <div className="!font-bold flex gap-2 items-center md:items-end justify-center [&_h3]:!text-lg [&_span]:!text-sm [&_span]:opacity-75">
+        <div className=" flex gap-2 items-center md:items-end justify-center [&_h3]:!text-lg [&_span]:!text-[16px] [&_span]:opacity-75">
           <h3>
             {new Date().getMonth() + 1}
             <span>월</span> {new Date().getDate()}

@@ -14,6 +14,7 @@ import ImageUploader from "../ImageUploader";
 import { usePathname } from "next/navigation";
 import { useUserStore } from "@/store/useUserStore";
 import { uploadMedicineImage } from "@/lib/supabase/upload";
+import { toast } from "sonner";
 
 export function MedicineImageField() {
   const minTablet = useMediaQuery({ minWidth: 768 });
@@ -103,7 +104,7 @@ export function MedicineImageField() {
             file={rawFile}
             onCropped={async (croppedFile) => {
               if (!user) {
-                alert("로그인이 필요합니다.");
+                toast.error("로그인이 필요해요");
                 return;
               }
 
@@ -117,7 +118,9 @@ export function MedicineImageField() {
                 setValue("imageUrl", publicUrl, { shouldDirty: true });
                 setValue("imageFilePath", filePath, { shouldDirty: true });
               } catch (err: any) {
-                alert("이미지 업로드 실패: " + err.message);
+                toast.error(
+                  "이미지 업로드 중 문제가 발생했어요 " + err.message
+                );
               } finally {
                 setUploading(false);
                 setCropOpen(false);

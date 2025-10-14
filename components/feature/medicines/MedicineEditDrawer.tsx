@@ -9,6 +9,17 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 
 import { useForm, FormProvider } from "react-hook-form";
@@ -27,10 +38,14 @@ import { MedicineSchema, MedicineFormValues } from "@/lib/schemas/medicine";
 import { useParams, useRouter } from "next/navigation";
 import { deleteMedicineImage } from "@/lib/supabase/upload";
 import { useGlobalLoading } from "@/store/useGlobalLoading";
+import { toast } from "sonner";
 
 async function fetchMedicine(id: string) {
   const res = await fetch(`/api/medicines/${id}`);
-  if (!res.ok) throw new Error("Failed to fetch medicine");
+  if (!res.ok) {
+    toast.error("정보를 불러오는 중 문제가 발생했어요");
+    throw new Error("Failed to fetch medicine");
+  }
   return res.json();
 }
 
@@ -42,19 +57,23 @@ async function updateMedicine(id: string, values: any) {
   });
 
   if (!res.ok) {
+    toast.error("정보를 수정하는 중 문제가 발생했어요");
     const err = await res.json();
     throw new Error(err.error);
   }
+  toast.success(`[${values.name}]의 정보를 수정했어요`);
 }
 
 async function deleteMedicine(id: string) {
   const res = await fetch(`/api/medicines/${id}`, { method: "DELETE" });
 
   if (!res.ok) {
+    toast.error("정보를 삭제하는 중 문제가 발생했어요");
     const err = await res.json();
     throw new Error(err.error);
   }
 
+  toast.success(`정보를 삭제했어요`);
   return res.json();
 }
 
@@ -130,6 +149,7 @@ export default function MedicineEditDrawer({
         setOriginalImageUrl(data.image_url ?? null);
       } catch (e) {
         console.error(e);
+        toast.error("정보를 불러오는 중 문제가 발생했어요");
       } finally {
         setGLoading(false);
       }
@@ -173,6 +193,7 @@ export default function MedicineEditDrawer({
 
       onOpenChange(false);
     } catch (err: any) {
+      toast.error("정보를 수정하는 중 문제가 발생했어요");
       console.log(err.message);
     } finally {
       setGLoading(false);
@@ -251,19 +272,40 @@ export default function MedicineEditDrawer({
             </form>
           </FormProvider>
           <DrawerFooter className="flex justify-center !py-8">
-            <Button
-              type="button"
-              variant="destructive"
-              className="!text-red-700 cursor-pointer"
-              onClick={async () => {
-                if (!confirm("정말 삭제하시겠습니까?")) return;
-                await deleteMedicine(String(id));
-                router.push("/");
-                onOpenChange(false);
-              }}
-            >
-              정보 삭제
-            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  className="!text-red-700 cursor-pointer w-full bg-pilltime-grayDark/25"
+                >
+                  정보 삭제
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="bg-pilltime-grayLight !p-4">
+                <AlertDialogHeader>
+                  <AlertDialogTitle>정말 삭제할까요?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    약과 관련된 모든 정보가 삭제됩니다!
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter className="flex gap-2 !px-12 sm:!px-0">
+                  <AlertDialogCancel className="!py-2 !px-4">
+                    취소
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    className="!py-2 !px-4 bg-red-500 !text-white"
+                    onClick={async () => {
+                      await deleteMedicine(String(id));
+                      router.push("/");
+                      onOpenChange(false);
+                    }}
+                  >
+                    삭제
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </DrawerFooter>
         </DrawerContent>
       </Drawer>

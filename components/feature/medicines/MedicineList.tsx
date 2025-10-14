@@ -6,6 +6,7 @@ import EmptyMedicine from "./EmptyMedicine";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useRef, useState } from "react";
 import { mapToCardModel, sortMedicinesByToday } from "@/lib/medicine";
+import { toast } from "sonner";
 
 async function fetchMedicines(supabase: any, userId: string) {
   const { data, error } = await supabase
@@ -34,7 +35,10 @@ async function fetchMedicines(supabase: any, userId: string) {
     .order("created_at", { ascending: false })
     .filter("medicine_schedules.deleted_at", "is", null);
 
-  if (error) throw error;
+  if (error) {
+    toast.error("최신 정보를 불러오는 중 문제가 발생했어요");
+    throw error;
+  }
   return data as MedicineDetail[];
 }
 

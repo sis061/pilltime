@@ -8,6 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { formatTime } from "@/lib/date";
 import { getTodayIntakeLog } from "@/lib/medicine";
 import { useEffect, useMemo, useState, useTransition } from "react";
+import { toast } from "sonner";
 
 export default function ScheduleItem(schedule: MedicineSchedule) {
   const todayLog = useMemo(() => getTodayIntakeLog(schedule), [schedule]);
@@ -40,7 +41,12 @@ export default function ScheduleItem(schedule: MedicineSchedule) {
         }),
       });
 
-      if (!res.ok) throw new Error(await res.text());
+      if (!res.ok) {
+        toast.error("기록하는 중 문제가 발생했어요");
+        throw new Error(await res.text());
+      }
+
+      // toast.success(`업데이트 성공: ${next}`);
     } catch {
       setStatus(optimisticPrev);
     }

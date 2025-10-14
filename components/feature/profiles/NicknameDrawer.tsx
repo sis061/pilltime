@@ -15,6 +15,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useUserStore } from "@/store/useUserStore";
 import { useMediaQuery } from "react-responsive";
 import { useGlobalLoading } from "@/store/useGlobalLoading";
+import { toast } from "sonner";
 
 interface Props {
   open: boolean;
@@ -66,7 +67,8 @@ export default function NicknameDrawer({
         .maybeSingle();
 
       if (duplicate) {
-        throw new Error("이미 사용 중인 닉네임이에요 😢");
+        toast.error("이미 사용 중인 닉네임이에요");
+        throw new Error("이미 사용 중인 닉네임이에요");
       }
 
       // 실제 업데이트
@@ -75,10 +77,14 @@ export default function NicknameDrawer({
         .update({ nickname })
         .eq("id", user.id);
 
-      if (error) throw error;
+      if (error) {
+        toast.error("정보를 수정하는 중 문제가 발생했어요");
+        throw error;
+      }
 
       // 3️⃣ 성공 시 — 그대로 유지
       console.log("✅ 프로필 업데이트 성공");
+      toast.success(`닉네임을 수정했어요`);
 
       // 닉네임 최초 생성이라면 다음 단계 자동 진행
       mode === "create" &&
@@ -86,7 +92,7 @@ export default function NicknameDrawer({
     } catch (err: any) {
       // 4️⃣ 실패 시 — 이전 상태로 롤백
       console.error("❌ 닉네임 업데이트 실패:", err.message);
-      alert("닉네임 저장 실패: " + err.message);
+      toast.error("정보를 수정하는 중 문제가 발생했어요");
       setUser({ ...user, nickname: prevNickname });
     } finally {
       // 5️⃣ 로딩 해제 + 닫기
