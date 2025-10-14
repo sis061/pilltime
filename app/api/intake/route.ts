@@ -22,6 +22,7 @@ export async function PUT(req: Request) {
     })
     .eq("id", Number(body.id))
     .eq("user_id", user.id)
+    .is("deleted_at", null)
     .single();
 
   if (error) {

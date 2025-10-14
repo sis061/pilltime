@@ -6,10 +6,14 @@ import { useUserStore } from "@/store/useUserStore";
 import { User } from "@/app/types/profile";
 
 export default function HomeProfile({ initialUser }: { initialUser: User }) {
-  const storedUser = useUserStore((s) => s.user);
-  const user = initialUser ?? storedUser;
-  // const user = storedUser;
+  const { user, setUser } = useUserStore();
   const [openDrawer, setOpenDrawer] = useState(false);
+
+  useEffect(() => {
+    if (initialUser && !user) {
+      setUser(initialUser);
+    }
+  }, [initialUser, user, setUser]);
 
   useEffect(() => {
     if (user && user.nickname === null) {
@@ -19,8 +23,8 @@ export default function HomeProfile({ initialUser }: { initialUser: User }) {
 
   if (!user) {
     return (
-      <div className="!mb-4 !text-sm text-center">
-        <h1>로그인 상태를 불러오는 중...</h1>
+      <div className="!my-8 !text-sm text-center !text-pilltime-grayDark/50 font-bold">
+        <h1>로그인 상태를 불러오는 중입니다...</h1>
       </div>
     );
   }

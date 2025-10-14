@@ -43,24 +43,56 @@ export default function NicknameDrawer({
     }
   }, [open, user]);
 
+  // -- 낙관적 업데이트 적용
+
   async function handleSave() {
     if (!user) return;
+
+    const prevNickname = user.nickname;
+    const optimisticUser = { ...user, nickname };
+
+    // 1️⃣ UI 즉시 갱신 (낙관적 업데이트)
+    setUser(optimisticUser);
     setGLoading(true, "정보를 수정 중이에요...");
-    const { error } = await supabase
-      .from("profiles")
-      .update({ nickname })
-      .eq("id", user.id);
 
-    if (error) {
-      alert("닉네임 저장 실패: " + error.message);
-      return;
+    try {
+      // 2️⃣ 서버 업데이트
+      // 닉네임 중복 확인
+      const { data: duplicate } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("nickname", nickname)
+        .neq("id", user.id)
+        .maybeSingle();
+
+      if (duplicate) {
+        throw new Error("이미 사용 중인 닉네임이에요 😢");
+      }
+
+      // 실제 업데이트
+      const { error } = await supabase
+        .from("profiles")
+        .update({ nickname })
+        .eq("id", user.id);
+
+      if (error) throw error;
+
+      // 3️⃣ 성공 시 — 그대로 유지
+      console.log("✅ 프로필 업데이트 성공");
+
+      // 닉네임 최초 생성이라면 다음 단계 자동 진행
+      mode === "create" &&
+        document.getElementById("create_new_medicine")?.click();
+    } catch (err: any) {
+      // 4️⃣ 실패 시 — 이전 상태로 롤백
+      console.error("❌ 닉네임 업데이트 실패:", err.message);
+      alert("닉네임 저장 실패: " + err.message);
+      setUser({ ...user, nickname: prevNickname });
+    } finally {
+      // 5️⃣ 로딩 해제 + 닫기
+      setGLoading(false);
+      onOpenChange(false);
     }
-
-    setUser({ ...user, nickname });
-    setGLoading(false);
-    onOpenChange(false);
-    mode === "create" &&
-      document.getElementById("create_new_medicine")?.click();
   }
 
   return (
@@ -76,7 +108,7 @@ export default function NicknameDrawer({
           <Button
             onClick={() => onOpenChange(false)}
             variant={"ghost"}
-            className={`!pr-2 font-bold  ${
+            className={`!pr-2 font-bold cursor-pointer  ${
               mode === "create" ? `!text-transparent` : `!text-pilltime-violet`
             } `}
           >
@@ -89,7 +121,7 @@ export default function NicknameDrawer({
             type="submit"
             variant={"ghost"}
             disabled={isLoading}
-            className="!pl-1 font-bold !text-pilltime-violet"
+            className="!pl-1 font-bold !text-pilltime-violet cursor-pointer"
             onClick={() =>
               submitBtnRef?.current && submitBtnRef.current.click()
             }

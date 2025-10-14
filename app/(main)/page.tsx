@@ -1,6 +1,4 @@
 // TODO 빌드 전에 필요없는 라이브러리 삭제 필요
-// TODO 아무 약도 없는 경우에 렌더할 페이지 필요
-// TODO 리얼타임 구현 데이터 추가 삭제 변경 될 시 바로 반영되게
 
 import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/utils/supabase/server";
@@ -51,7 +49,8 @@ export default async function Home() {
     )
     .eq("user_id", user.id)
     .is("deleted_at", null)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .filter("medicine_schedules.deleted_at", "is", null);
 
   if (error) {
     console.error("DB Error:", error.message);
@@ -59,7 +58,7 @@ export default async function Home() {
   }
 
   return (
-    <section className="inner !text-pilltime-blue text-3xl !mx-auto !w-full h-full !mb-8 !p-2">
+    <section className="inner min-h-[calc(100dvh-11.5rem)] !text-pilltime-blue text-3xl !mx-auto !w-full h-full !mb-8 !p-2">
       <HomeProfile
         initialUser={{
           id: user.id,
@@ -67,7 +66,7 @@ export default async function Home() {
           nickname: profile?.nickname ?? null,
         }}
       />
-      <MedicineList medicines={medicines} />
+      <MedicineList initialMedicines={medicines} userId={user.id} />
     </section>
   );
 }

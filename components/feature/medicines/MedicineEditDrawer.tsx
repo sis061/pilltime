@@ -208,7 +208,7 @@ export default function MedicineEditDrawer({
               onClick={() => onOpenChange(false)}
               variant={"ghost"}
               disabled={isLoading}
-              className="!pr-2 font-bold !text-pilltime-violet"
+              className="!pr-2 font-bold !text-pilltime-violet cursor-pointer"
             >
               취소
             </Button>
@@ -217,7 +217,7 @@ export default function MedicineEditDrawer({
               type="submit"
               variant={"ghost"}
               disabled={isLoading}
-              className="!pl-1 font-bold !text-pilltime-violet"
+              className="!pl-1 font-bold !text-pilltime-violet cursor-pointer"
               onClick={() =>
                 submitBtnRef?.current && submitBtnRef.current.click()
               }
@@ -250,7 +250,7 @@ export default function MedicineEditDrawer({
             <Button
               type="button"
               variant="destructive"
-              className="!text-red-700"
+              className="!text-red-700 cursor-pointer"
               onClick={async () => {
                 if (!confirm("정말 삭제하시겠습니까?")) return;
                 await deleteMedicine(String(id));

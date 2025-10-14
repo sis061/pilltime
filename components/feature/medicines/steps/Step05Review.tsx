@@ -40,7 +40,7 @@ export function Step05Review() {
           type="button"
           size="sm"
           variant="ghost"
-          className="!text-pilltime-violet"
+          className="!text-pilltime-violet cursor-pointer"
           onClick={() => goToStep(0)} // Step1로 이동
         >
           수정
@@ -61,7 +61,7 @@ export function Step05Review() {
           type="button"
           size="sm"
           variant="ghost"
-          className="!text-pilltime-violet"
+          className="!text-pilltime-violet cursor-pointer"
           onClick={() => goToStep(1)} // Step2로 이동
         >
           수정
@@ -84,7 +84,7 @@ export function Step05Review() {
           type="button"
           size="sm"
           variant="ghost"
-          className="!text-pilltime-violet"
+          className="!text-pilltime-violet cursor-pointer"
           onClick={() => goToStep(2)} // Step3로 이동
         >
           수정
@@ -105,7 +105,7 @@ export function Step05Review() {
           type="button"
           size="sm"
           variant="ghost"
-          className="!text-pilltime-violet"
+          className="!text-pilltime-violet cursor-pointer"
           onClick={() => goToStep(2)} // Step3로 이동
         >
           수정
@@ -128,7 +128,7 @@ export function Step05Review() {
           type="button"
           size="sm"
           variant="ghost"
-          className="!text-pilltime-violet"
+          className="!text-pilltime-violet cursor-pointer"
           onClick={() => goToStep(3)} // Step4로 이동
         >
           수정

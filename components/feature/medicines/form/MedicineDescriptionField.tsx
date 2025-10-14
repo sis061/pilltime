@@ -24,7 +24,7 @@ export function MedicineDescriptionField() {
             type="button"
             variant="ghost"
             size="sm"
-            className="!text-red-500"
+            className="!text-red-500 cursor-pointer"
             onClick={() => remove(index)}
           >
             삭제
@@ -35,7 +35,7 @@ export function MedicineDescriptionField() {
         type="button"
         variant="ghost"
         size="sm"
-        className="max-w-12 w-full self-center"
+        className="max-w-12 w-full self-center cursor-pointer"
         onClick={() => append({ value: "" })}
       >
         추가

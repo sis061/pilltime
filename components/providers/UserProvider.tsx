@@ -47,6 +47,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         clearUser();
       }
       if (event === "SIGNED_IN" && session?.user) {
+        // 이미 로그인된 동일 유저라면 store 덮어쓰지 않음
+        const current = useUserStore.getState().user;
+        if (current && current.id === session.user.id && current.nickname)
+          return;
         setUser({
           id: session.user.id,
           email: session.user.email ?? undefined,
@@ -58,7 +62,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, [supabase, setUser, clearUser()]);
+  }, [supabase, setUser, clearUser]);
 
   return <>{children}</>;
 }

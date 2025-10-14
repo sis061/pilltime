@@ -95,7 +95,7 @@ export function MedicineSchedulesField() {
                 }}
                 className={`!px-4 !py-2  ${
                   repeatedPattern.type === opt.value &&
-                  "!bg-pilltime-blue !text-white "
+                  "!bg-pilltime-blue !text-white cursor-pointer"
                 }`}
               >
                 {opt.label}
@@ -128,7 +128,7 @@ export function MedicineSchedulesField() {
                   // 시간도 최소 1개 보장하도록 필요 시 유지/리셋 선택
                 }}
                 className={`!p-2 w-[calc((100%/7)-0.43rem)] ${
-                  selected && "!bg-pilltime-blue !text-white"
+                  selected && "!bg-pilltime-blue !text-white cursor-pointer"
                 }`}
               >
                 {day}
@@ -160,7 +160,7 @@ export function MedicineSchedulesField() {
                   });
                 }}
                 className={`!p-2 w-[calc((100%/4)-0.43rem)] ${
-                  selected && "!bg-pilltime-blue !text-white"
+                  selected && "!bg-pilltime-blue !text-white cursor-pointer"
                 }`}
               >
                 {date}일
@@ -188,7 +188,7 @@ export function MedicineSchedulesField() {
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="!text-red-500"
+                  className="!text-red-500 cursor-pointer"
                   onClick={() => remove(index)}
                 >
                   삭제
@@ -206,7 +206,7 @@ export function MedicineSchedulesField() {
             type="button"
             variant="ghost"
             size="sm"
-            className="max-w-20 w-full self-center"
+            className="max-w-20 w-full self-center cursor-pointer"
             onClick={() => append({ time: "" })}
           >
             추가

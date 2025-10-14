@@ -5,7 +5,7 @@
 
 import { IntakeLog, MedicineSchedule } from "@/app/types/medicines";
 import { Switch } from "@/components/ui/switch";
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 
 function formatTime(time: string) {
   // time = "08:00"
@@ -38,6 +38,10 @@ export default function ScheduleItem(schedule: MedicineSchedule) {
   const [status, setStatus] = useState<IntakeLog["status"]>(initialStatus);
   const [isPending, startTransition] = useTransition();
   const isTaken = status === "taken";
+
+  useEffect(() => {
+    setStatus(todayLog?.status ?? "scheduled");
+  }, [todayLog?.status]);
 
   async function putIntakeLog(id: number, next: IntakeLog["status"]) {
     const optimisticPrev = status;

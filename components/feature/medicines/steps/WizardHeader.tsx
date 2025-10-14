@@ -50,7 +50,7 @@ export function WizardHeader({
             type="button"
             onClick={onClose}
             variant="ghost"
-            className="!text-pilltime-violet font-bold"
+            className="!text-pilltime-violet font-bold cursor-pointer"
           >
             취소
           </Button>
@@ -59,7 +59,7 @@ export function WizardHeader({
             type="button"
             onClick={previousStep}
             variant="ghost"
-            className="!text-pilltime-violet font-bold"
+            className="!text-pilltime-violet font-bold cursor-pointer"
           >
             이전
           </Button>
@@ -77,7 +77,7 @@ export function WizardHeader({
             onClick={() =>
               submitBtnRef?.current && submitBtnRef.current?.click()
             }
-            className="!text-pilltime-violet font-bold"
+            className="!text-pilltime-violet font-bold cursor-pointer"
           >
             저장
           </Button>
@@ -86,7 +86,7 @@ export function WizardHeader({
             type="button"
             onClick={handleNext}
             variant="ghost"
-            className="!text-pilltime-violet font-bold"
+            className="!text-pilltime-violet font-bold cursor-pointer"
           >
             다음
           </Button>

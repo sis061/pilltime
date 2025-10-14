@@ -43,6 +43,8 @@ export async function GET(
     )
     .eq("id", Number(id))
     .eq("user_id", user.id)
+    .is("deleted_at", null)
+    .filter("medicine_schedules.deleted_at", "is", null)
     .maybeSingle();
 
   if (error)
@@ -79,7 +81,8 @@ export async function PUT(
       updated_at: new Date().toISOString(),
     })
     .eq("id", Number(id))
-    .eq("user_id", user.id);
+    .eq("user_id", user.id)
+    .is("deleted_at", null);
 
   if (medError)
     return NextResponse.json({ error: medError.message }, { status: 500 });
@@ -126,10 +129,18 @@ export async function PUT(
   // 4️⃣ 기존 스케줄 전체 삭제
   // -------------------------------
   const { error: deleteSchedulesError } = await supabase
+    // .from("medicine_schedules")
+    // .delete()
+    // .eq("medicine_id", Number(id))
+    // .eq("user_id", user.id);
     .from("medicine_schedules")
-    .delete()
+    .update({
+      deleted_at: new Date().toISOString(),
+      is_notify: false,
+    })
     .eq("medicine_id", Number(id))
-    .eq("user_id", user.id);
+    .eq("user_id", user.id)
+    .is("deleted_at", null);
 
   if (deleteSchedulesError) {
     return NextResponse.json(

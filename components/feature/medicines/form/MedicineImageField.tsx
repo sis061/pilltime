@@ -68,7 +68,7 @@ export function MedicineImageField() {
             type="button"
             variant="ghost"
             size="sm"
-            className="max-w-12 w-full self-center"
+            className="max-w-12 w-full self-center cursor-pointer"
             onClick={handleSelectFile}
             disabled={uploading}
           >
@@ -87,7 +87,7 @@ export function MedicineImageField() {
           <DrawerHeader className="grid grid-cols-3 items-center !mb-8">
             <Button
               variant="ghost"
-              className="font-bold !text-pilltime-violet justify-self-start"
+              className="font-bold cursor-pointer !text-pilltime-violet justify-self-start"
               onClick={() => {
                 setRawFile(null);
                 setCropOpen(false);
