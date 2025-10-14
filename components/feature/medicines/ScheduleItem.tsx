@@ -7,7 +7,7 @@ import { IntakeLog, MedicineSchedule } from "@/app/types/medicines";
 import { Switch } from "@/components/ui/switch";
 import { useEffect, useMemo, useState, useTransition } from "react";
 
-function formatTime(time: string) {
+export function formatTime(time: string) {
   // time = "08:00"
   const [hours, minutes] = time.split(":").map(Number);
   const date = new Date();

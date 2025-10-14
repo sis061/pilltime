@@ -3,6 +3,12 @@ import Image from "next/image";
 import ScheduleItem from "./ScheduleItem";
 import Link from "next/link";
 import { MedicineDetail, RepeatedPattern } from "@/app/types/medicines";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@radix-ui/react-popover";
+import { ZoomableImage } from "@/components/layout/ZoomableImage";
 
 /**
  * 오늘 복용해야 하는 약인지 여부를 반환
@@ -55,9 +61,14 @@ export default function MedicineCard(medicine: MedicineDetail) {
       <div className="border-2 bg-white border-pilltime-blue/50 rounded-md !px-4 !py-8 flex flex-col gap-4 shadow-md">
         <div className="flex items-center gap-4 w-full relative">
           <div className="rounded-md overflow-hidden border border-pilltime-violet/50 shadow-sm">
+            <ZoomableImage
+              src={imageUrl}
+              alt="fallback-medicine"
+              width={120}
+              height={120}
+            />
             <Image
               src={imageUrl}
-              // src={"/fallback-medicine.png"}
               alt="fallback-medicine"
               width={120}
               height={120}
@@ -71,12 +82,36 @@ export default function MedicineCard(medicine: MedicineDetail) {
 
           <div className="absolute -top-4 right-0">
             <div className="flex items-center justify-between gap-2">
-              <Info
-                size={20}
-                className="cursor-pointer"
-                strokeWidth={2.5}
-                color="#F9731690"
-              />
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Info
+                    size={20}
+                    className="cursor-pointer"
+                    strokeWidth={2.5}
+                    color="#F9731690"
+                  />
+                </PopoverTrigger>
+                <PopoverContent
+                  align="end"
+                  sideOffset={4}
+                  alignOffset={8}
+                  className="max-w-80 min-w-48 border-2 bg-white rounded-md !py-3 !px-2 *:text-[16px] !border-[#F9731690] shadow-lg transition-opacity duration-150 data-[state=open]:animate-in
+            data-[state=closed]:animate-out
+            data-[state=open]:fade-in-0
+            data-[state=closed]:fade-out-0
+            data-[side=bottom]:slide-in-from-top-2
+            data-[side=top]:slide-in-from-bottom-2
+            data-[side=left]:slide-in-from-right-2
+            data-[side=right]:slide-in-from-left-2"
+                >
+                  <ul className="flex flex-col gap-1 list-disc [&_>li]:!ml-4">
+                    {description.map((text, i) => (
+                      <li key={i}>{text}</li>
+                    ))}
+                  </ul>
+                </PopoverContent>
+              </Popover>
+
               <Link href={`/medicines/${id}/edit`}>
                 <Settings
                   size={20}

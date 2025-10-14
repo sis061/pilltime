@@ -1,17 +1,17 @@
 "use client";
 
-//TODO 특정 필드만 수정하면 다시 최종페이지로 돌아오는 기능 구현
-//TODO formatTime 여기도 가져오기, 유틸함수 분리
-
 import { useWizard } from "react-use-wizard";
 import { useFormContext } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { MedicineFormValues } from "@/lib/schemas/medicine";
 import { DAYS } from "../form/MedicineSchedulesField";
+import { formatTime } from "../ScheduleItem";
+import { useReturnToStore } from "@/store/returnTo";
 
 export function Step05Review() {
-  const { goToStep } = useWizard();
+  const { activeStep, goToStep } = useWizard();
   const { getValues } = useFormContext<MedicineFormValues>();
+  const { setReturnTo } = useReturnToStore();
 
   const values = getValues();
 
@@ -41,7 +41,10 @@ export function Step05Review() {
           size="sm"
           variant="ghost"
           className="!text-pilltime-violet cursor-pointer"
-          onClick={() => goToStep(0)} // Step1로 이동
+          onClick={() => {
+            setReturnTo(activeStep);
+            goToStep(0);
+          }} // Step1로 이동
         >
           수정
         </Button>
@@ -62,7 +65,10 @@ export function Step05Review() {
           size="sm"
           variant="ghost"
           className="!text-pilltime-violet cursor-pointer"
-          onClick={() => goToStep(1)} // Step2로 이동
+          onClick={() => {
+            setReturnTo(activeStep);
+            goToStep(1);
+          }} // Step2로 이동
         >
           수정
         </Button>
@@ -85,7 +91,10 @@ export function Step05Review() {
           size="sm"
           variant="ghost"
           className="!text-pilltime-violet cursor-pointer"
-          onClick={() => goToStep(2)} // Step3로 이동
+          onClick={() => {
+            setReturnTo(activeStep);
+            goToStep(2);
+          }} // Step3로 이동
         >
           수정
         </Button>
@@ -97,7 +106,7 @@ export function Step05Review() {
           <strong>복용 시간</strong>
           <ul className="list-disc list-inside text-sm flex flex-col gap-1">
             {sortedSchedules?.map((s, i) => (
-              <li key={i}>{s.time}</li>
+              <li key={i}>{formatTime(s.time)}</li>
             ))}
           </ul>
         </div>
@@ -106,7 +115,10 @@ export function Step05Review() {
           size="sm"
           variant="ghost"
           className="!text-pilltime-violet cursor-pointer"
-          onClick={() => goToStep(2)} // Step3로 이동
+          onClick={() => {
+            setReturnTo(activeStep);
+            goToStep(2);
+          }} // Step3로 이동
         >
           수정
         </Button>
@@ -129,7 +141,10 @@ export function Step05Review() {
           size="sm"
           variant="ghost"
           className="!text-pilltime-violet cursor-pointer"
-          onClick={() => goToStep(3)} // Step4로 이동
+          onClick={() => {
+            setReturnTo(activeStep);
+            goToStep(3);
+          }} // Step4로 이동
         >
           수정
         </Button>
