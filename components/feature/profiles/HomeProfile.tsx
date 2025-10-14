@@ -3,18 +3,9 @@
 import { useEffect, useState } from "react";
 import NicknameDrawer from "@/components/feature/profiles/NicknameDrawer";
 import { useUserStore } from "@/store/useUserStore";
+import { User } from "@/app/types/profile";
 
-interface ProfileSectionProps {
-  id: string;
-  email?: string;
-  nickname?: string | null;
-}
-
-export default function HomeProfile({
-  initialUser,
-}: {
-  initialUser: ProfileSectionProps;
-}) {
+export default function HomeProfile({ initialUser }: { initialUser: User }) {
   const storedUser = useUserStore((s) => s.user);
   const user = initialUser ?? storedUser;
   // const user = storedUser;

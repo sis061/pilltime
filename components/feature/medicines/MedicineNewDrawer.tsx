@@ -1,7 +1,5 @@
 "use client";
 
-//TODO 헤더는 냅두고 안에 폼만 스크롤되게 해야지
-
 import {
   Drawer,
   DrawerContent,
@@ -22,6 +20,7 @@ import { steps, StepWrapper } from "./steps/config";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { MedicineSchema, MedicineFormValues } from "@/lib/schemas/medicine";
 import { deleteMedicineImage } from "@/utils/supabase/upload";
+import { useGlobalLoading } from "@/store/useGlobalLoading";
 
 async function createMedicine(values: MedicineFormValues) {
   const res = await fetch("/api/medicines", {
@@ -45,6 +44,8 @@ export default function MedicineNewDrawer({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const isLoading = useGlobalLoading((s) => s.isGLoading);
+  const setGLoading = useGlobalLoading((s) => s.setGLoading);
   const methods = useForm<MedicineFormValues>({
     resolver: zodResolver(MedicineSchema),
     defaultValues: {
@@ -69,7 +70,7 @@ export default function MedicineNewDrawer({
     }
   }
 
-  const onSubmit = (data: MedicineFormValues) => {
+  const onSubmit = async (data: MedicineFormValues) => {
     const sortedSchedules = [...(data.schedules ?? [])].sort((a, b) =>
       a.time.localeCompare(b.time)
     );
@@ -79,8 +80,15 @@ export default function MedicineNewDrawer({
       schedules: sortedSchedules,
     };
     console.log("최종 저장 데이터:", _data);
-    createMedicine(_data);
-    onOpenChange(false);
+    try {
+      setGLoading(true, "새로운 약을 등록 중이에요...");
+      await createMedicine(_data);
+      onOpenChange(false);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setGLoading(false);
+    }
   };
 
   const submitBtnRef = useRef<HTMLButtonElement>(null);
@@ -108,7 +116,7 @@ export default function MedicineNewDrawer({
         <FormProvider {...methods}>
           <form
             onSubmit={methods.handleSubmit(onSubmit)}
-            className="flex flex-col gap-8 max-h-[80vh] md:h-screen overflow-y-auto px-2"
+            className="flex flex-col gap-8 max-h-[80vh] md:h-screen px-2"
           >
             <Wizard
               header={
@@ -130,7 +138,12 @@ export default function MedicineNewDrawer({
               ))}
               <Step05Review />
             </Wizard>
-            <button ref={submitBtnRef} type="submit" hidden>
+            <button
+              ref={submitBtnRef}
+              type="submit"
+              hidden
+              disabled={isLoading}
+            >
               저장
             </button>
           </form>

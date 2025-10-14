@@ -14,6 +14,7 @@ import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { useUserStore } from "@/store/useUserStore";
 import { useMediaQuery } from "react-responsive";
+import { useGlobalLoading } from "@/store/useGlobalLoading";
 
 interface Props {
   open: boolean;
@@ -29,6 +30,8 @@ export default function NicknameDrawer({
   const supabase = createClient();
   const user = useUserStore((s) => s.user);
   const setUser = useUserStore((s) => s.setUser);
+  const isLoading = useGlobalLoading((s) => s.isGLoading);
+  const setGLoading = useGlobalLoading((s) => s.setGLoading);
 
   const [nickname, setNickname] = useState(user?.nickname || "");
   const submitBtnRef = useRef<HTMLButtonElement>(null);
@@ -42,6 +45,7 @@ export default function NicknameDrawer({
 
   async function handleSave() {
     if (!user) return;
+    setGLoading(true, "정보를 수정 중이에요...");
     const { error } = await supabase
       .from("profiles")
       .update({ nickname })
@@ -53,6 +57,7 @@ export default function NicknameDrawer({
     }
 
     setUser({ ...user, nickname });
+    setGLoading(false);
     onOpenChange(false);
     mode === "create" &&
       document.getElementById("create_new_medicine")?.click();
@@ -83,6 +88,7 @@ export default function NicknameDrawer({
           <Button
             type="submit"
             variant={"ghost"}
+            disabled={isLoading}
             className="!pl-1 font-bold !text-pilltime-violet"
             onClick={() =>
               submitBtnRef?.current && submitBtnRef.current.click()

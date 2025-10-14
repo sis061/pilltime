@@ -2,18 +2,21 @@
 
 import { createClient } from "@/utils/supabase/client";
 import { Button } from "@/components/ui/button";
-import { useUserStore } from "@/store/useUserStore";
 import { useState } from "react";
+import { PacmanLoader } from "react-spinners";
+import { useGlobalLoading } from "@/store/useGlobalLoading";
 
 export default function SocialLogin() {
   const supabase = createClient();
   const [loadingProvider, setLoadingProvider] = useState<
     "google" | "apple" | null
   >(null);
+  const setGLoading = useGlobalLoading((s) => s.setGLoading);
 
   async function handleLogin(provider: "google" | "apple") {
     try {
       setLoadingProvider(provider);
+      setGLoading(true, "로그인 중이에요...");
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
@@ -24,13 +27,12 @@ export default function SocialLogin() {
     } catch (error: any) {
       alert(error.message);
       setLoadingProvider(null);
+      setGLoading(false);
     }
   }
 
-  console.log(typeof (loadingProvider === "google"));
-
   return (
-    <div className="flex flex-col gap-3 w-full">
+    <div className="flex flex-col gap-4 w-full relative">
       <Button
         onClick={() => handleLogin("google")}
         disabled={loadingProvider === "google"}

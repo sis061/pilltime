@@ -90,17 +90,13 @@ export default function MedicineCard(medicine: MedicineDetail) {
         </div>
         <div className="!py-4 !px-2 relative">
           {!isMedicineTakenToday && (
-            <div className="absolute top-0 left-0 bg-black/75 w-full h-full rounded-sm z-10 flex items-center justify-center">
-              <span className="!text-white font-bold text-xl">
+            <div className="absolute top-0 left-0 bg-black/50 w-full h-full rounded-sm z-10 flex items-center justify-center backdrop-blur-xs">
+              <span className="!text-pilltime-grayLight font-bold text-lg">
                 오늘은 먹을 약이 없네요!
               </span>
             </div>
           )}
-          <ul
-            className={`flex flex-col gap-4 ${
-              !isMedicineTakenToday && "blur-xs"
-            }`}
-          >
+          <ul className={`flex flex-col gap-4`}>
             {schedules.map((schedule) => (
               <li key={schedule?.id}>
                 <ScheduleItem {...schedule} />

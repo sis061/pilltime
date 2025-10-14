@@ -26,7 +26,7 @@ export function Step05Review() {
   ].sort((a, b) => a - b);
 
   return (
-    <div className="flex flex-col gap-6 !pb-8 !-mt-4">
+    <div className="flex flex-col gap-6 !pb-8 !-mt-4 overflow-y-auto">
       <h2 className="text-sm font-bold !text-pilltime-grayDark/40">
         마지막으로 정보가 맞는지 확인하고 저장하세요
       </h2>

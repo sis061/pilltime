@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { UserProvider } from "@/components/providers/UserProvider";
+import GlobalLoading from "@/components/layout/GlobalLoading";
 
 export const metadata: Metadata = {
   title: "PillTime",
@@ -37,6 +38,7 @@ export default function RootLayout({
     <html lang="ko" className={`${pretendard.variable}  antialiased`}>
       <body>
         <UserProvider>{children}</UserProvider>
+        <GlobalLoading />
       </body>
     </html>
   );

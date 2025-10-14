@@ -1,6 +1,5 @@
 "use client";
 
-//TODO 로딩 컴포넌트 구현
 //TODO 캐싱
 
 import {
@@ -27,6 +26,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { MedicineSchema, MedicineFormValues } from "@/lib/schemas/medicine";
 import { useParams, useRouter } from "next/navigation";
 import { deleteMedicineImage } from "@/utils/supabase/upload";
+import { useGlobalLoading } from "@/store/useGlobalLoading";
 
 async function fetchMedicine(id: string) {
   const res = await fetch(`/api/medicines/${id}`);
@@ -66,7 +66,8 @@ export default function MedicineEditDrawer({
   onOpenChange: (open: boolean) => void;
 }) {
   const { id } = useParams();
-  const [loading, setLoading] = useState(true);
+  const isLoading = useGlobalLoading((s) => s.isGLoading);
+  const setGLoading = useGlobalLoading((s) => s.setGLoading);
   const submitBtnRef = useRef<HTMLButtonElement>(null);
   const minTablet = useMediaQuery({ minWidth: 768 });
   const router = useRouter();
@@ -109,7 +110,7 @@ export default function MedicineEditDrawer({
 
     (async () => {
       try {
-        setLoading(true);
+        setGLoading(true, "정보를 불러오는 중이에요..");
         const data = await fetchMedicine(String(id));
 
         // ✅ react-hook-form 값 업데이트
@@ -130,7 +131,7 @@ export default function MedicineEditDrawer({
       } catch (e) {
         console.error(e);
       } finally {
-        setLoading(false);
+        setGLoading(false);
       }
     })();
   }, [id, open, methods.reset]);
@@ -146,6 +147,7 @@ export default function MedicineEditDrawer({
     };
     console.log("최종 수정 데이터:", _data);
     try {
+      setGLoading(true, "수정 중이에요..");
       await updateMedicine(String(id), _data);
 
       // ✅ 이미지가 변경되었을 경우 storage에서 이전 이미지 삭제
@@ -168,6 +170,8 @@ export default function MedicineEditDrawer({
       onOpenChange(false);
     } catch (err: any) {
       console.log(err.message);
+    } finally {
+      setGLoading(false);
     }
   };
 
@@ -203,6 +207,7 @@ export default function MedicineEditDrawer({
             <Button
               onClick={() => onOpenChange(false)}
               variant={"ghost"}
+              disabled={isLoading}
               className="!pr-2 font-bold !text-pilltime-violet"
             >
               취소
@@ -211,6 +216,7 @@ export default function MedicineEditDrawer({
             <Button
               type="submit"
               variant={"ghost"}
+              disabled={isLoading}
               className="!pl-1 font-bold !text-pilltime-violet"
               onClick={() =>
                 submitBtnRef?.current && submitBtnRef.current.click()
@@ -230,7 +236,12 @@ export default function MedicineEditDrawer({
               <MedicineDescriptionField />
               <MedicineSchedulesField />
 
-              <button ref={submitBtnRef} type="submit" className=" hidden">
+              <button
+                ref={submitBtnRef}
+                type="submit"
+                className=" hidden"
+                disabled={isLoading}
+              >
                 저장
               </button>
             </form>

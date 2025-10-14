@@ -1,10 +1,5 @@
+import { User } from "@/app/types/profile";
 import { create } from "zustand";
-
-interface User {
-  id: string;
-  email?: string;
-  nickname?: string | null;
-}
 
 interface UserState {
   user: User | null;

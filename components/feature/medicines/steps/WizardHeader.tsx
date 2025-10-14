@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { RefObject } from "react";
 import { useFormContext } from "react-hook-form";
+import { useGlobalLoading } from "@/store/useGlobalLoading";
 
 export function WizardHeader({
   submitBtnRef,
@@ -18,6 +19,7 @@ export function WizardHeader({
   const { previousStep, nextStep, isFirstStep, isLastStep, activeStep } =
     useWizard();
   const { trigger } = useFormContext();
+  const isLoading = useGlobalLoading((s) => s.isGLoading);
 
   // 스텝별 검증 필드 매핑
   const stepValidationMap: Record<number, string[] | undefined> = {
@@ -71,6 +73,7 @@ export function WizardHeader({
           <Button
             type="button"
             variant="ghost"
+            disabled={isLoading}
             onClick={() =>
               submitBtnRef?.current && submitBtnRef.current?.click()
             }
