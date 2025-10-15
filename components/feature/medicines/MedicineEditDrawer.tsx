@@ -49,7 +49,7 @@ async function fetchMedicine(id: string) {
   return res.json();
 }
 
-async function updateMedicine(id: string, values: any) {
+async function updateMedicine(id: string, values: MedicineFormValues) {
   const res = await fetch(`/api/medicines/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },

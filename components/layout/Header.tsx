@@ -3,20 +3,27 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { createClient } from "@/lib/supabase/client";
+
 import { useRouter } from "next/navigation";
 import { useUserStore } from "@/store/useUserStore";
 import { useState } from "react";
 import NicknameDrawer from "../feature/profiles/NicknameDrawer";
 import Image from "next/image";
+import { User } from "@supabase/supabase-js";
 
-export default function Header({ user }: { user: any }) {
+export default function Header({ user }: { user: User | null }) {
   const router = useRouter();
-  const supabase = createClient();
+
   const clearUser = useUserStore((s) => s.clearUser);
   const [open, setOpen] = useState(false);
 
+  async function getSupabase() {
+    const { createClient } = await import("@/lib/supabase/client"); // ✅ 지연 로드
+    return createClient();
+  }
+
   async function logout() {
+    const supabase = await getSupabase();
     await supabase.auth.signOut();
     clearUser();
     router.replace("/login");

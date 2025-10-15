@@ -78,8 +78,8 @@ export default function MedicineCard(medicine: MedicineDetail) {
               height={120}
             /> */}
           </div>
-          <div className="grow self-start !z-10 !pt-1 !pl-1 rounded-full">
-            <span className="font-bold !text-pilltime-grayDark/75 backdrop-blur-xs text-2xl text-ellipsis rounded-full">
+          <div className="grow self-start !z-10 !pt-1 !pl-1 ">
+            <span className="font-bold !text-pilltime-grayDark text-2xl text-ellipsis text-shadow-sm backdrop-blur-2xl">
               {name}
             </span>
           </div>

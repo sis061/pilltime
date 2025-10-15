@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import withBundleAnalyzer from "@next/bundle-analyzer";
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -7,7 +8,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "cxkefmygfdtcwidshaoa.supabase.co", // ✅ 본인 Supabase 프로젝트 도메인
+        hostname: "cxkefmygfdtcwidshaoa.supabase.co",
         pathname: "/storage/v1/object/public/medicine-images/**",
       },
     ],
@@ -20,4 +21,9 @@ const nextConfig: NextConfig = {
   ],
 };
 
-export default nextConfig;
+// export default nextConfig;
+
+export default withBundleAnalyzer({
+  enabled: process.env.ANALYZE === "true",
+  // openAnalyzer: true // default!
+})(nextConfig);

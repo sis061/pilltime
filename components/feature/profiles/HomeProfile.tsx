@@ -19,7 +19,7 @@ export default function HomeProfile({ initialUser }: { initialUser: User }) {
     if (user && user.nickname === null) {
       setOpenDrawer(true);
     }
-  }, [user?.nickname]);
+  }, [user]);
 
   if (!user) {
     return (

@@ -96,7 +96,7 @@ export default function ImageUploader({ file, onCropped }: Props) {
         maxWidthOrHeight: 512,
         useWebWorker: !isIOS && typeof Worker !== "undefined",
       });
-    } catch (e) {
+    } catch (_e) {
       // ✅ 압축 실패하면 원본 그대로 사용 (크래시 방지)
       output = input;
     }

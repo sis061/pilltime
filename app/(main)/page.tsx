@@ -68,7 +68,7 @@ export default async function Home() {
           nickname: profile?.nickname ?? null,
         }}
       />
-      <MedicineList initialMedicines={medicines} userId={user.id} />
+      <MedicineList medicines={medicines} userId={user.id} />
     </section>
   );
 }

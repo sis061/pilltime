@@ -20,7 +20,7 @@ export default function ScheduleItem(schedule: ScheduleItemProps) {
   const initialStatus: IntakeLog["status"] = todayLog?.status ?? "scheduled";
 
   const [status, setStatus] = useState<IntakeLog["status"]>(initialStatus);
-  const [isPending, startTransition] = useTransition();
+  const [_isPending, startTransition] = useTransition();
   const isTaken = status === "taken";
 
   useEffect(() => {

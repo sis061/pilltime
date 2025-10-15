@@ -42,7 +42,6 @@ export async function middleware(req: NextRequest) {
   // 세션 검사
   const {
     data: { user },
-    error,
   } = await supabase.auth.getUser();
 
   // 1) 비로그인 & 보호 경로 접근 → /login 으로 (원래 목적지 next 파라미터 유지)

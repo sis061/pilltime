@@ -13,7 +13,7 @@ export async function PUT(req: Request) {
 
   const body = await req.json();
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from("intake_logs")
     .update({
       status: body.status,

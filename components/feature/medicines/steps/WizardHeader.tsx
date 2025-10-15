@@ -2,7 +2,6 @@
 
 import { useWizard } from "react-use-wizard";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
 import { RefObject } from "react";
 import { useFormContext } from "react-hook-form";
 import { useGlobalLoading } from "@/store/useGlobalLoading";
@@ -11,11 +10,11 @@ import { useReturnToStore } from "@/store/returnTo";
 export function WizardHeader({
   submitBtnRef,
   onClose,
-  onImageUploadCancel,
-}: {
+}: // onImageUploadCancel,
+{
   submitBtnRef: RefObject<HTMLButtonElement | null>;
   onClose: () => void;
-  onImageUploadCancel?: () => void;
+  // onImageUploadCancel?: () => void;
 }) {
   const {
     previousStep,

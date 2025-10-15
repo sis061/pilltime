@@ -3,7 +3,6 @@
 import {
   Drawer,
   DrawerContent,
-  DrawerFooter,
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
