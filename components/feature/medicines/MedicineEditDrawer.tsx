@@ -61,7 +61,7 @@ async function updateMedicine(id: string, values: any) {
     const err = await res.json();
     throw new Error(err.error);
   }
-  toast.success(`[${values.name}]의 정보를 수정했어요`);
+  toast.success(`${values.name}의 정보를 수정했어요`);
 }
 
 async function deleteMedicine(id: string) {

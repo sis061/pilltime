@@ -31,7 +31,7 @@ async function createMedicine(values: MedicineFormValues) {
     throw new Error(error.error);
   }
 
-  toast.success(`[${values.name}]의 정보를 등록했어요`);
+  toast.success(`${values.name}의 정보를 등록했어요`);
   return res.json();
 }
 

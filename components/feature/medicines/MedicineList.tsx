@@ -65,7 +65,7 @@ export default function MedicineList({
       } catch (err) {
         console.error("Refetch failed:", err);
       }
-    }, 300);
+    }, 0);
   };
 
   useEffect(() => {
