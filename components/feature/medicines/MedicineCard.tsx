@@ -23,11 +23,8 @@ export default function MedicineCard(medicine: MedicineDetail) {
   const [pending, setPending] = useState<Record<number, IntakeLog["status"]>>(
     {}
   );
-
   const onOptimisticSet = (logId: number, status: IntakeLog["status"]) =>
-    setPending((p) => ({ ...p, [logId]: status }));
-
-  // ✅ 성공 시에는 더 이상 즉시 지우지 않음
+    setPending((p) => ({ ...p, [logId]: status })); // ✅ 성공 시에는 더 이상 즉시 지우지 않음
   const onOptimisticClear = (logId: number) =>
     setPending(({ [logId]: _omit, ...rest }) => rest);
 
@@ -35,14 +32,11 @@ export default function MedicineCard(medicine: MedicineDetail) {
   useEffect(() => {
     if (!schedules?.length) return;
     const dateStr = toYYYYMMDD(new Date());
-
-    // 오늘 로그 id -> 실제 status
     const actual = new Map<number, IntakeLog["status"]>();
     schedules
       .flatMap((s) => s.intake_logs)
       .filter((l) => l.date === dateStr)
       .forEach((l) => actual.set(l.id, l.status));
-
     setPending((prev) => {
       const next = { ...prev };
       for (const [idStr, desired] of Object.entries(prev)) {
@@ -54,7 +48,6 @@ export default function MedicineCard(medicine: MedicineDetail) {
       return next;
     });
   }, [schedules]);
-
   const isMedicineTakenToday = useMemo(
     () => RenderTodaysMedicine(schedules[0]?.repeated_pattern),
     [schedules]
@@ -78,7 +71,7 @@ export default function MedicineCard(medicine: MedicineDetail) {
               height={120}
             /> */}
           </div>
-          <div className="grow self-start !z-10 !pt-1 !pl-1 ">
+          <div className="grow self-start !z-10">
             <span className="font-bold !text-pilltime-grayDark text-2xl text-ellipsis text-shadow-sm backdrop-blur-2xl">
               {name}
             </span>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import NicknameDrawer from "@/components/feature/profiles/NicknameDrawer";
 import { useUserStore } from "@/store/useUserStore";
 import { User } from "@/types/profile";
@@ -8,22 +8,50 @@ import { User } from "@/types/profile";
 export default function HomeProfile({ initialUser }: { initialUser: User }) {
   const { user, setUser } = useUserStore();
   const [openDrawer, setOpenDrawer] = useState(false);
+  const openedOnceRef = useRef(false);
 
   useEffect(() => {
-    if (initialUser && !user) {
+    if (initialUser && (!user || user.id !== initialUser.id)) {
       setUser(initialUser);
     }
   }, [initialUser, user, setUser]);
 
-  useEffect(() => {
-    if (user && user.nickname === null) {
-      setOpenDrawer(true);
-    }
-  }, [user]);
+  const currentUser = user ?? initialUser;
 
-  if (!user) {
+  useEffect(() => {
+    if (
+      currentUser &&
+      currentUser.nickname === null &&
+      !openedOnceRef.current
+    ) {
+      setOpenDrawer(true);
+      openedOnceRef.current = true;
+    }
+  }, [currentUser]);
+
+  const now = useMemo(() => new Date(), []);
+  const month = now.getMonth() + 1;
+  const date = now.getDate();
+  const weekdayShort = now.toLocaleDateString("ko-KR", {
+    weekday: "short",
+    timeZone: "Asia/Seoul",
+  });
+
+  // 자정 이후 자동 업데이트
+  const [, setMidnightTick] = useState(0);
+  useEffect(() => {
+    const tz = "Asia/Seoul";
+    const d = new Date();
+    const next = new Date(d);
+    next.setHours(24, 0, 0, 0);
+    const ms = next.getTime() - d.getTime();
+    const t = setTimeout(() => setMidnightTick((x) => x + 1), ms);
+    return () => clearTimeout(t);
+  }, []);
+
+  if (!currentUser) {
     return (
-      <div className="!my-8 !text-sm text-center !text-pilltime-grayDark/50 font-bold">
+      <div className="!my-16 !text-sm text-center !text-pilltime-grayDark/50 font-bold">
         <h1>로그인 상태를 불러오는 중입니다...</h1>
       </div>
     );
@@ -46,9 +74,9 @@ export default function HomeProfile({ initialUser }: { initialUser: User }) {
       </div>
       <h1 className="!text-4xl w-full !px-4 text-center !text-pilltime-grayDark/60">
         안녕하세요{" "}
-        {user?.nickname ? (
+        {currentUser?.nickname ? (
           <span className="!font-bold !text-pilltime-blue">
-            {user.nickname}
+            {currentUser.nickname}
           </span>
         ) : (
           "..."
@@ -59,7 +87,7 @@ export default function HomeProfile({ initialUser }: { initialUser: User }) {
       <NicknameDrawer
         open={openDrawer}
         onOpenChange={setOpenDrawer}
-        mode={user.nickname ? "edit" : "create"}
+        mode={currentUser?.nickname ? "edit" : "create"}
       />
     </div>
   );

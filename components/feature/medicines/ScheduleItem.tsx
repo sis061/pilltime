@@ -76,6 +76,7 @@ export default function ScheduleItem(schedule: ScheduleItemProps) {
       </span>
       <Switch
         checked={isTaken}
+        disabled={_isPending || !todayLog}
         onCheckedChange={onToggle}
         className={`${
           status === "missed" && "!bg-black/75 [&_span]:!bg-red-500"

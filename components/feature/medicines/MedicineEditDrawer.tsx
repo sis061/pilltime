@@ -23,7 +23,7 @@ import {
 import { Button } from "@/components/ui/button";
 
 import { useForm, FormProvider } from "react-hook-form";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useMediaQuery } from "react-responsive";
 
 import {
@@ -40,11 +40,14 @@ import { deleteMedicineImage } from "@/lib/supabase/upload";
 import { useGlobalLoading } from "@/store/useGlobalLoading";
 import { toast } from "sonner";
 
-async function fetchMedicine(id: string) {
-  const res = await fetch(`/api/medicines/${id}`);
+async function fetchMedicine(id: string, signal?: AbortSignal) {
+  const res = await fetch(`/api/medicines/${id}`, {
+    signal,
+    cache: "no-store",
+  });
   if (!res.ok) {
-    toast.error("정보를 불러오는 중 문제가 발생했어요");
-    throw new Error("Failed to fetch medicine");
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err?.error ?? "Failed to fetch medicine");
   }
   return res.json();
 }
@@ -57,20 +60,17 @@ async function updateMedicine(id: string, values: MedicineFormValues) {
   });
 
   if (!res.ok) {
-    toast.error("정보를 수정하는 중 문제가 발생했어요");
-    const err = await res.json();
-    throw new Error(err.error);
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err?.error ?? "Failed to update");
   }
-  toast.success(`${values.name}의 정보를 수정했어요`);
 }
 
 async function deleteMedicine(id: string) {
   const res = await fetch(`/api/medicines/${id}`, { method: "DELETE" });
 
   if (!res.ok) {
-    toast.error("정보를 삭제하는 중 문제가 발생했어요");
-    const err = await res.json();
-    throw new Error(err.error);
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err?.error ?? "Failed to update");
   }
 
   toast.success(`정보를 삭제했어요`);
@@ -91,6 +91,7 @@ export default function MedicineEditDrawer({
   const minTablet = useMediaQuery({ minWidth: 768 });
   const router = useRouter();
   const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null);
+  const [isPendingNav, startTransition] = useTransition();
 
   const methods = useForm<MedicineFormValues>({
     resolver: zodResolver(MedicineSchema),
@@ -102,6 +103,7 @@ export default function MedicineEditDrawer({
       imageUrl: "/fallback-medicine.png",
       imageFilePath: null,
     },
+    mode: "onSubmit",
   });
 
   // supabase storage 에 orphan 파일 삭제용
@@ -126,11 +128,12 @@ export default function MedicineEditDrawer({
 
   useEffect(() => {
     if (!id || !open) return;
+    const ac = new AbortController();
 
     (async () => {
       try {
         setGLoading(true, "정보를 불러오는 중이에요..");
-        const data = await fetchMedicine(String(id));
+        const data = await fetchMedicine(String(id), ac.signal);
 
         // ✅ react-hook-form 값 업데이트
         methods.reset({
@@ -143,18 +146,30 @@ export default function MedicineEditDrawer({
           repeated_pattern: data.medicine_schedules?.[0]?.repeated_pattern ?? {
             type: "DAILY",
           },
-          imageUrl: data.image_url,
+          imageUrl: data.image_url ?? "/fallback-medicine.png",
           imageFilePath: null,
         });
         setOriginalImageUrl(data.image_url ?? null);
-      } catch (e) {
-        console.error(e);
-        toast.error("정보를 불러오는 중 문제가 발생했어요");
+      } catch (e: any) {
+        if (e?.name !== "AbortError") {
+          console.error(e);
+          toast.error("정보를 불러오는 중 문제가 발생했어요");
+        }
       } finally {
         setGLoading(false);
       }
     })();
+
+    return () => ac.abort(); // AbortController로 빠른 닫기 시 요청 취소
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, open, methods.reset]);
+
+  const {
+    handleSubmit,
+    formState: { isSubmitting },
+  } = methods;
+
+  const busy = isSubmitting || isLoading || isPendingNav;
 
   const onSubmit = async (data: MedicineFormValues) => {
     const sortedSchedules = [...(data.schedules ?? [])].sort((a, b) =>
@@ -162,7 +177,7 @@ export default function MedicineEditDrawer({
     );
     const filteredEmptyDescription =
       data.description &&
-      [...data.description].filter((v) => v.value?.length > 0);
+      [...data.description].filter((v) => (v.value ?? "").trim()?.length > 0);
 
     const _data = {
       ...data,
@@ -191,10 +206,16 @@ export default function MedicineEditDrawer({
         }
       }
 
+      toast.success(`${_data.name}의 정보를 수정했어요`);
+
+      // [ADDED] 상위 RSC 갱신 + 닫기 (인터랙션 동안 UI 잠금)
+      startTransition(() => {
+        router.refresh();
+      });
       onOpenChange(false);
     } catch (err: any) {
-      toast.error("정보를 수정하는 중 문제가 발생했어요");
       console.log(err.message);
+      toast.error("정보를 수정하는 중 문제가 발생했어요");
     } finally {
       setGLoading(false);
     }
@@ -220,6 +241,7 @@ export default function MedicineEditDrawer({
             // Drawer가 닫힐 때 → 취소 로직 실행
             await handleCancel();
             onOpenChange(false);
+            startTransition(() => router.refresh());
           } else {
             onOpenChange(true);
           }
@@ -232,7 +254,8 @@ export default function MedicineEditDrawer({
             <Button
               onClick={() => onOpenChange(false)}
               variant={"ghost"}
-              disabled={isLoading}
+              disabled={busy}
+              aria-busy={busy}
               className="!pr-2 font-bold !text-pilltime-violet cursor-pointer"
             >
               취소
@@ -241,8 +264,11 @@ export default function MedicineEditDrawer({
             <Button
               type="submit"
               variant={"ghost"}
-              disabled={isLoading}
-              className="!pl-1 font-bold !text-pilltime-violet cursor-pointer"
+              disabled={busy}
+              aria-busy={busy}
+              className={`!pl-1 font-bold !text-pilltime-violet cursor-pointer ${
+                busy && "opacity-50"
+              }`}
               onClick={() =>
                 submitBtnRef?.current && submitBtnRef.current.click()
               }
@@ -253,7 +279,7 @@ export default function MedicineEditDrawer({
 
           <FormProvider {...methods}>
             <form
-              onSubmit={methods.handleSubmit(onSubmit)}
+              onSubmit={handleSubmit(onSubmit)}
               className="flex flex-col gap-8 max-h-[80vh] md:h-screen overflow-y-auto px-2"
             >
               <MedicineImageField />
@@ -265,7 +291,7 @@ export default function MedicineEditDrawer({
                 ref={submitBtnRef}
                 type="submit"
                 className=" hidden"
-                disabled={isLoading}
+                disabled={busy}
               >
                 저장
               </button>
@@ -277,6 +303,7 @@ export default function MedicineEditDrawer({
                 <Button
                   type="button"
                   variant="destructive"
+                  disabled={busy}
                   className="!text-red-700 cursor-pointer w-full bg-pilltime-grayDark/25"
                 >
                   정보 삭제
@@ -290,16 +317,33 @@ export default function MedicineEditDrawer({
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter className="flex gap-2 !px-12 sm:!px-0">
-                  <AlertDialogCancel className="!py-2 !px-4">
+                  <AlertDialogCancel className="!py-2 !px-4" disabled={busy}>
                     취소
                   </AlertDialogCancel>
                   <AlertDialogAction
                     className="!py-2 !px-4 bg-red-500 !text-white"
+                    // onClick={async () => {
+                    //   await deleteMedicine(String(id));
+                    //   router.push("/");
+                    //   onOpenChange(false);
+                    // }}
                     onClick={async () => {
-                      await deleteMedicine(String(id));
-                      router.push("/");
-                      onOpenChange(false);
+                      try {
+                        await deleteMedicine(String(id));
+                        toast.success("정보를 삭제했어요");
+
+                        // [ADDED] 삭제 후 안전한 복귀 + 갱신
+                        startTransition(() => {
+                          router.push("/");
+                          router.refresh();
+                          onOpenChange(false);
+                        });
+                      } catch (err: any) {
+                        console.error(err);
+                        toast.error("정보를 삭제하는 중 문제가 발생했어요");
+                      }
                     }}
+                    disabled={busy}
                   >
                     삭제
                   </AlertDialogAction>

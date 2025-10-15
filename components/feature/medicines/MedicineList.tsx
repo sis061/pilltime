@@ -7,7 +7,7 @@ export default function MedicineList({
   medicines,
   userId,
 }: {
-  medicines: any[];
+  medicines: any;
   userId: string;
 }) {
   if (!medicines?.length) {
@@ -28,11 +28,8 @@ export default function MedicineList({
         {items.map((m) => (
           <MedicineCard
             key={m.id.toString()}
-            id={m.id}
-            name={m.name}
-            imageUrl={m.imageUrl}
-            description={m.description}
-            schedules={m.schedules}
+            {...m}
+            imageUrl={m.imageUrl ?? "/fallback-medicine.png"}
           />
         ))}
       </div>

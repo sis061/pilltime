@@ -9,12 +9,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useUserStore } from "@/store/useUserStore";
 import { useMediaQuery } from "react-responsive";
 import { useGlobalLoading } from "@/store/useGlobalLoading";
 import { toast } from "sonner";
+import { User } from "@/types/profile";
 
 interface Props {
   open: boolean;
@@ -32,6 +33,7 @@ export default function NicknameDrawer({
   const setUser = useUserStore((s) => s.setUser);
   const isLoading = useGlobalLoading((s) => s.isGLoading);
   const setGLoading = useGlobalLoading((s) => s.setGLoading);
+  const [submitting, setSubmitting] = useState(false);
 
   const [nickname, setNickname] = useState(user?.nickname || "");
   const submitBtnRef = useRef<HTMLButtonElement>(null);
@@ -46,16 +48,27 @@ export default function NicknameDrawer({
   // -- 낙관적 업데이트 적용
 
   async function handleSave() {
-    if (!user) return;
+    if (!user) {
+      toast.error("로그인 정보가 없어요. 다시 시도해주세요.");
+      return;
+    }
+
+    if (submitting) return;
+    setGLoading(
+      true,
+      mode === "create"
+        ? "프로필을 생성 중이에요..."
+        : "정보를 수정 중이에요..."
+    );
 
     const prevNickname = user.nickname;
     const optimisticUser = { ...user, nickname };
 
     // 1️⃣ UI 즉시 갱신 (낙관적 업데이트)
     setUser(optimisticUser);
-    setGLoading(true, "정보를 수정 중이에요...");
 
     try {
+      setSubmitting(true);
       // 2️⃣ 서버 업데이트
       // 닉네임 중복 확인
       const { data: duplicate } = await supabase
@@ -73,37 +86,50 @@ export default function NicknameDrawer({
       // 실제 업데이트
       const { error } = await supabase
         .from("profiles")
-        .update({ nickname })
+        .update({ nickname: nickname })
         .eq("id", user.id);
 
       if (error) {
-        toast.error("정보를 수정하는 중 문제가 발생했어요");
-        throw error;
+        throw new Error(error.message);
       }
 
       // 3️⃣ 성공 시 — 그대로 유지
-      console.log("✅ 프로필 업데이트 성공");
-      toast.success(`닉네임을 수정했어요`);
+
+      toast.success(
+        mode === "create" ? "닉네임을 등록했어요" : "닉네임을 수정했어요"
+      );
+
+      onOpenChange(false);
 
       // 닉네임 최초 생성이라면 다음 단계 자동 진행
-      mode === "create" &&
+      if (mode === "create") {
         document.getElementById("create_new_medicine")?.click();
+      }
     } catch (err: any) {
       // 4️⃣ 실패 시 — 이전 상태로 롤백
-      console.error("❌ 닉네임 업데이트 실패:", err.message);
-      toast.error("정보를 수정하는 중 문제가 발생했어요");
+      console.error("닉네임 업데이트 실패:", err?.message || err);
+      toast.error(
+        mode === "create"
+          ? "닉네임을 등록하는 중 문제가 발생했어요"
+          : "닉네임을 수정하는 중 문제가 발생했어요"
+      );
       setUser({ ...user, nickname: prevNickname });
     } finally {
       // 5️⃣ 로딩 해제 + 닫기
       setGLoading(false);
-      onOpenChange(false);
+      setSubmitting(false);
     }
   }
+
+  const busy = isLoading;
 
   return (
     <Drawer
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={(nextOpen) => {
+        if (busy && !nextOpen) return;
+        onOpenChange(nextOpen);
+      }}
       direction={minTablet ? "right" : "bottom"}
       repositionInputs={false}
     >
@@ -111,6 +137,7 @@ export default function NicknameDrawer({
         {/* Header */}
         <DrawerHeader className="!pb-4 flex w-full items-center justify-between">
           <Button
+            disabled={busy}
             onClick={() => onOpenChange(false)}
             variant={"ghost"}
             className={`!pr-2 font-bold cursor-pointer  ${
@@ -124,8 +151,8 @@ export default function NicknameDrawer({
           </DrawerTitle>
           <Button
             type="submit"
+            disabled={busy}
             variant={"ghost"}
-            disabled={isLoading}
             className="!pl-1 font-bold !text-pilltime-violet cursor-pointer"
             onClick={() =>
               submitBtnRef?.current && submitBtnRef.current.click()
@@ -139,7 +166,7 @@ export default function NicknameDrawer({
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            handleSave();
+            if (!busy) handleSave();
           }}
           className="flex flex-col gap-8 max-h-[80vh] md:h-screen overflow-y-auto !px-2 !pb-8"
         >
@@ -161,6 +188,12 @@ export default function NicknameDrawer({
               value={nickname}
               required
               onChange={(e) => setNickname(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !busy) {
+                  e.preventDefault();
+                  handleSave();
+                }
+              }}
               placeholder="닉네임을 입력하세요"
               autoFocus
               className="!px-2 !border-pilltime-grayLight w-[98%] !ml-1"

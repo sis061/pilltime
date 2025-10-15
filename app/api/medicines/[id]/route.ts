@@ -9,9 +9,11 @@ export async function GET(
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },
+    error: authError,
   } = await supabase.auth.getUser();
-  if (!user)
+  if (authError || !user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   const { data, error } = await supabase
     .from("medicines")
@@ -59,7 +61,11 @@ export async function PUT(
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },
+    error: authError,
   } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   if (!user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -209,7 +215,11 @@ export async function DELETE(
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },
+    error: authError,
   } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   if (!user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

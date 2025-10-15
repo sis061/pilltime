@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
   /* config options here */
   reactStrictMode: false,
   images: {
+    formats: ["image/avif", "image/webp"],
     remotePatterns: [
       {
         protocol: "https",
@@ -12,6 +13,9 @@ const nextConfig: NextConfig = {
         pathname: "/storage/v1/object/public/medicine-images/**",
       },
     ],
+  },
+  experimental: {
+    optimizePackageImports: ["lucide-react", "date-fns"],
   },
   allowedDevOrigins: [
     "http://localhost:3000", // 로컬호스트

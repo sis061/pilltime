@@ -8,9 +8,11 @@ import { toYYYYMMDD } from "@/lib/date";
 
 function getTodaysLogPercentage(
   schedules: MedicineSchedule[],
-  pending: Record<number, IntakeLog["status"]>,
-  dateStr = toYYYYMMDD(new Date())
+  pending: Record<number, IntakeLog["status"]>
 ) {
+  const tz = (schedules[0]?.repeated_pattern as any)?.tz || "Asia/Seoul";
+  const dateStr = toYYYYMMDD(new Date(), tz);
+
   const logs = schedules
     .flatMap((s) => s.intake_logs)
     .filter((l) => l.date === dateStr)

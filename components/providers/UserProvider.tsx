@@ -25,7 +25,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         .from("profiles")
         .select("nickname")
         .eq("id", user.id)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.log("프로필 불러오기 실패", error.message);
