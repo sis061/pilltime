@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
-export default function EditPage({ params }: { params: { id: string } }) {
+export default function EditPage() {
   redirect(`/`);
 }

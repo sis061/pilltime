@@ -1,13 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import MedicineEditDrawer from "@/components/feature//medicines/MedicineEditDrawer";
+import MedicineEditDrawer from "@/components/feature/medicines/MedicineEditDrawer";
 
-export default function EditMedicinePage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default function EditMedicinePage() {
   const router = useRouter();
 
   return (

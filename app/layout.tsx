@@ -1,7 +1,15 @@
 //TODO 동적 메타데이터 구현하기
 
 import type { Metadata } from "next";
-import { Toaster } from "@/components/ui/sonner";
+
+// import { Toaster } from "@/components/ui/sonner";
+import dynamic from "next/dynamic";
+const Toaster = dynamic(
+  () => import("@/components/ui/sonner").then((m) => m.Toaster),
+  {
+    loading: () => null,
+  }
+);
 
 import localFont from "next/font/local";
 import "./globals.css";
@@ -39,6 +47,7 @@ export default function RootLayout({
     <html lang="ko" className={`${pretendard.variable}  antialiased`}>
       <body>
         <UserProvider>{children}</UserProvider>
+        {/* {children} */}
         <GlobalLoading />
         <Toaster
           position="top-center"

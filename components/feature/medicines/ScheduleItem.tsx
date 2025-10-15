@@ -10,12 +10,17 @@ import { getTodayIntakeLog } from "@/lib/medicine";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 
-export default function ScheduleItem(schedule: MedicineSchedule) {
+type ScheduleItemProps = MedicineSchedule & {
+  onOptimisticSet: (logId: number, status: IntakeLog["status"]) => void;
+  onOptimisticClear: (logId: number) => void;
+};
+
+export default function ScheduleItem(schedule: ScheduleItemProps) {
   const todayLog = useMemo(() => getTodayIntakeLog(schedule), [schedule]);
   const initialStatus: IntakeLog["status"] = todayLog?.status ?? "scheduled";
 
   const [status, setStatus] = useState<IntakeLog["status"]>(initialStatus);
-  const [isPending, startTransition] = useTransition();
+  const [_isPending, startTransition] = useTransition();
   const isTaken = status === "taken";
 
   useEffect(() => {
@@ -23,11 +28,13 @@ export default function ScheduleItem(schedule: MedicineSchedule) {
   }, [todayLog?.status]);
 
   async function putIntakeLog(id: number, next: IntakeLog["status"]) {
-    const optimisticPrev = status;
+    const prev = status;
     const optimisticCheckedAt =
       next === "taken" ? new Date().toISOString() : null;
 
+    // 낙관 반영
     setStatus(next);
+    schedule.onOptimisticSet(id, next);
 
     try {
       const res = await fetch(`/api/intake`, {
@@ -46,9 +53,13 @@ export default function ScheduleItem(schedule: MedicineSchedule) {
         throw new Error(await res.text());
       }
 
-      // toast.success(`업데이트 성공: ${next}`);
+      // ✅ 성공 시에는 pending을 여기서 지우지 않는다!
+      // (실제 데이터가 업데이트되어 schedules가 바뀌면, 상위 useEffect가 감지하고 지움)
     } catch {
-      setStatus(optimisticPrev);
+      // 실패 롤백은 즉시 수행
+      setStatus(prev);
+      schedule.onOptimisticSet(id, prev);
+      schedule.onOptimisticClear(id);
     }
   }
 
@@ -60,9 +71,12 @@ export default function ScheduleItem(schedule: MedicineSchedule) {
 
   return (
     <div className="flex items-center w-full justify-between gap-4 border-t border-t-pilltime-teal/50 !pt-4 !px-4">
-      <span>{formatTime(schedule?.time)}</span>
+      <span className="!text-pilltime-grayDark/75">
+        {formatTime(schedule?.time)}
+      </span>
       <Switch
         checked={isTaken}
+        disabled={_isPending || !todayLog}
         onCheckedChange={onToggle}
         className={`${
           status === "missed" && "!bg-black/75 [&_span]:!bg-red-500"

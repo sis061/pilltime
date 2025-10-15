@@ -6,14 +6,23 @@ export async function PUT(req: Request) {
 
   const {
     data: { user },
+    error: authError,
   } = await supabase.auth.getUser();
 
-  if (!user)
-    return NextResponse.json({ error: '"Unauthorized' }, { status: 401 });
+  if (authError || !user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   const body = await req.json();
 
-  const { data, error } = await supabase
+  if (!body?.id || !body?.status) {
+    return NextResponse.json(
+      { error: "Missing required fields" },
+      { status: 400 }
+    );
+  }
+
+  const { error } = await supabase
     .from("intake_logs")
     .update({
       status: body.status,
@@ -26,6 +35,7 @@ export async function PUT(req: Request) {
     .single();
 
   if (error) {
+    console.error("DB Error:", error.message);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 

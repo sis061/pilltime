@@ -2,7 +2,6 @@
 import {
   Drawer,
   DrawerContent,
-  DrawerFooter,
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
@@ -15,12 +14,13 @@ import { usePathname } from "next/navigation";
 import { useUserStore } from "@/store/useUserStore";
 import { uploadMedicineImage } from "@/lib/supabase/upload";
 import { toast } from "sonner";
+import Image from "next/image";
 
 export function MedicineImageField() {
   const minTablet = useMediaQuery({ minWidth: 768 });
   const { watch, setValue } = useFormContext();
   const imageUrl = watch("imageUrl");
-  const imageFilePath = watch("imageFilePath");
+  // const imageFilePath = watch("imageFilePath");
 
   const pathname = usePathname();
   const isPathnameNew = pathname.includes("new");
@@ -55,13 +55,15 @@ export function MedicineImageField() {
             <div
               className="w-40 h-40 border !border-pilltime-violet/50 rounded-md overflow-hidden "
               onClick={() => {
-                !uploading && handleSelectFile();
+                if (!uploading) handleSelectFile();
               }}
             >
-              <img
-                src={imageUrl || "/fallback-medicine.png"}
+              <Image
+                src={imageUrl}
                 alt="medicine-preview"
                 className="object-cover w-full h-full"
+                width={160}
+                height={160}
               />
             </div>
           )}

@@ -3,11 +3,11 @@
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 
 import { FormProvider, useForm } from "react-hook-form";
-import { Wizard } from "react-use-wizard";
+// import { Wizard } from "react-use-wizard";
 
 import { Step05Review } from "@/components/feature/medicines/steps/Step05Review";
 
-import { useRef } from "react";
+import { useRef, useTransition } from "react";
 import { useMediaQuery } from "react-responsive";
 import { WizardHeader } from "./steps/WizardHeader";
 import { steps, StepWrapper } from "./steps/config";
@@ -17,6 +17,18 @@ import { MedicineSchema, MedicineFormValues } from "@/lib/schemas/medicine";
 import { deleteMedicineImage } from "@/lib/supabase/upload";
 import { useGlobalLoading } from "@/store/useGlobalLoading";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
+import { PacmanLoader } from "react-spinners";
+
+const Wizard = dynamic(() => import("react-use-wizard").then((m) => m.Wizard), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-screen flex items-center justify-center">
+      <PacmanLoader size={20} color="#14B8A6" className="!z-[99] self-center" />
+    </div>
+  ),
+});
 
 async function createMedicine(values: MedicineFormValues) {
   const res = await fetch("/api/medicines", {
@@ -26,12 +38,9 @@ async function createMedicine(values: MedicineFormValues) {
   });
 
   if (!res.ok) {
-    toast.error("정보를 등록하는 중 문제가 발생했어요");
-    const error = await res.json();
-    throw new Error(error.error);
+    const error = await res.json().catch(() => ({}));
+    throw new Error(error?.error ?? "Failed to create medicine");
   }
-
-  toast.success(`[${values.name}]의 정보를 등록했어요`);
   return res.json();
 }
 
@@ -44,6 +53,8 @@ export default function MedicineNewDrawer({
 }) {
   const isLoading = useGlobalLoading((s) => s.isGLoading);
   const setGLoading = useGlobalLoading((s) => s.setGLoading);
+  const [isPendingNav, startTransition] = useTransition();
+  const router = useRouter();
   const methods = useForm<MedicineFormValues>({
     resolver: zodResolver(MedicineSchema),
     defaultValues: {
@@ -68,6 +79,11 @@ export default function MedicineNewDrawer({
     }
   }
 
+  const {
+    handleSubmit,
+    formState: { isSubmitting },
+  } = methods;
+
   const onSubmit = async (data: MedicineFormValues) => {
     const sortedSchedules = [...(data.schedules ?? [])].sort((a, b) =>
       a.time.localeCompare(b.time)
@@ -75,21 +91,27 @@ export default function MedicineNewDrawer({
 
     const filteredEmptyDescription =
       data.description &&
-      [...data.description].filter((v) => v.value?.length > 0);
+      [...data.description].filter((v) => (v.value ?? "").trim()?.length > 0);
 
     const _data = {
       ...data,
       description: filteredEmptyDescription,
       schedules: sortedSchedules,
     };
-    console.log("최종 저장 데이터:", _data);
     try {
       setGLoading(true, "새로운 약을 등록 중이에요...");
       await createMedicine(_data);
-      onOpenChange(false);
+
+      toast.success(`${_data.name}의 정보를 등록했어요`);
+
+      // [ADDED] 부모(RSC) 최신화 + 닫기
+      startTransition(() => {
+        router.refresh();
+        onOpenChange(false);
+      });
     } catch (error) {
-      toast.error("정보를 등록하는 중 문제가 발생했어요");
       console.log(error);
+      toast.error("정보를 등록하는 중 문제가 발생했어요");
     } finally {
       setGLoading(false);
     }
@@ -97,6 +119,8 @@ export default function MedicineNewDrawer({
 
   const submitBtnRef = useRef<HTMLButtonElement>(null);
   const minTablet = useMediaQuery({ minWidth: 768 });
+
+  const busy = isSubmitting || isLoading || isPendingNav;
 
   return (
     <Drawer
@@ -106,6 +130,8 @@ export default function MedicineNewDrawer({
           // Drawer가 닫힐 때 → 취소 로직 실행
           await handleCancel();
           onOpenChange(false);
+          // 혹시 중간까지 입력 후 닫혔던 경우를 대비해 목록 갱신
+          startTransition(() => router.refresh());
         } else {
           onOpenChange(true);
         }
@@ -119,7 +145,7 @@ export default function MedicineNewDrawer({
         </DrawerTitle>
         <FormProvider {...methods}>
           <form
-            onSubmit={methods.handleSubmit(onSubmit)}
+            onSubmit={handleSubmit(onSubmit)}
             className="flex flex-col gap-8 max-h-[80vh] md:h-screen px-2"
           >
             <Wizard
@@ -142,12 +168,7 @@ export default function MedicineNewDrawer({
               ))}
               <Step05Review />
             </Wizard>
-            <button
-              ref={submitBtnRef}
-              type="submit"
-              hidden
-              disabled={isLoading}
-            >
+            <button ref={submitBtnRef} type="submit" hidden disabled={busy}>
               저장
             </button>
           </form>

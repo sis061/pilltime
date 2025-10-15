@@ -3,8 +3,22 @@
 import { useEffect, useRef, useState } from "react";
 import ReactCrop, { PercentCrop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
-import imageCompression from "browser-image-compression";
+// import imageCompression from "browser-image-compression";
 import { Button } from "@/components/ui/button";
+
+// 동적 import + 1회 캐시
+let _imgCompPromise: Promise<
+  typeof import("browser-image-compression")["default"]
+> | null = null;
+
+async function getImageCompression() {
+  if (!_imgCompPromise) {
+    _imgCompPromise = import("browser-image-compression").then(
+      (m) => m.default
+    );
+  }
+  return _imgCompPromise;
+}
 
 interface Props {
   file: File | null;
@@ -90,13 +104,14 @@ export default function ImageUploader({ file, onCropped }: Props) {
 
     let output: Blob = input;
     try {
+      const imageCompression = await getImageCompression();
       // ✅ iOS/Safari에선 웹워커 비활성화
       output = await imageCompression(input as any, {
         maxSizeMB: 0.3,
         maxWidthOrHeight: 512,
         useWebWorker: !isIOS && typeof Worker !== "undefined",
       });
-    } catch (e) {
+    } catch (_) {
       // ✅ 압축 실패하면 원본 그대로 사용 (크래시 방지)
       output = input;
     }

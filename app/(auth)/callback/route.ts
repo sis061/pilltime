@@ -1,13 +1,22 @@
 // app/callback/route.ts
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
-export async function GET(request: Request) {
-  const url = new URL(request.url);
-  const code = url.searchParams.get("code");
-  const next = url.searchParams.get("next") || "/";
+function resolveSafeRedirect(req: NextRequest) {
+  const nextParam = req.nextUrl.searchParams.get("next") ?? "/";
+  // 내부 경로만 허용 (오픈 리다이렉트 방지)
+  const isInternal = nextParam.startsWith("/") && !nextParam.startsWith("//");
+  const path = isInternal ? nextParam : "/";
+  return new URL(path, req.nextUrl.origin);
+}
 
-  const res = NextResponse.redirect(new URL(next, request.url), 303);
+export async function GET(request: NextRequest) {
+  const url = request.nextUrl;
+  const code = url.searchParams.get("code");
+
+  // 기본 리다이렉트 목적지(안전한 내부 경로만)
+  const redirectURL = resolveSafeRedirect(request);
+  const res = NextResponse.redirect(redirectURL, 303);
 
   if (code) {
     const supabase = await createServerSupabaseClient(res);
@@ -26,7 +35,7 @@ export async function GET(request: Request) {
         .from("profiles")
         .select("id")
         .eq("id", user.id)
-        .single();
+        .maybeSingle();
 
       if (!profile) {
         await supabase

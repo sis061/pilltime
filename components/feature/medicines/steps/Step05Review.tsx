@@ -8,6 +8,7 @@ import { DAYS } from "../form/MedicineSchedulesField";
 import { useReturnToStore } from "@/store/returnTo";
 import { formatTime } from "@/lib/date";
 import { useEffect } from "react";
+import Image from "next/image";
 
 export function Step05Review() {
   const { activeStep, goToStep } = useWizard();
@@ -26,7 +27,8 @@ export function Step05Review() {
 
   useEffect(() => {
     setValue("description", filteredEmptyDescription);
-  }, [values.description]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [values.description, setValue]);
 
   const sortedDaysOfWeek = [
     ...(values.repeated_pattern.days_of_week ?? []),
@@ -145,10 +147,12 @@ export function Step05Review() {
         <div className="flex flex-col gap-2">
           <strong>이미지</strong>
           {values.imageUrl && (
-            <img
+            <Image
               src={values.imageUrl}
               alt="약 이미지"
-              className="w-48 h-48 object-cover rounded-md mt-2"
+              width={160}
+              height={160}
+              className="object-cover rounded-md mt-2"
             />
           )}
         </div>

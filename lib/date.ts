@@ -1,4 +1,12 @@
-export const toYYYYMMDD = (d: Date) => d.toISOString().slice(0, 10);
+export function toYYYYMMDD(date: Date, tz = "Asia/Seoul") {
+  // en-CA 포맷은 'YYYY-MM-DD'를 보장
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: tz,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+}
 
 export function sevenDayWindow(tz = "Asia/Seoul") {
   // 서버 TZ와 무관하게, 해당 tz의 '오늘' 기준 7일 윈도우

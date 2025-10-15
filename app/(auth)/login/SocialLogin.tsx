@@ -1,22 +1,26 @@
 "use client";
 
-import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useState } from "react";
 import { useGlobalLoading } from "@/store/useGlobalLoading";
 
 export default function SocialLogin() {
-  const supabase = createClient();
   const [loadingProvider, setLoadingProvider] = useState<
     "google" | "apple" | null
   >(null);
   const setGLoading = useGlobalLoading((s) => s.setGLoading);
 
+  async function getSupabase() {
+    const { createClient } = await import("@/lib/supabase/client"); // ✅ 지연 로드
+    return createClient();
+  }
+
   async function handleLogin(provider: "google" | "apple") {
     try {
       setLoadingProvider(provider);
       setGLoading(true, "로그인 중이에요...");
+      const supabase = await getSupabase();
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
@@ -24,7 +28,7 @@ export default function SocialLogin() {
         },
       });
       if (error) throw error;
-    } catch (error: any) {
+    } catch (_) {
       toast.error("로그인 중 문제가 발생했어요");
       setLoadingProvider(null);
       setGLoading(false);

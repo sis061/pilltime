@@ -3,11 +3,7 @@
 import { useRouter } from "next/navigation";
 import MedicineNewDrawer from "@/components/feature/medicines/MedicineNewDrawer";
 
-export default function NewMedicinePage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default function NewMedicinePage() {
   const router = useRouter();
 
   return (

@@ -1,7 +1,7 @@
 // app/api/medicines/route.ts
 import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import type { Database, TablesInsert } from "@/types_db";
+import type { TablesInsert } from "@/types_db";
 import { MedicineSchema } from "@/lib/schemas/medicine";
 import { sevenDayWindow } from "@/lib/date";
 
@@ -57,8 +57,12 @@ export async function POST(req: Request) {
     }
 
     // 3️⃣ schedules insert
-    const sortedSchedules = schedules.sort((a, b) =>
-      a.time.localeCompare(b.time)
+    const sortedSchedules = Array.from(
+      new Map(
+        [...schedules]
+          .sort((a, b) => a.time.localeCompare(b.time))
+          .map((s) => [s.time, s])
+      ).values()
     );
 
     const scheduleInserts: TablesInsert<"medicine_schedules">[] =
@@ -112,8 +116,10 @@ export async function POST(req: Request) {
         console.log(`✅ ${insertedCount} logs generated for schedule ${s.id}`);
       }
     }
+    const res = NextResponse.json(medicine, { status: 201 });
+    res.headers.set("Location", `/medicines/${medicine.id}`);
 
-    return NextResponse.json(medicine, { status: 201 });
+    return res;
   } catch (err: any) {
     return NextResponse.json(
       { error: err?.message ?? "알 수 없는 오류" },

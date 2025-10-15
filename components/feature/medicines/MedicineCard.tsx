@@ -1,8 +1,10 @@
-import { Info, Settings } from "lucide-react";
+"use client";
+
 // import Image from "next/image";
+import { Info, Settings } from "lucide-react";
 import ScheduleItem from "./ScheduleItem";
 import Link from "next/link";
-import { MedicineDetail } from "@/types/medicines";
+import { IntakeLog, MedicineDetail } from "@/types/medicines";
 import {
   Popover,
   PopoverTrigger,
@@ -11,15 +13,49 @@ import {
 import { ZoomableImage } from "@/components/layout/ZoomableImage";
 import { RenderTodaysMedicine } from "@/lib/medicine";
 
+import TodayProgress from "./TodayProgress";
+import { useEffect, useMemo, useState } from "react";
+import { toYYYYMMDD } from "@/lib/date";
+
 export default function MedicineCard(medicine: MedicineDetail) {
   const { id, name, imageUrl, description, schedules } = medicine;
-  const isMedicineTakenToday = RenderTodaysMedicine(
-    schedules[0]?.repeated_pattern
+  // logId -> 원하는(낙관) status
+  const [pending, setPending] = useState<Record<number, IntakeLog["status"]>>(
+    {}
+  );
+  const onOptimisticSet = (logId: number, status: IntakeLog["status"]) =>
+    setPending((p) => ({ ...p, [logId]: status })); // ✅ 성공 시에는 더 이상 즉시 지우지 않음
+  const onOptimisticClear = (logId: number) =>
+    setPending(({ [logId]: _omit, ...rest }) => rest);
+
+  // ✅ 리컨실리에이션: 실제 스케줄 데이터가 pending과 같아지면 그 때만 pending 제거
+  useEffect(() => {
+    if (!schedules?.length) return;
+    const dateStr = toYYYYMMDD(new Date());
+    const actual = new Map<number, IntakeLog["status"]>();
+    schedules
+      .flatMap((s) => s.intake_logs)
+      .filter((l) => l.date === dateStr)
+      .forEach((l) => actual.set(l.id, l.status));
+    setPending((prev) => {
+      const next = { ...prev };
+      for (const [idStr, desired] of Object.entries(prev)) {
+        const id = Number(idStr);
+        if (actual.get(id) === desired) {
+          delete next[id];
+        }
+      }
+      return next;
+    });
+  }, [schedules]);
+  const isMedicineTakenToday = useMemo(
+    () => RenderTodaysMedicine(schedules[0]?.repeated_pattern),
+    [schedules]
   );
 
   return (
     <>
-      <div className="border-2 bg-white border-pilltime-blue/50 rounded-md !px-4 !py-8 flex flex-col gap-4 shadow-md">
+      <div className="border-2 bg-white border-pilltime-blue/50 rounded-md !px-4 !pb-8 !pt-12 flex flex-col gap-4 shadow-md">
         <div className="flex items-center gap-4 w-full relative">
           <div className="rounded-md overflow-hidden border border-pilltime-violet/50 shadow-sm">
             <ZoomableImage
@@ -35,13 +71,18 @@ export default function MedicineCard(medicine: MedicineDetail) {
               height={120}
             /> */}
           </div>
-          <div className="grow">
-            <div className="flex flex-col items-center justify-center gap-2">
-              <span className="font-bold !text-pilltime-grayDark">{name}</span>
-            </div>
+          <div className="grow self-start !z-10">
+            <span className="font-bold !text-pilltime-grayDark text-2xl text-ellipsis text-shadow-sm backdrop-blur-2xl">
+              {name}
+            </span>
           </div>
+          <TodayProgress
+            schedules={schedules}
+            pending={pending}
+            className="w-28 h-28 absolute right-2 -bottom-2"
+          />
 
-          <div className="absolute -top-4 right-0">
+          <div className="absolute -top-8 right-0">
             <div className="flex items-center justify-between gap-2">
               <Popover>
                 <PopoverTrigger asChild>
@@ -94,7 +135,11 @@ export default function MedicineCard(medicine: MedicineDetail) {
           <ul className={`flex flex-col gap-4`}>
             {schedules.map((schedule) => (
               <li key={schedule?.id}>
-                <ScheduleItem {...schedule} />
+                <ScheduleItem
+                  {...schedule}
+                  onOptimisticSet={onOptimisticSet}
+                  onOptimisticClear={onOptimisticClear}
+                />
               </li>
             ))}
           </ul>
