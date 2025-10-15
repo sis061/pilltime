@@ -1,11 +1,16 @@
 "use client";
 
-//TODO 시간 인풋 라이브러리 찾아서 적용. 안이쁘고 시간 뒤죽박죽.
+import "dayjs/locale/ko";
+import dayjs from "dayjs";
+dayjs.locale("ko");
 
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
-import { useFormContext, useFieldArray } from "react-hook-form";
+import { useFormContext, useFieldArray, Controller } from "react-hook-form";
 import { MedicineFormValues } from "@/lib/schemas/medicine";
+import TimePicker from "antd/es/time-picker";
+import koKR from "antd/locale/ko_KR";
+import { useRef } from "react";
 
 export const DAYS = ["일", "월", "화", "수", "목", "금", "토"];
 const MONTH_DATES = [1, 10, 20, 30];
@@ -14,6 +19,12 @@ const OPTIONS: { value: "DAILY" | "WEEKLY" | "MONTHLY"; label: string }[] = [
   { value: "WEEKLY", label: "매주" },
   { value: "MONTHLY", label: "매달" },
 ];
+
+const tpLocale =
+  // v5에서 TimePicker 전용 로케일이 있으면 사용
+  (koKR as any).TimePicker ??
+  // 없으면 DatePicker 안의 timePickerLocale로 폴백
+  (koKR as any).DatePicker?.timePickerLocale;
 
 export function MedicineSchedulesField() {
   const {
@@ -178,12 +189,58 @@ export function MedicineSchedulesField() {
           {fields.map((field, index) => (
             <div key={field.id} className="flex flex-col gap-2 items-center">
               <div className="flex gap-2 items-center w-full">
-                <input
+                {/* <input
                   type="time"
                   {...register(`schedules.${index}.time` as const, {
                     required: "필수 항목입니다!",
                   })}
                   className="!p-2 border border-slate-100 shadow-sm rounded w-full"
+                /> */}
+
+                <Controller
+                  control={control}
+                  name={`schedules.${index}.time`}
+                  rules={{ required: "필수 항목입니다!" }}
+                  render={({ field, fieldState }) => {
+                    const wrapperRef = useRef<HTMLDivElement | null>(null);
+                    return (
+                      <div
+                        ref={wrapperRef}
+                        className="w-full border-pilltime-grayLight"
+                      >
+                        <TimePicker
+                          locale={tpLocale}
+                          value={
+                            field.value ? dayjs(field.value, "HH:mm") : null
+                          }
+                          onChange={(v) =>
+                            field.onChange(v ? v.format("HH:mm") : "")
+                          }
+                          minuteStep={5}
+                          hideDisabledOptions
+                          needConfirm={false}
+                          showNow={false}
+                          showSecond={false}
+                          format={(val) =>
+                            val ? dayjs(val).locale("ko").format("A hh:mm") : ""
+                          }
+                          variant="borderless"
+                          allowClear={false}
+                          placeholder="약 먹을 시간을 입력하세요"
+                          className="!px-2 !py-2 shadow-sm w-[98%] !ml-1"
+                          getPopupContainer={(trigger) =>
+                            (trigger?.parentElement as HTMLElement) ??
+                            document.body
+                          }
+                        />
+                        {fieldState.error && (
+                          <p className="text-red-500 text-sm mt-1">
+                            {fieldState.error.message}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  }}
                 />
                 <Button
                   type="button"
