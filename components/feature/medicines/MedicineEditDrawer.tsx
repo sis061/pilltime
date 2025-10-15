@@ -184,7 +184,7 @@ export default function MedicineEditDrawer({
       description: filteredEmptyDescription,
       schedules: sortedSchedules,
     };
-    console.log("최종 수정 데이터:", _data);
+
     try {
       setGLoading(true, "수정 중이에요..");
       await updateMedicine(String(id), _data);

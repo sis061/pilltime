@@ -17,16 +17,16 @@ export default function ErrorBoundary({
   }, [error]);
 
   return (
-    <section className="inner min-h-[calc(100dvh-11.5rem)] flex flex-col items-center justify-center gap-6 !mx-auto !w-full !p-6">
-      <div className="rounded-2xl border border-border bg-card shadow-sm p-8 max-w-md text-center">
-        <h2 className="text-lg font-semibold mb-3 text-pilltime-grayDark">
+    <section className="inner min-h-[calc(100dvh-11.5rem)] flex flex-col items-center justify-center !mx-auto !w-full !p-6">
+      <div className="bg-card !p-8 max-w-md text-center">
+        <h2 className="text-lg font-semibold !mb-8 text-pilltime-grayDark/75">
           데이터를 불러올 수 없어요
         </h2>
-        <p className="text-sm text-pilltime-grayDark/70 leading-relaxed">
+        <p className="text-sm text-pilltime-grayDark/50 leading-relaxed">
           일시적인 문제일 수 있어요. <br />
           잠시 후 다시 시도하거나 새로고침 해주세요.
         </p>
-        <Button onClick={() => reset()} className="mt-6">
+        <Button onClick={() => reset()} className="!mt-6 !p-4">
           다시 시도
         </Button>
       </div>

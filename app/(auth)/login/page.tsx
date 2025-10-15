@@ -3,7 +3,7 @@ import Image from "next/image";
 
 export default function LoginPage() {
   return (
-    <section className="flex inner max-md:!px-8 min-h-screen items-center justify-center">
+    <section className="flex w-full max-w-screen-2xl mx-auto max-md:!px-8 min-h-screen items-center justify-center">
       <div className="w-full max-w-sm !p-8 bg-[#F6F4F2] rounded-2xl flex flex-col items-center justify-center gap-20 min-h-[75dvh]">
         <Image
           src="/pilltime_logo.png"

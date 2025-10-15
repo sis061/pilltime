@@ -98,7 +98,6 @@ export default function MedicineNewDrawer({
       description: filteredEmptyDescription,
       schedules: sortedSchedules,
     };
-    console.log("최종 저장 데이터:", _data);
     try {
       setGLoading(true, "새로운 약을 등록 중이에요...");
       await createMedicine(_data);

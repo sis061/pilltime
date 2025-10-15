@@ -88,8 +88,8 @@ export default async function Home() {
 
 function ProfileFallback() {
   return (
-    <div className="rounded-xl border p-4 mb-4">
-      <p className="text-sm text-muted-foreground">
+    <div className="!p-4 !my-8 text-center">
+      <p className="text-sm !text-pilltime-grayDark/50 !pb-2 font-bold ">
         프로필 정보를 불러오지 못했습니다. 새로고침을 시도해보세요.
       </p>
     </div>
@@ -98,9 +98,11 @@ function ProfileFallback() {
 
 function MedicineListFallback() {
   return (
-    <div className="rounded-xl border p-4">
-      <h3 className="text-base font-semibold mb-2">약 목록</h3>
-      <p className="text-sm text-muted-foreground">
+    <div className="!p-4 !my-8 text-center">
+      <h3 className="text-base !text-pilltime-grayDark/50 !pb-2 font-bold !mb-2">
+        약 목록
+      </h3>
+      <p className="text-sm !text-pilltime-grayDark/50 !pb-2 font-bold ">
         약 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.
       </p>
     </div>

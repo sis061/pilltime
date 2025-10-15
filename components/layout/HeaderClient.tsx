@@ -85,7 +85,7 @@ export default function HeaderClient({
           로그아웃
         </Button>
       ) : (
-        <Link href="/login" className="text-white/90 hover:underline">
+        <Link href="/login" className="!text-white/90 hover:underline">
           로그인
         </Link>
       )}
