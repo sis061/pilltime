@@ -28,7 +28,7 @@ export default function SocialLogin() {
         },
       });
       if (error) throw error;
-    } catch (_error: any) {
+    } catch (_) {
       toast.error("로그인 중 문제가 발생했어요");
       setLoadingProvider(null);
       setGLoading(false);

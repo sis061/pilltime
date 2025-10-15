@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import NicknameDrawer from "@/components/feature/profiles/NicknameDrawer";
 import { useUserStore } from "@/store/useUserStore";
 import { User } from "@/types/profile";
@@ -28,26 +28,6 @@ export default function HomeProfile({ initialUser }: { initialUser: User }) {
       openedOnceRef.current = true;
     }
   }, [currentUser]);
-
-  const now = useMemo(() => new Date(), []);
-  const month = now.getMonth() + 1;
-  const date = now.getDate();
-  const weekdayShort = now.toLocaleDateString("ko-KR", {
-    weekday: "short",
-    timeZone: "Asia/Seoul",
-  });
-
-  // 자정 이후 자동 업데이트
-  const [, setMidnightTick] = useState(0);
-  useEffect(() => {
-    const tz = "Asia/Seoul";
-    const d = new Date();
-    const next = new Date(d);
-    next.setHours(24, 0, 0, 0);
-    const ms = next.getTime() - d.getTime();
-    const t = setTimeout(() => setMidnightTick((x) => x + 1), ms);
-    return () => clearTimeout(t);
-  }, []);
 
   if (!currentUser) {
     return (

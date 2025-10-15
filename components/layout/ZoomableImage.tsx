@@ -1,15 +1,12 @@
-// components/layout/ZoomableImage.tsx
 "use client";
 
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import Image, { type ImageProps as NextImageProps } from "next/image";
-// [REMOVED] import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import dynamic from "next/dynamic"; // [ADDED]
-import { X } from "lucide-react";
+import dynamic from "next/dynamic";
 import { Skeleton } from "@/components/ui/skeleton";
 
-// [ADDED] 모달용 컴포넌트만 framer-motion과 함께 동적 로드
+//  모달용 컴포넌트만 framer-motion과 함께 동적 로드
 const MotionOverlay = dynamic(
   () => import("./MotionOverlay").then((m) => m.MotionOverlay),
   { ssr: false }
@@ -70,7 +67,7 @@ export function ZoomableImage({
       {mounted &&
         isZoomed &&
         createPortal(
-          <MotionOverlay // [ADDED] 모달을 여는 순간 framer-motion 로드
+          <MotionOverlay // 모달을 여는 순간 framer-motion 로드
             src={stringSrc}
             alt={alt ?? ""}
             onClose={() => setIsZoomed(false)}

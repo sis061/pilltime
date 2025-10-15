@@ -19,6 +19,7 @@ export default async function MainLayout({
     const { data, error } = await supabase.auth.getUser();
     if (!error) user = data.user ?? null;
   } catch {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     user = null;
   }
 

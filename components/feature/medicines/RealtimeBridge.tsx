@@ -47,6 +47,7 @@ export default function RealtimeBridge({ userId }: { userId: string }) {
     })();
 
     return () => cleanup?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   return null;

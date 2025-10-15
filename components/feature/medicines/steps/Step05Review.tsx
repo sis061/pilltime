@@ -27,6 +27,7 @@ export function Step05Review() {
 
   useEffect(() => {
     setValue("description", filteredEmptyDescription);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [values.description, setValue]);
 
   const sortedDaysOfWeek = [

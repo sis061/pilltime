@@ -9,13 +9,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useUserStore } from "@/store/useUserStore";
 import { useMediaQuery } from "react-responsive";
 import { useGlobalLoading } from "@/store/useGlobalLoading";
 import { toast } from "sonner";
-import { User } from "@/types/profile";
 
 interface Props {
   open: boolean;

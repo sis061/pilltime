@@ -103,7 +103,6 @@ export default function MedicineNewDrawer({
       setGLoading(true, "새로운 약을 등록 중이에요...");
       await createMedicine(_data);
 
-      const result = await createMedicine(_data);
       toast.success(`${_data.name}의 정보를 등록했어요`);
 
       // [ADDED] 부모(RSC) 최신화 + 닫기
