@@ -252,12 +252,6 @@ export function MedicineSchedulesField() {
                   삭제
                 </Button>
               </div>
-
-              {errors.schedules?.[index]?.time && (
-                <p className="!text-red-500 text-sm w-full">
-                  {errors.schedules[index]?.time?.message}
-                </p>
-              )}
             </div>
           ))}
           <Button
@@ -273,7 +267,7 @@ export function MedicineSchedulesField() {
       )}
 
       {errors.repeated_pattern?.type && (
-        <p className="!text-red-500 text-sm">
+        <p className="!text-red-500 text-sm !mt-1">
           {errors.repeated_pattern.type.message}
         </p>
       )}

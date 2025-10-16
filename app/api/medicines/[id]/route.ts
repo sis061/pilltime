@@ -202,7 +202,22 @@ export async function PUT(
   }
 
   // -------------------------------
-  // 7️⃣ 완료 응답
+  // 7️⃣ 미복용 로그 마킹 (수동 호출)
+  // -------------------------------
+
+  try {
+    const { error: missedErr } = await supabase.rpc("mark_missed_logs_rpc");
+    if (missedErr) {
+      console.error("⚠️ mark_missed_logs RPC error:", missedErr.message);
+    } else {
+      console.log("✅ mark_missed_logs() called successfully");
+    }
+  } catch (rpcErr: any) {
+    console.error("❌ mark_missed_logs RPC 호출 실패:", rpcErr.message);
+  }
+
+  // -------------------------------
+  // 완료 응답
   // -------------------------------
   return NextResponse.json({ success: true });
 }

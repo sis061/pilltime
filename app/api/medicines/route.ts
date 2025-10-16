@@ -116,6 +116,7 @@ export async function POST(req: Request) {
         console.log(`✅ ${insertedCount} logs generated for schedule ${s.id}`);
       }
     }
+
     const res = NextResponse.json(medicine, { status: 201 });
     res.headers.set("Location", `/medicines/${medicine.id}`);
 

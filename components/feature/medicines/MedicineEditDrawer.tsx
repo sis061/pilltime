@@ -73,7 +73,6 @@ async function deleteMedicine(id: string) {
     throw new Error(err?.error ?? "Failed to update");
   }
 
-  toast.success(`정보를 삭제했어요`);
   return res.json();
 }
 
