@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
     ],
   },
   experimental: {
-    optimizePackageImports: ["lucide-react", "date-fns"],
+    optimizePackageImports: ["lucide-react", "date-fns", "antd"],
   },
   allowedDevOrigins: [
     "http://localhost:3000", // 로컬호스트
@@ -25,9 +25,9 @@ const nextConfig: NextConfig = {
   ],
 };
 
-// export default nextConfig;
+export default nextConfig;
 
-export default withBundleAnalyzer({
-  enabled: process.env.ANALYZE === "true",
-  // openAnalyzer: true // default!
-})(nextConfig);
+// export default withBundleAnalyzer({
+//   enabled: process.env.ANALYZE === "true",
+//   // openAnalyzer: true // default!
+// })(nextConfig);

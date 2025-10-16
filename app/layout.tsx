@@ -1,9 +1,7 @@
-//TODO 동적 메타데이터 구현하기
+import "@ant-design/v5-patch-for-react-19";
 
-import type { Metadata } from "next";
-
-// import { Toaster } from "@/components/ui/sonner";
 import dynamic from "next/dynamic";
+import type { Metadata } from "next";
 const Toaster = dynamic(
   () => import("@/components/ui/sonner").then((m) => m.Toaster),
   {
@@ -16,6 +14,7 @@ import "./globals.css";
 import { UserProvider } from "@/components/providers/UserProvider";
 import GlobalLoading from "@/components/layout/GlobalLoading";
 
+//TODO 동적 메타데이터 구현하기
 export const metadata: Metadata = {
   title: "PillTime",
   description: "약먹어",

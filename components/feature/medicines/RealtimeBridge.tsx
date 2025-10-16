@@ -11,7 +11,7 @@ export default function RealtimeBridge({ userId }: { userId: string }) {
     if (t.current) window.clearTimeout(t.current);
     t.current = window.setTimeout(() => {
       startTransition(() => router.refresh());
-    }, 120);
+    }, 100);
   };
 
   useEffect(() => {

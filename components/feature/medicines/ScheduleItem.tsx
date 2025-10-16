@@ -1,18 +1,45 @@
 "use client";
 
 // TODO 알람 기능 구현
-// TODO 복용 로그에 따라 스티커 붙이기
 
 import { IntakeLog, MedicineSchedule } from "@/types/medicines";
-import { Switch } from "@/components/ui/switch";
 import { formatTime } from "@/lib/date";
 import { getTodayIntakeLog } from "@/lib/medicine";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
+import {
+  ButtonGroup,
+  ButtonGroupSeparator,
+} from "@/components/ui/button-group";
+import { Button } from "@/components/ui/button";
+import { Check, SkipForward } from "lucide-react";
 
 type ScheduleItemProps = MedicineSchedule & {
   onOptimisticSet: (logId: number, status: IntakeLog["status"]) => void;
   onOptimisticClear: (logId: number) => void;
+};
+
+export const RenderStatusText = (status: IntakeLog["status"]) => {
+  let content;
+
+  switch (status) {
+    case "taken":
+      content = "먹었어요!";
+      break;
+    case "skipped":
+      content = "안 먹을래요";
+      break;
+    case "missed":
+      content = "지났어요!";
+      break;
+    case "scheduled":
+      content = "";
+      break;
+    default:
+      content = "";
+      break;
+  }
+  return content;
 };
 
 export default function ScheduleItem(schedule: ScheduleItemProps) {
@@ -21,7 +48,6 @@ export default function ScheduleItem(schedule: ScheduleItemProps) {
 
   const [status, setStatus] = useState<IntakeLog["status"]>(initialStatus);
   const [_isPending, startTransition] = useTransition();
-  const isTaken = status === "taken";
 
   useEffect(() => {
     setStatus(todayLog?.status ?? "scheduled");
@@ -63,25 +89,59 @@ export default function ScheduleItem(schedule: ScheduleItemProps) {
     }
   }
 
-  function onToggle(checked: boolean) {
+  function onButtonClick(value: IntakeLog["status"]) {
     if (!todayLog) return;
-    const next: IntakeLog["status"] = checked ? "taken" : "skipped";
-    startTransition(() => void putIntakeLog(todayLog.id, next));
+    startTransition(() => void putIntakeLog(todayLog.id, value));
   }
 
   return (
     <div className="flex items-center w-full justify-between gap-4 border-t border-t-pilltime-teal/50 !pt-4 !px-4">
-      <span className="!text-pilltime-grayDark/75">
-        {formatTime(schedule?.time)}
-      </span>
-      <Switch
-        checked={isTaken}
-        disabled={_isPending || !todayLog}
-        onCheckedChange={onToggle}
-        className={`${
-          status === "missed" && "!bg-black/75 [&_span]:!bg-red-500"
-        } `}
-      />
+      <div className="flex-col flex gap-1 grow items-start">
+        <span className="!text-pilltime-grayDark/90 text-2xl ">
+          {formatTime(schedule?.time)}
+        </span>
+        <span className="text-sm !text-pilltime-grayDark/60 ">
+          {RenderStatusText(status)}
+        </span>
+      </div>
+
+      <ButtonGroup className="[&_button]:!px-4 [&_button]:!py-2 [&_>button]:shadow-xs [&_>button]:cursor-pointer [&_>button]:transition-colors [&_>button]:duration-150 [&_>button]:focus-visible:outline-none [&_>button]:focus-visible:ring-2 [&_>button]:focus-visible:ring-offset-2 [&_>button]:focus-visible:ring-slate-300">
+        <Button
+          type="button"
+          size="icon"
+          disabled={_isPending || !todayLog}
+          variant="secondary"
+          className={` hover:!bg-pilltime-blue/50 hover:[&_svg]:stroke-white
+              ${status === "taken" && "bg-pilltime-blue [&_>svg]:stroke-white"}
+              ${status === "skipped" && "[&_>svg]:!stroke-pilltime-teal/50"}
+              ${
+                status === "missed" &&
+                "[&_>svg]:!stroke-pilltime-teal bg-red-700 [&_>svg]:animate-pulse"
+              }`}
+          onClick={() => onButtonClick("taken")}
+        >
+          <Check strokeWidth={2.5} />
+        </Button>
+        <ButtonGroupSeparator />
+        <Button
+          type="button"
+          size="icon"
+          disabled={_isPending || !todayLog}
+          variant="secondary"
+          className={`hover:!bg-pilltime-yellow/50 hover:[&_svg]:stroke-white
+            ${
+              status === "skipped" && "!bg-pilltime-yellow [&_svg]:stroke-white"
+            }
+            ${status === "taken" && "[&_>svg]:!stroke-pilltime-teal/50"}
+          ${
+            status === "missed" &&
+            "[&_>svg]:!stroke-pilltime-teal bg-red-700 [&_>svg]:animate-pulse "
+          }`}
+          onClick={() => onButtonClick("skipped")}
+        >
+          <SkipForward strokeWidth={2.5} />
+        </Button>
+      </ButtonGroup>
     </div>
   );
 }

@@ -17,6 +17,12 @@ export interface MedicineSchedule {
   intake_logs: IntakeLog[];
 }
 
+export interface UISchedule {
+  id: number | null;
+  time: string;
+  repeated_pattern: RepeatedPattern;
+}
+
 /** 반복 패턴 (JSONB) */
 export interface RepeatedPattern {
   tz: string; // 예: "Asia/Seoul"

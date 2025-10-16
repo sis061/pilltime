@@ -97,7 +97,7 @@ export default function MedicineCard(medicine: MedicineDetail) {
                   align="end"
                   sideOffset={4}
                   alignOffset={8}
-                  className="max-w-48 !min-w-24 border-2 bg-white rounded-md !py-3 !px-2 *:text-[16px] !border-[#F9731690] shadow-lg transition-opacity duration-150 "
+                  className="!min-w-24 border-2 bg-white rounded-md !py-3 !px-2 *:text-[16px] !border-[#F9731690] shadow-lg transition-opacity duration-150 "
                 >
                   {description.length > 0 ? (
                     <ul className="flex flex-col gap-1 list-disc [&_>li]:!ml-4 w-full">

@@ -49,7 +49,7 @@ export function MotionOverlay({
           className="absolute top-4 right-4 p-1 cursor-pointer"
           onClick={onClose}
         >
-          <X size={28} color="#fff" />
+          <X size={20} color="#fff" />
         </button>
         <motion.div
           key="zoomed-wrapper"
@@ -58,7 +58,8 @@ export function MotionOverlay({
           exit={{ scale: prefersReduced ? 1 : 0.98, opacity: 0 }}
           transition={prefersReduced ? { duration: 0 } : { duration: 0.12 }}
           className="relative w-full h-full max-w-[min(95vw,1100px)] max-h-[90vh]"
-          onClick={(e) => e.stopPropagation()}
+          // onClick={(e) => e.stopPropagation()}
+          onClick={onClose}
         >
           <Image
             src={src}

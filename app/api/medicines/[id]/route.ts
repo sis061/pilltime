@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { toHHMMSS } from "@/lib/date";
 
 export async function GET(
   req: Request,
@@ -67,142 +68,168 @@ export async function PUT(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (!user)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
   const body = await req.json();
 
   // -------------------------------
-  // 1️⃣ 약 정보 업데이트
+  // 1️⃣ 약 정보 업데이트 (dirty만)
   // -------------------------------
-  const { error: medError } = await supabase
-    .from("medicines")
-    .update({
-      name: body.name,
-      description:
-        body.description?.map((d: { value: string }) => d.value) ?? [],
-      image_url: body.imageUrl,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", Number(id))
-    .eq("user_id", user.id)
-    .is("deleted_at", null);
 
-  if (medError)
-    return NextResponse.json({ error: medError.message }, { status: 500 });
+  const medPatch: any = {
+    updated_at: new Date().toISOString(),
+  };
+  if (body.name !== undefined) medPatch.name = body.name;
+  if (body.description !== undefined)
+    medPatch.description =
+      body.description?.map((d: { value: string }) => d.value) ?? [];
+  if (body.imageUrl !== undefined) medPatch.image_url = body.imageUrl ?? null;
 
-  // -------------------------------
-  // 2️⃣ 기존 스케줄 ID 조회
-  // -------------------------------
-  const { data: existingSchedules, error: schedulesSelectError } =
-    await supabase
-      .from("medicine_schedules")
-      .select("id")
-      .eq("medicine_id", Number(id))
-      .eq("user_id", user.id);
+  if (Object.keys(medPatch).length > 1) {
+    const { error: medError } = await supabase
+      .from("medicines")
+      .update(medPatch)
+      .eq("id", Number(id))
+      .eq("user_id", user.id)
+      .is("deleted_at", null);
 
-  if (schedulesSelectError) {
-    return NextResponse.json(
-      { error: schedulesSelectError.message },
-      { status: 500 }
-    );
-  }
-
-  const existingIds = existingSchedules?.map((s) => s.id) ?? [];
-
-  // -------------------------------
-  // 3️⃣ 기존 로그 중 미래 로그만 삭제 (과거 기록 보존)
-  // -------------------------------
-  if (existingIds.length > 0) {
-    const today = new Date().toISOString().split("T")[0];
-    const { error: deleteLogsError } = await supabase
-      .from("intake_logs")
-      .delete()
-      .in("schedule_id", existingIds)
-      .gte("date", today);
-
-    if (deleteLogsError) {
-      return NextResponse.json(
-        { error: deleteLogsError.message },
-        { status: 500 }
-      );
-    }
+    if (medError)
+      return NextResponse.json({ error: medError.message }, { status: 500 });
   }
 
   // -------------------------------
-  // 4️⃣ 기존 스케줄 전체 삭제
+  // 2️⃣ 스케줄 diff 부분 적용
   // -------------------------------
-  const { error: deleteSchedulesError } = await supabase
-    // .from("medicine_schedules")
-    // .delete()
-    // .eq("medicine_id", Number(id))
-    // .eq("user_id", user.id);
-    .from("medicine_schedules")
-    .update({
-      deleted_at: new Date().toISOString(),
-      is_notify: false,
-    })
-    .eq("medicine_id", Number(id))
-    .eq("user_id", user.id)
-    .is("deleted_at", null);
 
-  if (deleteSchedulesError) {
-    return NextResponse.json(
-      { error: deleteSchedulesError.message },
-      { status: 500 }
-    );
-  }
+  const { schedules_changed, schedules_patch, repeated_pattern } = body ?? {};
+  if (schedules_changed && schedules_patch) {
+    // 기본 RP (프론트에서 넘어온 값, 없으면 DAILY)
+    const baseRP = {
+      tz: repeated_pattern?.tz ?? "Asia/Seoul",
+      type: repeated_pattern?.type ?? "DAILY",
+      days_of_week: repeated_pattern?.days_of_week ?? [],
+      days_of_month: repeated_pattern?.days_of_month ?? [],
+    };
 
-  // -------------------------------
-  // 5️⃣ 새 스케줄 insert
-  // -------------------------------
-  const sortedSchedules = [...body.schedules].sort((a, b) =>
-    a.time.localeCompare(b.time)
-  );
+    // 공통: 7일 윈도우
+    const now = new Date();
+    const fromStr = now.toISOString().slice(0, 10);
+    const to = new Date(now);
+    to.setDate(now.getDate() + 7);
+    const toStr = to.toISOString().slice(0, 10);
 
-  const { data: newSchedules, error: schedulesInsertError } = await supabase
-    .from("medicine_schedules")
-    .insert(
-      sortedSchedules.map((s: { time: string }) => ({
+    // --- INSERT ---
+    if (
+      Array.isArray(schedules_patch.insert) &&
+      schedules_patch.insert.length
+    ) {
+      const insertRows = schedules_patch.insert.map((s: any) => ({
         user_id: user.id,
         medicine_id: Number(id),
-        time: s.time,
-        repeated_pattern: body.repeated_pattern ?? { type: "DAILY" },
+        time: toHHMMSS(s.time),
+        repeated_pattern: s.repeated_pattern ?? baseRP,
         is_notify: true,
-      }))
-    )
-    .select("id");
+      }));
 
-  if (schedulesInsertError) {
-    return NextResponse.json(
-      { error: schedulesInsertError.message },
-      { status: 500 }
-    );
-  }
+      const { data: inserted, error } = await supabase
+        .from("medicine_schedules")
+        .insert(insertRows)
+        .select("id");
+      if (error)
+        return NextResponse.json({ error: error.message }, { status: 500 });
 
-  // -------------------------------
-  // 6️⃣ 새 스케줄 기준으로 7일치 로그 재생성
-  // -------------------------------
-  const now = new Date();
-  const from = now.toISOString().split("T")[0];
-  const to = new Date();
-  to.setDate(now.getDate() + 7);
-  const toStr = to.toISOString().split("T")[0];
+      // 새 스케줄만 로그 생성
+      for (const row of inserted ?? []) {
+        // 미래 로그 리셋(예방적) 후 생성
+        await supabase.rpc("reset_future_logs_for_schedule", {
+          p_schedule_id: row.id,
+        });
+        const { error: genErr } = await supabase.rpc(
+          "generate_logs_for_schedule",
+          {
+            p_schedule_id: row.id,
+            p_from_date: fromStr,
+            p_to_date: toStr,
+          }
+        );
+        if (genErr)
+          console.error("generate_logs(insert) error:", genErr.message);
+      }
+    }
 
-  for (const s of newSchedules ?? []) {
-    const { error } = await supabase.rpc("generate_logs_for_schedule", {
-      p_schedule_id: s.id,
-      p_from_date: from,
-      p_to_date: toStr,
-    });
+    // --- UPDATE ---
+    if (
+      Array.isArray(schedules_patch.update) &&
+      schedules_patch.update.length
+    ) {
+      for (const u of schedules_patch.update) {
+        const patch: any = {};
+        if (u.time !== undefined) patch.time = toHHMMSS(u.time);
+        if (u.repeated_pattern !== undefined)
+          patch.repeated_pattern = u.repeated_pattern;
 
-    if (error) {
-      console.error(`로그 생성 실패 (schedule_id=${s.id}):`, error.message);
+        if (Object.keys(patch).length) {
+          const { error } = await supabase
+            .from("medicine_schedules")
+            .update({ ...patch, updated_at: new Date().toISOString() })
+            .eq("id", u.id)
+            .eq("medicine_id", Number(id))
+            .eq("user_id", user.id)
+            .is("deleted_at", null);
+          if (error)
+            return NextResponse.json({ error: error.message }, { status: 500 });
+        }
+
+        // 해당 스케줄의 미래 로그만 리셋 후 재생성
+        await supabase.rpc("reset_future_logs_for_schedule", {
+          p_schedule_id: u.id,
+        });
+        const { error: genErr } = await supabase.rpc(
+          "generate_logs_for_schedule",
+          {
+            p_schedule_id: u.id,
+            p_from_date: fromStr,
+            p_to_date: toStr,
+          }
+        );
+        if (genErr)
+          console.error("generate_logs(update) error:", genErr.message);
+      }
+    }
+
+    // --- DELETE ---
+    if (
+      Array.isArray(schedules_patch.delete) &&
+      schedules_patch.delete.length
+    ) {
+      const delIds: number[] = schedules_patch.delete;
+
+      // 미래 로그만 삭제 (과거는 보존)
+      const today = new Date().toISOString().slice(0, 10);
+      const { error: delLogsErr } = await supabase
+        .from("intake_logs")
+        .delete()
+        .in("schedule_id", delIds)
+        .gte("date", today);
+      if (delLogsErr)
+        return NextResponse.json(
+          { error: delLogsErr.message },
+          { status: 500 }
+        );
+
+      // 스케줄 soft-delete
+      const { error: softErr } = await supabase
+        .from("medicine_schedules")
+        .update({ deleted_at: new Date().toISOString(), is_notify: false })
+        .in("id", delIds)
+        .eq("medicine_id", Number(id))
+        .eq("user_id", user.id)
+        .is("deleted_at", null);
+      if (softErr)
+        return NextResponse.json({ error: softErr.message }, { status: 500 });
     }
   }
 
   // -------------------------------
-  // 7️⃣ 완료 응답
+  // 3️⃣ 완료 응답
   // -------------------------------
   return NextResponse.json({ success: true });
 }

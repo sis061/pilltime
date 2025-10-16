@@ -8,6 +8,11 @@ export function toYYYYMMDD(date: Date, tz = "Asia/Seoul") {
   }).format(date);
 }
 
+export const toHHMMSS = (t: string) => {
+  const [h = "00", m = "00", s = "00"] = (t || "").split(":");
+  return `${h.padStart(2, "0")}:${m.padStart(2, "0")}:${s.padStart(2, "0")}`;
+};
+
 export function sevenDayWindow(tz = "Asia/Seoul") {
   // 서버 TZ와 무관하게, 해당 tz의 '오늘' 기준 7일 윈도우
   const now = new Date();
