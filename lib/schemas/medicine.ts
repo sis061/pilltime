@@ -22,6 +22,7 @@ export const MedicineSchema = z.object({
   schedules: z
     .array(
       z.object({
+        id: z.number().int().optional().nullable(),
         time: z.string().min(1, "빈 복용 시간을 채워주세요"),
       })
     )

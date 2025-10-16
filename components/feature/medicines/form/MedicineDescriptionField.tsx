@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useFormContext, useFieldArray } from "react-hook-form";
 
 export function MedicineDescriptionField() {
-  const { control, register } = useFormContext();
+  const { control, register, setValue } = useFormContext();
   const { fields, append, remove } = useFieldArray({
     control,
     name: "description",
@@ -16,7 +16,13 @@ export function MedicineDescriptionField() {
       {fields.map((field, index) => (
         <div key={field.id} className="flex gap-2 items-center">
           <Input
-            {...register(`description.${index}.value` as const)}
+            {...register(`description.${index}.value` as const, {
+              onChange: (e) => {
+                setValue(`description.${index}.value`, e.target.value, {
+                  shouldDirty: true,
+                });
+              },
+            })}
             placeholder="상세 정보를 입력하세요."
             className="!px-2 !border-pilltime-grayLight !mx-1"
           />

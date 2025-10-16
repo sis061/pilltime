@@ -35,11 +35,16 @@ export function MedicineSchedulesField() {
     formState: { errors },
     clearErrors,
   } = useFormContext<MedicineFormValues>();
+
+  // ✅ 이 컴포넌트 내부에서 배열 관리
   const { fields, append, remove, replace } = useFieldArray({
     control,
     name: "schedules",
   });
+
+  // 주기 검증 유지
   register("repeated_pattern.type", { required: "복용 주기를 선택해주세요!" });
+
   const repeatedPattern = watch("repeated_pattern") ?? { type: "" };
   const weekly: number[] = watch("repeated_pattern.days_of_week") ?? [];
   const monthly: number[] = watch("repeated_pattern.days_of_month") ?? [];
@@ -69,8 +74,8 @@ export function MedicineSchedulesField() {
       setValue("repeated_pattern.days_of_week", [], { shouldDirty: true });
     }
 
-    // ⬇️ 시간 필드는 replace로 UI까지 리셋
-    replace([{ time: "" }]);
+    // ⬇️ 시간필드 리셋하되 신규로 인식되도록 id:null 유지
+    replace([{ id: null as any, time: "" } as any]);
   };
 
   const isTimeFieldVisible =
@@ -80,6 +85,7 @@ export function MedicineSchedulesField() {
 
   return (
     <div className="flex flex-col gap-8">
+      {/* 복용 주기 */}
       <div className="flex flex-col gap-2">
         <label className="text-sm font-bold">복용 주기</label>
         <RadioGroup
@@ -92,20 +98,16 @@ export function MedicineSchedulesField() {
               <RadioGroupItem id={opt.value} value={opt.value} hidden />
               <Button
                 type="button"
-                variant={"default"}
+                variant="default"
                 onClick={() => {
-                  const hiddenInput = document.getElementById(
-                    opt.value
-                  ) as HTMLInputElement | null;
-                  hiddenInput?.click();
-
+                  document.getElementById(opt.value)?.click();
                   setValue("repeated_pattern.type", opt.value, {
                     shouldValidate: true,
                     shouldDirty: true,
                     shouldTouch: true,
                   });
                 }}
-                className={`!px-4 !py-2  ${
+                className={`!px-4 !py-2 ${
                   repeatedPattern.type === opt.value &&
                   "!bg-pilltime-blue !text-white cursor-pointer"
                 }`}
@@ -117,7 +119,7 @@ export function MedicineSchedulesField() {
         </RadioGroup>
       </div>
 
-      {/* 매주: 요일 선택 */}
+      {/* 매주: 요일 */}
       {repeatedPattern.type === "WEEKLY" && (
         <div className="flex flex-wrap gap-2">
           {DAYS.map((day, i) => {
@@ -132,12 +134,14 @@ export function MedicineSchedulesField() {
                   const next = selected
                     ? weekly.filter((d) => d !== i)
                     : [...weekly, i];
-                  const sortedWeekly = [...next].sort((a, b) => a - b);
-                  setValue("repeated_pattern.days_of_week", sortedWeekly, {
-                    shouldValidate: true,
-                    shouldDirty: true,
-                  });
-                  // 시간도 최소 1개 보장하도록 필요 시 유지/리셋 선택
+                  setValue(
+                    "repeated_pattern.days_of_week",
+                    [...next].sort((a, b) => a - b),
+                    {
+                      shouldValidate: true,
+                      shouldDirty: true,
+                    }
+                  );
                 }}
                 className={`!p-2 w-[calc((100%/7)-0.43rem)] ${
                   selected && "!bg-pilltime-blue !text-white cursor-pointer"
@@ -150,7 +154,7 @@ export function MedicineSchedulesField() {
         </div>
       )}
 
-      {/* 매달: 날짜 선택 */}
+      {/* 매달: 날짜 */}
       {repeatedPattern.type === "MONTHLY" && (
         <div className="flex flex-wrap gap-2">
           {MONTH_DATES.map((date) => {
@@ -165,11 +169,14 @@ export function MedicineSchedulesField() {
                   const next = selected
                     ? monthly.filter((d) => d !== date)
                     : [...monthly, date];
-                  const sortedMonthly = [...next].sort((a, b) => a - b);
-                  setValue("repeated_pattern.days_of_month", sortedMonthly, {
-                    shouldValidate: true,
-                    shouldDirty: true,
-                  });
+                  setValue(
+                    "repeated_pattern.days_of_month",
+                    [...next].sort((a, b) => a - b),
+                    {
+                      shouldValidate: true,
+                      shouldDirty: true,
+                    }
+                  );
                 }}
                 className={`!p-2 w-[calc((100%/4)-0.43rem)] ${
                   selected && "!bg-pilltime-blue !text-white cursor-pointer"
@@ -182,20 +189,19 @@ export function MedicineSchedulesField() {
         </div>
       )}
 
-      {/**************  시간 필드 **************/}
+      {/* 시간 필드 */}
       {isTimeFieldVisible && (
         <div className="flex flex-col gap-2">
           <label className="text-sm font-bold">복용 시간</label>
-          {fields.map((field, index) => (
-            <div key={field.id} className="flex flex-col gap-2 items-center">
+
+          {fields.map((f, index) => (
+            <div key={f.id} className="flex flex-col gap-2 items-center">
               <div className="flex gap-2 items-center w-full">
-                {/* <input
-                  type="time"
-                  {...register(`schedules.${index}.time` as const, {
-                    required: "필수 항목입니다!",
-                  })}
-                  className="!p-2 border border-slate-100 shadow-sm rounded w-full"
-                /> */}
+                {/* ✅ 도메인 PK(id) 숨김 input → diff용으로 서버에 항상 전달 */}
+                <input
+                  type="hidden"
+                  {...(register as any)(`schedules.${index}.id`)}
+                />
 
                 <Controller
                   control={control}
@@ -242,6 +248,7 @@ export function MedicineSchedulesField() {
                     );
                   }}
                 />
+
                 <Button
                   type="button"
                   variant="ghost"
@@ -254,18 +261,21 @@ export function MedicineSchedulesField() {
               </div>
             </div>
           ))}
+
+          {/* 신규는 항상 id:null → insert로 인식 */}
           <Button
             type="button"
             variant="ghost"
             size="sm"
             className="max-w-20 w-full self-center cursor-pointer"
-            onClick={() => append({ time: "" })}
+            onClick={() => append({ id: null as any, time: "" } as any)}
           >
             추가
           </Button>
         </div>
       )}
 
+      {/* 에러 */}
       {errors.repeated_pattern?.type && (
         <p className="!text-red-500 text-sm !mt-1">
           {errors.repeated_pattern.type.message}
