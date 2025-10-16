@@ -36,13 +36,11 @@ export function MedicineSchedulesField() {
     clearErrors,
   } = useFormContext<MedicineFormValues>();
 
-  // ✅ 이 컴포넌트 내부에서 배열 관리
   const { fields, append, remove, replace } = useFieldArray({
     control,
     name: "schedules",
   });
 
-  // 주기 검증 유지
   register("repeated_pattern.type", { required: "복용 주기를 선택해주세요!" });
 
   const repeatedPattern = watch("repeated_pattern") ?? { type: "" };

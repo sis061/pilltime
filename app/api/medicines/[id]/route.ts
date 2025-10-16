@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { toHHMMSS } from "@/lib/date";
 
 export async function GET(
   req: Request,
@@ -69,19 +70,10 @@ export async function PUT(
 
   const body = await req.json();
 
-  // ✅ ADDED: 시간 정규화 유틸 (HH:mm → HH:mm:ss)
-  const toHHMMSS = (t: string) => {
-    const [h = "00", m = "00", s] = (t || "").split(":");
-    return `${h.padStart(2, "0")}:${m.padStart(2, "0")}:${(s ?? "00").padStart(
-      2,
-      "0"
-    )}`;
-  };
-
   // -------------------------------
   // 1️⃣ 약 정보 업데이트 (dirty만)
   // -------------------------------
-  // ✏️ CHANGED: undefined인 필드는 건드리지 않도록 부분 업데이트
+
   const medPatch: any = {
     updated_at: new Date().toISOString(),
   };
@@ -106,7 +98,7 @@ export async function PUT(
   // -------------------------------
   // 2️⃣ 스케줄 diff 부분 적용
   // -------------------------------
-  // ✏️ CHANGED: 전량 삭제/재삽입 ❌, diff만 소비 ⭕
+
   const { schedules_changed, schedules_patch, repeated_pattern } = body ?? {};
   if (schedules_changed && schedules_patch) {
     // 기본 RP (프론트에서 넘어온 값, 없으면 DAILY)

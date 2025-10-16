@@ -2,7 +2,9 @@ import {
   MedicineDetail,
   MedicineSchedule,
   RepeatedPattern,
+  UISchedule,
 } from "@/types/medicines";
+import { toHHMMSS } from "./date";
 
 /**
  * 오늘 복용해야 하는 약인지 여부를 반환
@@ -80,3 +82,54 @@ export function getTodayIntakeLog(data: MedicineSchedule) {
 
   return data.intake_logs.find((log) => log.date === today);
 }
+
+/* ---------------------------
+ * diff 유틸
+ * --------------------------- */
+
+export const rpEq = (a?: RepeatedPattern, b?: RepeatedPattern) =>
+  JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
+
+export const buildPatch = (prev: UISchedule[], next: UISchedule[]) => {
+  const P = new Map(prev.map((x) => [x.id, { ...x, time: toHHMMSS(x.time) }]));
+  const seen = new Set<number>();
+  const insert: Array<Omit<UISchedule, "id">> = [];
+  const update: Array<{
+    id: number;
+    time?: string;
+    repeated_pattern?: RepeatedPattern;
+  }> = [];
+  const del: number[] = [];
+
+  for (const n of next) {
+    const time = toHHMMSS(n.time);
+    if (!n.id) {
+      insert.push({ time, repeated_pattern: n.repeated_pattern });
+      continue;
+    }
+
+    const cur = P.get(n.id);
+    if (!cur) {
+      insert.push({ time, repeated_pattern: n.repeated_pattern });
+      continue;
+    }
+
+    seen.add(n.id);
+
+    const tc = cur.time !== time;
+    const rc = !rpEq(cur.repeated_pattern, n.repeated_pattern);
+
+    if (tc || rc)
+      update.push({
+        id: n.id,
+        ...(tc ? { time } : {}),
+        ...(rc ? { repeated_pattern: n.repeated_pattern } : {}),
+      });
+  }
+
+  for (const [id] of P) if (id && !seen.has(id)) del.push(id);
+
+  return insert.length || update.length || del.length
+    ? { insert, update, delete: del }
+    : undefined;
+};

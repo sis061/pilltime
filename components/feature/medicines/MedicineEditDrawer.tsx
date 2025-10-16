@@ -36,7 +36,13 @@ import { useParams, useRouter } from "next/navigation";
 import { deleteMedicineImage } from "@/lib/supabase/upload";
 import { useGlobalLoading } from "@/store/useGlobalLoading";
 import { toast } from "sonner";
-import { MedicineSchedule, RepeatedPattern } from "@/types/medicines";
+import {
+  MedicineSchedule,
+  RepeatedPattern,
+  UISchedule,
+} from "@/types/medicines";
+import { toHHMMSS } from "@/lib/date";
+import { buildPatch } from "@/lib/medicine";
 
 /* ---------------------------
  * API
@@ -74,68 +80,6 @@ async function deleteMedicine(id: string) {
   }
   return res.json();
 }
-
-/* ---------------------------
- * diff 유틸
- * --------------------------- */
-
-interface UISchedule {
-  id: number | null;
-  time: string;
-  repeated_pattern: RepeatedPattern;
-}
-
-const toHHMMSS = (t: string) => {
-  const [h = "00", m = "00", s = "00"] = (t || "").split(":");
-  return `${h.padStart(2, "0")}:${m.padStart(2, "0")}:${s.padStart(2, "0")}`;
-};
-
-const rpEq = (a?: RepeatedPattern, b?: RepeatedPattern) =>
-  JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
-
-const buildPatch = (prev: UISchedule[], next: UISchedule[]) => {
-  const P = new Map(prev.map((x) => [x.id, { ...x, time: toHHMMSS(x.time) }]));
-  const seen = new Set<number>();
-  const insert: Array<Omit<UISchedule, "id">> = [];
-  const update: Array<{
-    id: number;
-    time?: string;
-    repeated_pattern?: RepeatedPattern;
-  }> = [];
-  const del: number[] = [];
-
-  for (const n of next) {
-    const time = toHHMMSS(n.time);
-    if (!n.id) {
-      insert.push({ time, repeated_pattern: n.repeated_pattern });
-      continue;
-    }
-
-    const cur = P.get(n.id);
-    if (!cur) {
-      insert.push({ time, repeated_pattern: n.repeated_pattern });
-      continue;
-    }
-
-    seen.add(n.id);
-
-    const tc = cur.time !== time;
-    const rc = !rpEq(cur.repeated_pattern, n.repeated_pattern);
-
-    if (tc || rc)
-      update.push({
-        id: n.id,
-        ...(tc ? { time } : {}),
-        ...(rc ? { repeated_pattern: n.repeated_pattern } : {}),
-      });
-  }
-
-  for (const [id] of P) if (id && !seen.has(id)) del.push(id);
-
-  return insert.length || update.length || del.length
-    ? { insert, update, delete: del }
-    : undefined;
-};
 
 export default function MedicineEditDrawer({
   open,
