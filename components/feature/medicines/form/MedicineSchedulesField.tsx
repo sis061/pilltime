@@ -105,9 +105,9 @@ export function MedicineSchedulesField() {
                     shouldTouch: true,
                   });
                 }}
-                className={`!px-4 !py-2 ${
+                className={`!px-4 !py-2 shadow-xs cursor-pointer  ${
                   repeatedPattern.type === opt.value &&
-                  "!bg-pilltime-blue !text-white cursor-pointer"
+                  "!bg-pilltime-blue !text-white "
                 }`}
               >
                 {opt.label}
@@ -141,8 +141,8 @@ export function MedicineSchedulesField() {
                     }
                   );
                 }}
-                className={`!p-2 w-[calc((100%/7)-0.43rem)] ${
-                  selected && "!bg-pilltime-blue !text-white cursor-pointer"
+                className={`!p-2 w-[calc((100%/7)-0.43rem)] shadow-xs cursor-pointer ${
+                  selected && "!bg-pilltime-blue !text-white "
                 }`}
               >
                 {day}
@@ -176,8 +176,8 @@ export function MedicineSchedulesField() {
                     }
                   );
                 }}
-                className={`!p-2 w-[calc((100%/4)-0.43rem)] ${
-                  selected && "!bg-pilltime-blue !text-white cursor-pointer"
+                className={`!p-2 w-[calc((100%/4)-0.43rem)] shadow-xs cursor-pointer ${
+                  selected && "!bg-pilltime-blue !text-white "
                 }`}
               >
                 {date}일

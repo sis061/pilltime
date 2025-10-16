@@ -148,12 +148,15 @@ export default function MedicineEditDrawer({
           days_of_week: [],
           days_of_month: [],
         };
+        const sortedSch = [...data.medicine_schedules].sort((a, b) =>
+          a.time.localeCompare(b.time)
+        );
 
         reset({
           name: data.name,
           description:
             data.description?.map((d: string) => ({ value: d })) ?? [],
-          schedules: data.medicine_schedules.map((s: MedicineSchedule) => ({
+          schedules: sortedSch.map((s: MedicineSchedule) => ({
             id: s.id,
             time: toHHMMSS(s.time),
           })) as any[],
