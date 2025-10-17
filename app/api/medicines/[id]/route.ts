@@ -227,18 +227,32 @@ export async function PUT(
     ) {
       const delIds: number[] = schedules_patch.delete;
 
-      // 미래 로그만 삭제 (과거는 보존)
       const today = new Date().toISOString().slice(0, 10);
-      const { error: delLogsErr } = await supabase
-        .from("intake_logs")
-        .delete()
-        .in("schedule_id", delIds)
-        .gte("date", today);
-      if (delLogsErr)
-        return NextResponse.json(
-          { error: delLogsErr.message },
-          { status: 500 }
+      // // 미래 로그만 삭제 (과거는 보존)
+      // const { error: delLogsErr } = await supabase
+      //   .from("intake_logs")
+      //   .delete()
+      //   .in("schedule_id", delIds)
+      //   .gte("date", today);
+      // if (delLogsErr)
+      //   return NextResponse.json(
+      //     { error: delLogsErr.message },
+      //     { status: 500 }
+      //   );
+
+      //    내일 이후 전부 삭제 + 오늘은 'scheduled'만 삭제(체크 기록 보존)
+      for (const sid of delIds) {
+        const { error: resetErr } = await supabase.rpc(
+          "reset_future_logs_for_schedule",
+          { p_schedule_id: sid }
         );
+        if (resetErr) {
+          return NextResponse.json(
+            { error: resetErr.message },
+            { status: 500 }
+          );
+        }
+      }
 
       // 스케줄 soft-delete
       const { error: softErr } = await supabase
