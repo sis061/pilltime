@@ -140,7 +140,7 @@ export default function MedicineEditDrawer({
 
     (async () => {
       try {
-        setGLoading(true, "정보를 불러오는 중이에요..");
+        // setGLoading(true, "정보를 불러오는 중이에요..");
         const data = await fetchMedicine(String(id), ac.signal);
         const rp = data.medicine_schedules[0]?.repeated_pattern ?? {
           type: "DAILY",

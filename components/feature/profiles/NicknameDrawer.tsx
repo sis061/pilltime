@@ -102,6 +102,7 @@ export default function NicknameDrawer({
 
       // 닉네임 최초 생성이라면 다음 단계 자동 진행
       if (mode === "create") {
+        setGLoading(true, "새로운 약을 등록하러 가는중....");
         document.getElementById("create_new_medicine")?.click();
       }
     } catch (err: any) {

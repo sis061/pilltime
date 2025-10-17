@@ -9,6 +9,7 @@ import { useUserStore } from "@/store/useUserStore";
 import { useEffect, useMemo, useState } from "react";
 import NicknameDrawer from "../feature/profiles/NicknameDrawer";
 import type { User } from "@supabase/supabase-js";
+import { useGlobalLoading } from "@/store/useGlobalLoading";
 
 export default function HeaderClient({
   user,
@@ -21,6 +22,7 @@ export default function HeaderClient({
   const clearUser = useUserStore((s) => s.clearUser);
   const setUser = useUserStore((s) => s.setUser);
   const [open, setOpen] = useState(false);
+  const setGLoading = useGlobalLoading((s) => s.setGLoading);
 
   useEffect(() => {
     if (user) {
@@ -57,6 +59,7 @@ export default function HeaderClient({
         id="create_new_medicine"
         aria-label="새 약 등록"
         prefetch
+        onClick={() => setGLoading(true, "정보를 불러오는 중이에요..")}
       >
         <Plus size={20} color="#fff" />
       </Link>

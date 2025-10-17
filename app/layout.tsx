@@ -13,6 +13,9 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { UserProvider } from "@/components/providers/UserProvider";
 import GlobalLoading from "@/components/layout/GlobalLoading";
+const ScrollTopBtn = dynamic(() =>
+  import("@/components/layout/ScrollToTop").then((mod) => mod.default)
+);
 
 //TODO 동적 메타데이터 구현하기
 export const metadata: Metadata = {
@@ -54,6 +57,7 @@ export default function RootLayout({
           closeButton
           theme="light"
         />
+        <ScrollTopBtn />
       </body>
     </html>
   );

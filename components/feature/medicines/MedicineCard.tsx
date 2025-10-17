@@ -16,6 +16,7 @@ import { RenderTodaysMedicine } from "@/lib/medicine";
 import TodayProgress from "./TodayProgress";
 import { useEffect, useMemo, useState } from "react";
 import { toYYYYMMDD } from "@/lib/date";
+import { useGlobalLoading } from "@/store/useGlobalLoading";
 
 export default function MedicineCard(medicine: MedicineDetail) {
   const { id, name, imageUrl, description, schedules } = medicine;
@@ -23,6 +24,7 @@ export default function MedicineCard(medicine: MedicineDetail) {
   const [pending, setPending] = useState<Record<number, IntakeLog["status"]>>(
     {}
   );
+  const setGLoading = useGlobalLoading((s) => s.setGLoading);
   const onOptimisticSet = (logId: number, status: IntakeLog["status"]) =>
     setPending((p) => ({ ...p, [logId]: status })); // ✅ 성공 시에는 더 이상 즉시 지우지 않음
   const onOptimisticClear = (logId: number) =>
@@ -113,7 +115,10 @@ export default function MedicineCard(medicine: MedicineDetail) {
                 </PopoverContent>
               </Popover>
 
-              <Link href={`/medicines/${id}/edit`}>
+              <Link
+                href={`/medicines/${id}/edit`}
+                onClick={() => setGLoading(true, "정보를 불러오는 중이에요..")}
+              >
                 <Settings
                   size={20}
                   className="cursor-pointer"

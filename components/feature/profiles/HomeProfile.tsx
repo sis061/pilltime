@@ -4,9 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import NicknameDrawer from "@/components/feature/profiles/NicknameDrawer";
 import { useUserStore } from "@/store/useUserStore";
 import { User } from "@/types/profile";
+// import { useGlobalLoading } from "@/store/useGlobalLoading";
 
 export default function HomeProfile({ initialUser }: { initialUser: User }) {
   const { user, setUser } = useUserStore();
+  // const setGLoading = useGlobalLoading((s) => s.setGLoading);
   const [openDrawer, setOpenDrawer] = useState(false);
   const openedOnceRef = useRef(false);
 
@@ -24,6 +26,7 @@ export default function HomeProfile({ initialUser }: { initialUser: User }) {
       currentUser.nickname === null &&
       !openedOnceRef.current
     ) {
+      // setGLoading(true, "닉네임을 등록하러 가는중....");
       setOpenDrawer(true);
       openedOnceRef.current = true;
     }
