@@ -1,5 +1,7 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { revalidateMonthIndicator } from "@/lib/calendar/indicator";
+export const runtime = "nodejs";
 
 export async function PUT(req: Request) {
   const supabase = await createServerSupabaseClient();
@@ -22,7 +24,7 @@ export async function PUT(req: Request) {
     );
   }
 
-  const { error } = await supabase
+  const { data: updated, error } = await supabase
     .from("intake_logs")
     .update({
       status: body.status,
@@ -32,11 +34,16 @@ export async function PUT(req: Request) {
     .eq("id", Number(body.id))
     .eq("user_id", user.id)
     .is("deleted_at", null)
+    .select("date") // [NEW] 무효화용 날짜 회수
     .single();
 
   if (error) {
     console.error("DB Error:", error.message);
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  if (updated?.date) {
+    await revalidateMonthIndicator(user.id, updated.date as string);
   }
 
   return NextResponse.json({ success: true }, { status: 200 });

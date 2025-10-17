@@ -48,6 +48,9 @@ export default function ScheduleItem(schedule: ScheduleItemProps) {
 
   const [status, setStatus] = useState<IntakeLog["status"]>(initialStatus);
   const [_isPending, startTransition] = useTransition();
+  const isTaken = status === "taken";
+  const isSkipped = status === "skipped";
+  const isMissed = status === "missed";
 
   useEffect(() => {
     setStatus(todayLog?.status ?? "scheduled");
@@ -96,10 +99,16 @@ export default function ScheduleItem(schedule: ScheduleItemProps) {
 
   return (
     <div className="flex items-center w-full justify-between gap-4 border-t border-t-pilltime-teal/50 !pt-4 !px-4">
-      <div className="flex-col flex gap-1 grow items-start">
-        <span className="!text-pilltime-grayDark/90 text-2xl ">
+      <div className="flex-col flex grow items-start">
+        <p
+          className={`!text-pilltime-grayDark/90 text-2xl
+            ${
+              (isTaken || isSkipped) &&
+              "line-through decoration-pilltime-teal/50"
+            }`}
+        >
           {formatTime(schedule?.time)}
-        </span>
+        </p>
         <span className="text-sm !text-pilltime-grayDark/60 ">
           {RenderStatusText(status)}
         </span>
@@ -112,10 +121,10 @@ export default function ScheduleItem(schedule: ScheduleItemProps) {
           disabled={_isPending || !todayLog}
           variant="secondary"
           className={` hover:!bg-pilltime-blue/50 hover:[&_svg]:stroke-white
-              ${status === "taken" && "bg-pilltime-blue [&_>svg]:stroke-white"}
-              ${status === "skipped" && "[&_>svg]:!stroke-pilltime-teal/50"}
+              ${isTaken && "bg-pilltime-blue [&_>svg]:stroke-white"}
+              ${isSkipped && "[&_>svg]:!stroke-pilltime-teal/50"}
               ${
-                status === "missed" &&
+                isMissed &&
                 "[&_>svg]:!stroke-pilltime-teal bg-red-700 [&_>svg]:animate-pulse"
               }`}
           onClick={() => onButtonClick("taken")}
@@ -129,12 +138,10 @@ export default function ScheduleItem(schedule: ScheduleItemProps) {
           disabled={_isPending || !todayLog}
           variant="secondary"
           className={`hover:!bg-pilltime-yellow/50 hover:[&_svg]:stroke-white
-            ${
-              status === "skipped" && "!bg-pilltime-yellow [&_svg]:stroke-white"
-            }
-            ${status === "taken" && "[&_>svg]:!stroke-pilltime-teal/50"}
+            ${isSkipped && "!bg-pilltime-yellow [&_svg]:stroke-white"}
+            ${isTaken && "[&_>svg]:!stroke-pilltime-teal/50"}
           ${
-            status === "missed" &&
+            isMissed &&
             "[&_>svg]:!stroke-pilltime-teal bg-red-700 [&_>svg]:animate-pulse "
           }`}
           onClick={() => onButtonClick("skipped")}

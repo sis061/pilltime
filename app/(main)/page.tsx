@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import HomeProfile from "@/components/feature/profiles/HomeProfile";
 import MedicineList from "@/components/feature/medicines/MedicineList";
+import HomeToday from "@/components/feature/calendars/HomeToday";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "default-no-store";
@@ -66,17 +67,20 @@ export default async function Home() {
 
   return (
     <section className="inner min-h-[calc(100dvh-11.5rem)] !text-pilltime-blue text-3xl !mx-auto !w-full h-full !mb-8 !p-2">
-      {profile ? (
-        <HomeProfile
-          initialUser={{
-            id: user.id,
-            email: user.email,
-            nickname: profile?.nickname ?? null,
-          }}
-        />
-      ) : (
-        <ProfileFallback />
-      )}
+      <div className="!mb-12 flex flex-col items-center gap-4 justify-center max-md:!pt-4">
+        <HomeToday />
+        {profile ? (
+          <HomeProfile
+            initialUser={{
+              id: user.id,
+              email: user.email,
+              nickname: profile?.nickname ?? null,
+            }}
+          />
+        ) : (
+          <ProfileFallback />
+        )}
+      </div>
 
       {medicines ? (
         <MedicineList medicines={medicines} userId={user.id} />

@@ -4,9 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import NicknameDrawer from "@/components/feature/profiles/NicknameDrawer";
 import { useUserStore } from "@/store/useUserStore";
 import { User } from "@/types/profile";
+// import { useGlobalLoading } from "@/store/useGlobalLoading";
 
 export default function HomeProfile({ initialUser }: { initialUser: User }) {
   const { user, setUser } = useUserStore();
+  // const setGLoading = useGlobalLoading((s) => s.setGLoading);
   const [openDrawer, setOpenDrawer] = useState(false);
   const openedOnceRef = useRef(false);
 
@@ -24,6 +26,7 @@ export default function HomeProfile({ initialUser }: { initialUser: User }) {
       currentUser.nickname === null &&
       !openedOnceRef.current
     ) {
+      // setGLoading(true, "닉네임을 등록하러 가는중....");
       setOpenDrawer(true);
       openedOnceRef.current = true;
     }
@@ -38,20 +41,7 @@ export default function HomeProfile({ initialUser }: { initialUser: User }) {
   }
 
   return (
-    <div className="!mb-12 flex flex-col items-center gap-4 justify-center max-md:!pt-4">
-      <div className="flex items-center justify-center md:justify-end w-full [&_*]:!text-pilltime-grayDark/50">
-        <div className=" flex gap-2 items-center md:items-end justify-center [&_h3]:!text-lg [&_span]:!text-[16px] [&_span]:opacity-75">
-          <h3>
-            {new Date().getMonth() + 1}
-            <span>월</span> {new Date().getDate()}
-            <span>일</span>
-          </h3>
-          <h3>
-            {new Date().toLocaleDateString("ko-KR", { weekday: "short" })}
-            <span>요일</span>
-          </h3>
-        </div>
-      </div>
+    <>
       <h1 className="!text-4xl w-full !px-4 text-center !text-pilltime-grayDark/60">
         안녕하세요{" "}
         {currentUser?.nickname ? (
@@ -69,6 +59,6 @@ export default function HomeProfile({ initialUser }: { initialUser: User }) {
         onOpenChange={setOpenDrawer}
         mode={currentUser?.nickname ? "edit" : "create"}
       />
-    </div>
+    </>
   );
 }

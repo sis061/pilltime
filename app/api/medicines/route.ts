@@ -4,6 +4,10 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { TablesInsert } from "@/types_db";
 import { MedicineSchema } from "@/lib/schemas/medicine";
 import { sevenDayWindow } from "@/lib/date";
+// [NEW] 월 요약 캐시 무효화 헬퍼
+import { revalidateMonthIndicator } from "@/lib/calendar/indicator";
+// [NEW] revalidateTag는 Node 런타임 필요
+export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   try {
@@ -92,6 +96,11 @@ export async function POST(req: Request) {
     }
 
     // 4️⃣ 7일치 로그 생성 (Supabase RPC)
+    //    → 각 스케줄에 대해 reset + generate 실행
+    //    → 끝난 뒤, 생성 범위가 걸치는 "월"만 캐시 무효화
+    // [NEW] 무효화할 월(YYYY-MM)을 모으는 Set
+    const ymToInvalidate = new Set<string>();
+
     for (const s of scheduleRows) {
       const repeated = s.repeated_pattern as Record<string, any>;
       const tz = repeated?.tz ?? "Asia/Seoul";
@@ -115,11 +124,19 @@ export async function POST(req: Request) {
       } else {
         console.log(`✅ ${insertedCount} logs generated for schedule ${s.id}`);
       }
+
+      // [NEW] 7일 범위가 걸치는 월만 dedupe 수집
+      ymToInvalidate.add(fromStr.slice(0, 7)); // "YYYY-MM"
+      ymToInvalidate.add(toStr.slice(0, 7));
+    }
+
+    // [NEW] 무효화: 수집된 월만 한 번씩 revalidate
+    for (const ym of ymToInvalidate) {
+      await revalidateMonthIndicator(user.id, `${ym}-01`);
     }
 
     const res = NextResponse.json(medicine, { status: 201 });
     res.headers.set("Location", `/medicines/${medicine.id}`);
-
     return res;
   } catch (err: any) {
     return NextResponse.json(

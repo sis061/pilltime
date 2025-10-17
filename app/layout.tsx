@@ -1,3 +1,5 @@
+//TODO not-found 페이지 만들기
+
 import "@ant-design/v5-patch-for-react-19";
 
 import dynamic from "next/dynamic";
@@ -13,6 +15,9 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { UserProvider } from "@/components/providers/UserProvider";
 import GlobalLoading from "@/components/layout/GlobalLoading";
+const ScrollTopBtn = dynamic(() =>
+  import("@/components/layout/ScrollToTop").then((mod) => mod.default)
+);
 
 //TODO 동적 메타데이터 구현하기
 export const metadata: Metadata = {
@@ -54,6 +59,7 @@ export default function RootLayout({
           closeButton
           theme="light"
         />
+        <ScrollTopBtn />
       </body>
     </html>
   );

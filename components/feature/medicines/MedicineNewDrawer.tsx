@@ -7,7 +7,7 @@ import { FormProvider, useForm } from "react-hook-form";
 
 import { Step05Review } from "@/components/feature/medicines/steps/Step05Review";
 
-import { useRef, useTransition } from "react";
+import { useRef, useTransition, useEffect } from "react";
 import { useMediaQuery } from "react-responsive";
 import { WizardHeader } from "./steps/WizardHeader";
 import { steps, StepWrapper } from "./steps/config";
@@ -67,6 +67,10 @@ export default function MedicineNewDrawer({
     },
   });
 
+  useEffect(() => {
+    setGLoading(false);
+  }, [setGLoading]);
+
   // supabase storage 에 orphan 파일 삭제용
   async function handleCancel() {
     const filePath = methods.getValues("imageFilePath");
@@ -104,7 +108,7 @@ export default function MedicineNewDrawer({
 
       toast.success(`${_data.name}의 정보를 등록했어요`);
 
-      // [ADDED] 부모(RSC) 최신화 + 닫기
+      // 부모(RSC) 최신화 + 닫기
       startTransition(() => {
         router.refresh();
         onOpenChange(false);
@@ -126,6 +130,7 @@ export default function MedicineNewDrawer({
     <Drawer
       open={open}
       onOpenChange={async (nextOpen) => {
+        if (nextOpen) setGLoading(false);
         if (!nextOpen) {
           // Drawer가 닫힐 때 → 취소 로직 실행
           await handleCancel();
