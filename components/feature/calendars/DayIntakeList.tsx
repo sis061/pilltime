@@ -2,33 +2,25 @@
 "use client";
 
 import * as React from "react";
-import type { DayIntakeItem } from "@/types/calendar";
+import type { DayDot, DayIntakeItem } from "@/types/calendar";
 import { formatTime } from "@/lib/date";
 import { PacmanLoader } from "react-spinners";
+import { statusBadgeClass } from "./CalendarShell";
 
-function statusBadgeClass(s: DayIntakeItem["status"]) {
-  switch (s) {
-    case "taken":
-      return "bg-pilltime-blue !text-white";
-    case "skipped":
-      return "bg-pilltime-yellow !text-white";
-    case "missed":
-      return "bg-red-700 !text-pilltime-teal";
-    case "scheduled":
-      return "bg-gray-400 !text-white";
-  }
-}
-function statusLabelKo(s: DayIntakeItem["status"]) {
-  switch (s) {
-    case "taken":
-      return "먹었어요!";
-    case "skipped":
-      return "안 먹기로 했어요!";
-    case "missed":
-      return "놓쳤어요!!!";
-    case "scheduled":
-      return "아직 예정이에요";
-  }
+function getIntakeSummary(intakes: DayIntakeItem[]): string[] {
+  const statuses = intakes.map((i) => i.status);
+
+  const hasSkipped = statuses.includes("skipped");
+  const hasMissed = statuses.includes("missed");
+  const allTaken = statuses.length > 0 && statuses.every((s) => s === "taken");
+
+  const messages: string[] = [];
+
+  if (hasSkipped) messages.push("건너뛴 약이 있어요.");
+  if (hasMissed) messages.push("놓친 약이 있네요!");
+  if (allTaken) messages.push("다 먹었어요!");
+
+  return messages;
 }
 
 export default function DayIntakeList({
@@ -53,48 +45,73 @@ export default function DayIntakeList({
   }
   if (!items?.length) {
     return (
-      <div className="w-full h-full flex items-center justify-center text-sm !text-pilltime-grayDark/75">
+      <div className="w-full h-full flex items-center justify-center text-sm !text-pilltime-grayDark/75 ">
         이 날은 먹은 약이 없어요!
       </div>
     );
   }
 
+  const groupedArr = Object.values(
+    items.reduce<
+      Record<
+        string,
+        {
+          medicine_id: string;
+          medicine_name: string;
+          intakes: DayIntakeItem[];
+        }
+      >
+    >((acc, item) => {
+      const key = item.medicine_id;
+      const name = item.medicine_name;
+      if (!acc[key])
+        acc[key] = { medicine_id: key, medicine_name: name, intakes: [] };
+
+      acc[key].intakes.push(item);
+      return acc;
+    }, {})
+  );
+
   return (
-    <ul className="grid gap-2">
-      {items.map((it) => (
+    <ul className="flex flex-wrap [@media(min-width:480px)]:grid grid-rows-2 grid-cols-2 gap-2 w-full">
+      {groupedArr.map((group) => (
         <li
-          key={it.intake_id}
-          className="flex items-center justify-between rounded-md bg-[#fafafa] !p-2 shadow-md"
+          key={group.medicine_id}
+          className="w-full flex items-center gap-4 rounded-md bg-[#fafafa] !p-4 bg-card text-base text-foreground shadow-sm border-1 border-pilltime-teal/10"
         >
-          <div className="flex items-center gap-4">
-            {/* 이니셜 배지 */}
-            <span
-              className={[
-                "inline-flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold",
-                statusBadgeClass(it.status),
-              ].join(" ")}
-              title={statusLabelKo(it.status)}
-            >
-              {/* {Array.from(it.medicine_name)[0]?.toUpperCase?.() ?? "?"} */}
-            </span>
-            {/* 텍스트 */}
-            <div className="flex flex-col min-w-16 max-w-24 truncate">
-              <span className="text-sm font-bold !text-pilltime-grayDark">
-                {it.medicine_name}
-              </span>
-              <span className="text-xs  !text-pilltime-grayDark/90">
-                {formatTime(it.time) ?? "시간 없음"}
-              </span>
-            </div>
-            <div className="flex items-center gap-4">
-              <span className="text-xs !text-pilltime-grayDark/75">
-                {statusLabelKo(it.status)}
-              </span>
+          {/* 텍스트 -- 약 이름, 복용 상태 요약 */}
+          <div className="flex flex-col gap-2 w-1/2 min-w-24 items-start justify-start h-full truncate">
+            <h4 className="text-lg font-bold !text-pilltime-grayDark truncate !text-ellipsis w-full">
+              {group.medicine_name}
+            </h4>
+            <div className="flex flex-col gap-1">
+              {getIntakeSummary(group.intakes).map((message, i) => (
+                <span key={i} className="text-xs !text-pilltime-grayDark/75">
+                  {message}
+                </span>
+              ))}
             </div>
           </div>
 
-          {/* (향후 액션 자리) */}
-          {/* <Button size="sm" variant="ghost">수정</Button> */}
+          {/* 복용 시간별 상태 배지 */}
+          <div className="flex flex-col grow gap-1 !py-1 items-start justify-start h-full ">
+            {group.intakes.map((intake) => (
+              <div
+                key={intake.intake_id}
+                className="flex items-center justify-center gap-1"
+              >
+                <span className="text-xs !text-pilltime-grayDark/75 w-14">
+                  {formatTime(intake.time) ?? "--:--"}
+                </span>
+                <span
+                  className={[
+                    "inline-flex h-3 w-3 items-center justify-center rounded-full text-[11px] font-bold",
+                    statusBadgeClass(intake.status),
+                  ].join(" ")}
+                />
+              </div>
+            ))}
+          </div>
         </li>
       ))}
     </ul>

@@ -15,6 +15,7 @@ import { useUserStore } from "@/store/useUserStore";
 import { useMediaQuery } from "react-responsive";
 import { useGlobalLoading } from "@/store/useGlobalLoading";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 interface Props {
   open: boolean;
@@ -28,6 +29,7 @@ export default function NicknameDrawer({
   mode = "edit",
 }: Props) {
   const supabase = createClient();
+  const router = useRouter();
   const user = useUserStore((s) => s.user);
   const setUser = useUserStore((s) => s.setUser);
   const isLoading = useGlobalLoading((s) => s.isGLoading);
@@ -36,7 +38,15 @@ export default function NicknameDrawer({
 
   const [nickname, setNickname] = useState(user?.nickname || "");
   const submitBtnRef = useRef<HTMLButtonElement>(null);
+  const modeAtOpenRef = useRef<"create" | "edit">(mode);
   const minTablet = useMediaQuery({ minWidth: 768 });
+
+  // Drawer가 열릴 때, 그 시점의 모드를 고정(부모 리렌더 영향 차단)
+  useEffect(() => {
+    if (open) {
+      modeAtOpenRef.current = mode;
+    }
+  }, [open, mode]);
 
   useEffect(() => {
     if (open) {
@@ -47,6 +57,7 @@ export default function NicknameDrawer({
   // -- 낙관적 업데이트 적용
 
   async function handleSave() {
+    const openedMode = modeAtOpenRef.current;
     if (!user) {
       toast.error("로그인 정보가 없어요. 다시 시도해주세요.");
       return;
@@ -100,16 +111,19 @@ export default function NicknameDrawer({
 
       onOpenChange(false);
 
+      console.log(openedMode);
+
       // 닉네임 최초 생성이라면 다음 단계 자동 진행
-      if (mode === "create") {
+      if (openedMode === "create") {
         setGLoading(true, "새로운 약을 등록하러 가는중....");
-        document.getElementById("create_new_medicine")?.click();
+        // document.getElementById("create_new_medicine")?.click();
+        router.push("/medicines/new");
       }
     } catch (err: any) {
       // 4️⃣ 실패 시 — 이전 상태로 롤백
       console.error("닉네임 업데이트 실패:", err?.message || err);
       toast.error(
-        mode === "create"
+        openedMode === "create"
           ? "닉네임을 등록하는 중 문제가 발생했어요"
           : "닉네임을 수정하는 중 문제가 발생했어요"
       );

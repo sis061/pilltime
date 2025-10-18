@@ -50,7 +50,9 @@ async function _buildMonthIndicatorMap(
 
   const { data, error } = await supabase
     .from("intake_logs")
-    .select("date,status,medicine_id, medicines(name)")
+    .select(
+      "date,status,medicine_id, medicines!left(name, deleted_at),medicine_schedules!left(id, deleted_at) "
+    )
     .eq("user_id", userId)
     .gte("date", startYmd)
     .lte("date", endYmdInclusive);

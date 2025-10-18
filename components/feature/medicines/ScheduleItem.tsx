@@ -58,8 +58,8 @@ export default function ScheduleItem(schedule: ScheduleItemProps) {
 
   async function putIntakeLog(id: number, next: IntakeLog["status"]) {
     const prev = status;
-    const optimisticCheckedAt =
-      next === "taken" ? new Date().toISOString() : null;
+    // const optimisticCheckedAt =
+    //   next === "taken" ? new Date().toISOString() : null;
 
     // 낙관 반영
     setStatus(next);
@@ -72,7 +72,7 @@ export default function ScheduleItem(schedule: ScheduleItemProps) {
         body: JSON.stringify({
           id,
           status: next,
-          checked_at: optimisticCheckedAt,
+          // checked_at: optimisticCheckedAt,
           source: "manual",
         }),
       });

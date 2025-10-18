@@ -33,7 +33,7 @@ export default function MedicineCard(medicine: MedicineDetail) {
   // ✅ 리컨실리에이션: 실제 스케줄 데이터가 pending과 같아지면 그 때만 pending 제거
   useEffect(() => {
     if (!schedules?.length) return;
-    const dateStr = toYYYYMMDD(new Date());
+    const dateStr = toYYYYMMDD(new Date(), "Asia/Seoul");
     const actual = new Map<number, IntakeLog["status"]>();
     schedules
       .flatMap((s) => s.intake_logs)

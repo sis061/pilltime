@@ -24,13 +24,21 @@ export async function PUT(req: Request) {
     );
   }
 
+  const now = new Date().toISOString();
+
+  const updatePayload: Record<string, any> = {
+    status: body.status,
+    source: body.source ?? "manual",
+  };
+
+  // ✅ taken/missed/skip 등 상태가 확정될 때만 checked_at 갱신
+  if (["taken", "missed", "skipped"].includes(body.status)) {
+    updatePayload.checked_at = now;
+  }
+
   const { data: updated, error } = await supabase
     .from("intake_logs")
-    .update({
-      status: body.status,
-      source: body.source,
-      checked_at: body.checked_at,
-    })
+    .update(updatePayload)
     .eq("id", Number(body.id))
     .eq("user_id", user.id)
     .is("deleted_at", null)

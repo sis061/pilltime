@@ -12,13 +12,50 @@ import type {
   DayIntakeResponse,
 } from "@/types/calendar";
 
+const STATUS = [
+  {
+    enum: "taken",
+    kr: "복용",
+    badgeClass: statusBadgeClass("taken"),
+  },
+  {
+    enum: "skipped",
+    kr: "건너뜀",
+    badgeClass: statusBadgeClass("skipped"),
+  },
+  {
+    enum: "missed",
+    kr: "미복용",
+    badgeClass: statusBadgeClass("missed"),
+  },
+  {
+    enum: "scheduled",
+    kr: "예정",
+    badgeClass: statusBadgeClass("scheduled"),
+  },
+] as const;
+
+const ymOf = (date: Date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+
+export function statusBadgeClass(s: DayIntakeItem["status"]) {
+  switch (s) {
+    case "taken":
+      return "bg-pilltime-blue !text-white";
+    case "skipped":
+      return "bg-pilltime-yellow !text-white";
+    case "missed":
+      return "bg-red-700 !text-pilltime-teal";
+    case "scheduled":
+      return "bg-gray-400 !text-white";
+  }
+}
+
 function normalizeYmdKST(d: string | null) {
   const today = toYYYYMMDD(new Date(), "Asia/Seoul");
   if (!d) return today;
   return /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : today;
 }
-const ymOf = (date: Date) =>
-  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
 
 export default function CalendarShell({
   dateParam,
@@ -117,7 +154,7 @@ export default function CalendarShell({
       className={
         layout === "page"
           ? "grid gap-4"
-          : "grid gap-4 grid-rows-[auto_minmax(0,1fr)_auto] h-full"
+          : "grid gap-4 grid-rows-[auto_auto_1fr] h-full"
       }
     >
       <PillCalendar
@@ -127,13 +164,22 @@ export default function CalendarShell({
         onSelectYmd={(ymd) => onChangeDate(ymd)}
         todayYmd={todayYmd}
         futureWindowDays={7}
-        dotsOfDate={dotsOfDate} // ✅ 이제 과거/미래 월도 커버
+        dotsOfDate={dotsOfDate}
       />
-
-      <div className={"!px-2 !py-4 rounded-md overflow-y-scroll shadow-sm"}>
-        {/* <div className="mb-2 text-sm text-muted-foreground">
-          선택된 날짜: {selectedYmd}
-        </div> */}
+      <ul className="flex items-center justify-center gap-4 w-full !px-2 !-mb-1">
+        {STATUS.map((s, i) => (
+          <li key={i} className="flex items-center justify-center gap-1">
+            <span
+              className={[
+                "inline-flex h-3 w-3 items-center justify-center rounded-full text-[11px] font-bold ",
+                s.badgeClass,
+              ].join(" ")}
+            />
+            <span className="text-xs !text-pilltime-grayDark/75">{s.kr}</span>
+          </li>
+        ))}
+      </ul>
+      <div className={"rounded-lg overflow-y-auto"}>
         <DayIntakeList
           date={selectedYmd}
           items={dayItems}

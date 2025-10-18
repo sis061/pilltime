@@ -6,6 +6,7 @@ import { toYYYYMMDD } from "@/lib/date";
 import { ko } from "date-fns/locale";
 import { format } from "date-fns";
 import type { DayDot } from "@/types/calendar"; // { medicine_id, label, status }
+import { statusBadgeClass } from "./CalendarShell";
 
 export default function PillCalendar({
   month,
@@ -53,22 +54,8 @@ export default function PillCalendar({
     [maxAllowedDate]
   );
 
-  // 상태 → 배지 색상 클래스
-  function badgeColor(status: DayDot["status"]) {
-    switch (status) {
-      case "taken":
-        return "bg-pilltime-blue text-white";
-      case "skipped":
-        return "bg-pilltime-yellow text-gray-900";
-      case "missed":
-        return "bg-red-700 text-white"; // 필요시 bg-pilltime-orange로 교체 가능
-      case "scheduled":
-        return "bg-[#9CA3AF] text-white";
-    }
-  }
-
   return (
-    <div className="rounded-xl bg-card text-base text-foreground w-full shadow-sm">
+    <div className="rounded-lg bg-card text-base text-foreground w-full shadow-md">
       <Calendar
         /* 제어형 월 네비 (1일로 고정 이동) */
         month={month}
@@ -112,9 +99,9 @@ export default function PillCalendar({
           "[&_.rdp-head_cell]:p-0",
           "[&_.rdp-cell]:p-0 [&_.rdp-cell]:align-top",
           "[&_.rdp-day]:aspect-auto [&_.rdp-day]:w-full",
-          "[&_.rdp-day]:h-[calc(var(--cell-size)*1.30)] md:[&_.rdp-day]:h-[calc(var(--cell-size)*1.35)]",
+          "[&_.rdp-day]:h-[calc(var(--cell-size)*1.20)] md:[&_.rdp-day]:h-[calc(var(--cell-size)*1.25)]",
           "[&_.rdp-day]:box-border",
-          "[--cell-size:--spacing(12)] md:[--cell-size:--spacing(14)]",
+          "[--cell-size:--spacing(11)] md:[--cell-size:--spacing(13)]",
         ].join(" ")}
         classNames={{
           day: "w-full outline-none focus:outline-none focus-visible:outline-none ring-0 focus:ring-0 focus-visible:ring-0 transition-none !p-1",
@@ -156,7 +143,7 @@ export default function PillCalendar({
                         className={[
                           "inline-flex items-center justify-center",
                           "h-1 w-4 rounded-full",
-                          badgeColor(d.status),
+                          statusBadgeClass(d.status),
                         ].join(" ")}
                         title={`${d.label} · ${d.status}`}
                         aria-hidden="true"
@@ -166,7 +153,7 @@ export default function PillCalendar({
                     ))}
                     {extra > 0 && (
                       <span
-                        className="inline-flex items-center justify-center h-4 px-1 rounded-full text-[10px] font-bold bg-muted text-foreground/70"
+                        className="inline-flex items-center justify-center h-4 px-1 rounded-full text-[10px] font-bold bg-muted !text-pilltime-grayDark/75"
                         aria-hidden="true"
                         title={`+${extra}`}
                       >

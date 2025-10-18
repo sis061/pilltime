@@ -67,8 +67,15 @@ export function sortMedicinesByToday(
       RenderTodaysMedicine(s.repeated_pattern)
     );
 
-    if (aHasToday === bHasToday) return 0;
-    return aHasToday ? -1 : 1; // 오늘 복용하는 약 → 앞으로
+    // 1️⃣ 둘 다 오늘 약이 아닐 때 — 그대로 유지
+    if (!aHasToday && !bHasToday) return 0;
+
+    // 2️⃣ 한쪽만 오늘 약이면, 오늘 약이 앞으로
+    if (aHasToday && !bHasToday) return -1;
+    if (!aHasToday && bHasToday) return 1;
+
+    // 3️⃣ 둘 다 오늘 약이면 id 오름차순 정렬
+    return a.id - b.id;
   });
 }
 

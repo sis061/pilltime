@@ -28,7 +28,7 @@ export async function GET(req: Request) {
   const { data, error } = await supabase
     .from("intake_logs")
     .select(
-      "id, status, time, schedule_id, medicine_id, source, medicines(name)"
+      `id, status, time, schedule_id, medicine_id, source, medicines!left(name, deleted_at), medicine_schedules!left(id, deleted_at)`
     )
     .eq("user_id", user.id)
     .eq("date", date)
