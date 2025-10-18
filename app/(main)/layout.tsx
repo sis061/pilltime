@@ -1,6 +1,6 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
-import Header from "@/components/layout/Header";
+import Header from "@/components/layout/header/Header";
 import Footer from "@/components/layout/Footer";
 
 export const dynamic = "force-dynamic"; // ✅ 개인화 화면: SSR 강제

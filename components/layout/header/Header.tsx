@@ -21,18 +21,20 @@ export default async function Header() {
 
   return (
     <header className="h-20 bg-pilltime-blue/75 flex items-center justify-between !px-4 shadow-sm">
-      <div>
-        <Image
-          src="/pilltime_logo.svg"
-          alt="PillTime 로고"
-          width={60}
-          height={60}
-          className="-rotate-12"
-          priority
-        />
-      </div>
+      <div className="inner flex justify-between !mx-auto">
+        <div>
+          <Image
+            src="/pilltime_logo.svg"
+            alt="PillTime 로고"
+            width={60}
+            height={60}
+            className="-rotate-12"
+            priority
+          />
+        </div>
 
-      <HeaderClient user={user} nickname={nickname} />
+        <HeaderClient user={user} nickname={nickname} />
+      </div>
     </header>
   );
 }
