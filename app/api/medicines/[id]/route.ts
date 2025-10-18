@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { toHHMMSS } from "@/lib/date";
+import { toHHMMSS, toYYYYMMDD } from "@/lib/date";
 // [NEW] 월 요약 캐시 무효화 헬퍼
 import { revalidateMonthIndicator } from "@/lib/calendar/indicator";
 // [NEW] revalidateTag는 Node 런타임 필요
@@ -319,7 +319,7 @@ export async function DELETE(
   // 2️⃣ 미래 로그만 삭제 (과거 로그는 유지)
   // -------------------------------
   if (scheduleIds.length > 0) {
-    const today = new Date().toISOString().split("T")[0];
+    const today = toYYYYMMDD(new Date(), "Asia/Seoul");
     const { error: logDeleteError } = await supabase
       .from("intake_logs")
       .delete()

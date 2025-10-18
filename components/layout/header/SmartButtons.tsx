@@ -11,6 +11,7 @@ import type { LucideIcon } from "lucide-react";
  * - 다른 컴포넌트에서도 import 가능
  */
 export interface SmartButtonProps {
+  id?: string;
   label: string;
   onClick?: () => void;
   iconLeft?: LucideIcon;
@@ -26,6 +27,7 @@ export const SmartButton = React.forwardRef<
 >(
   (
     {
+      id = "",
       label,
       onClick,
       iconLeft: Icon,
@@ -38,6 +40,7 @@ export const SmartButton = React.forwardRef<
   ) => {
     return (
       <Button
+        id={id}
         ref={ref}
         variant={variant}
         onClick={onClick}

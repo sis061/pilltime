@@ -8,9 +8,9 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
 import { useFormContext, useFieldArray, Controller } from "react-hook-form";
 import { MedicineFormValues } from "@/lib/schemas/medicine";
-import TimePicker from "antd/es/time-picker";
+import TimePicker, { TimePickerProps } from "antd/es/time-picker";
 import koKR from "antd/locale/ko_KR";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 
 export const DAYS = ["일", "월", "화", "수", "목", "금", "토"];
 const MONTH_DATES = [1, 10, 20, 30];
@@ -26,6 +26,92 @@ const tpLocale =
   // 없으면 DatePicker 안의 timePickerLocale로 폴백
   (koKR as any).DatePicker?.timePickerLocale;
 
+// AutoCloseTimePicker.tsx
+
+import * as React from "react";
+import type { Dayjs } from "dayjs";
+
+/**
+ * - needConfirm={false} + controlled open
+ * - onSelect 시 패널 닫고 인풋 blur로 재오픈 방지
+ * - inputReadOnly로 모바일 키보드 튐 방지
+ */
+type Props = Omit<TimePickerProps, "onChange" | "value"> & {
+  value: Dayjs | null; // 외부(RHF) 값
+  onCommit?: (v: Dayjs | null) => void; // 최종 커밋 때만 호출
+  closeAfterCommit?: boolean; // 기본 true
+};
+
+export default function AutoCloseTimePicker({
+  value,
+  onCommit,
+  closeAfterCommit = true,
+  allowClear = false,
+  needConfirm = false,
+  showSecond = false,
+  showNow = false,
+  inputReadOnly = true,
+  ...rest
+}: Props) {
+  // 패널 open 제어
+  const [open, setOpen] = React.useState(false);
+  // 임시 선택값(시/분 중 하나만 고른 상태)
+  const [temp, setTemp] = React.useState<Dayjs | null>(null);
+  // 이번 오픈 동안 몇 번 선택했는지
+  const selectCountRef = React.useRef(0);
+  const inputRef = React.useRef<HTMLInputElement | null>(null);
+
+  // 패널 열릴 때 상태 초기화
+  const handleOpenChange = (next: boolean) => {
+    setOpen(next);
+    if (next) {
+      selectCountRef.current = 0;
+      setTemp(null);
+    }
+  };
+
+  // 화면에 보일 값: 임시값이 있으면 그걸 우선 표시
+  const displayValue = temp ?? value ?? null;
+
+  return (
+    <TimePicker
+      {...rest}
+      ref={(inst: any) => {
+        // antd 내부 input 추적 (재오픈 방지용 blur에 사용)
+        inputRef.current =
+          inst?.nativeElement ?? inst?.input ?? inst?.picker?.input ?? null;
+      }}
+      value={displayValue}
+      open={open}
+      onOpenChange={handleOpenChange}
+      needConfirm={needConfirm}
+      showSecond={showSecond}
+      showNow={showNow}
+      allowClear={allowClear}
+      inputReadOnly={inputReadOnly}
+      // 패널에서 칸을 클릭할 때마다 호출됨(시/분 각각)
+      onSelect={(v) => {
+        selectCountRef.current += 1;
+        if (selectCountRef.current >= 2) {
+          // 2번째 선택: 최종 커밋
+          onCommit?.(v);
+          if (closeAfterCommit) {
+            setOpen(false);
+            // 즉시 재오픈 방지
+            queueMicrotask(() => inputRef.current?.blur());
+          }
+          // 커밋 후 임시 상태 초기화
+          setTemp(null);
+          selectCountRef.current = 0;
+        } else {
+          // 1번째 선택: 임시값만 보이게 하고 커밋은 보류
+          setTemp(v);
+        }
+      }}
+    />
+  );
+}
+
 export function MedicineSchedulesField() {
   const {
     control,
@@ -39,6 +125,7 @@ export function MedicineSchedulesField() {
   const { fields, append, remove, replace } = useFieldArray({
     control,
     name: "schedules",
+    keyName: "__key",
   });
 
   register("repeated_pattern.type", { required: "복용 주기를 선택해주세요!" });
@@ -193,12 +280,19 @@ export function MedicineSchedulesField() {
           <label className="text-sm font-bold">복용 시간</label>
 
           {fields.map((f, index) => (
-            <div key={f.id} className="flex flex-col gap-2 items-center">
+            <div key={f.__key} className="flex flex-col gap-2 items-center">
               <div className="flex gap-2 items-center w-full">
                 {/* ✅ 도메인 PK(id) 숨김 input → diff용으로 서버에 항상 전달 */}
                 <input
                   type="hidden"
-                  {...(register as any)(`schedules.${index}.id`)}
+                  {...register(`schedules.${index}.id`, {
+                    setValueAs: (v) =>
+                      v === "" || v == null
+                        ? null
+                        : Number.isNaN(Number(v))
+                        ? v
+                        : Number(v),
+                  })}
                 />
 
                 <Controller
@@ -212,7 +306,7 @@ export function MedicineSchedulesField() {
                         ref={wrapperRef}
                         className="w-full border-pilltime-grayLight"
                       >
-                        <TimePicker
+                        {/* <TimePicker
                           locale={tpLocale}
                           value={
                             field.value ? dayjs(field.value, "HH:mm") : null
@@ -230,6 +324,28 @@ export function MedicineSchedulesField() {
                           }
                           variant="borderless"
                           allowClear={false}
+                          placeholder="약 먹을 시간을 입력하세요"
+                          className="!px-2 !py-2 shadow-sm w-[98%] !ml-1"
+                          getPopupContainer={(trigger) =>
+                            (trigger?.parentElement as HTMLElement) ??
+                            document.body
+                          }
+                        /> */}
+                        <AutoCloseTimePicker
+                          value={
+                            field.value ? dayjs(field.value, "HH:mm") : null
+                          }
+                          onCommit={(v) =>
+                            field.onChange(v ? v.format("HH:mm") : "")
+                          }
+                          minuteStep={5}
+                          hideDisabledOptions
+                          needConfirm={false}
+                          showNow={false}
+                          showSecond={false}
+                          format="HH:mm"
+                          locale={tpLocale}
+                          variant="borderless"
                           placeholder="약 먹을 시간을 입력하세요"
                           className="!px-2 !py-2 shadow-sm w-[98%] !ml-1"
                           getPopupContainer={(trigger) =>

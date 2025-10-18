@@ -24,6 +24,7 @@ import {
   UserPen,
 } from "lucide-react";
 import { SmartButtonGroup } from "./SmartButtons";
+import { toYYYYMMDD } from "@/lib/date";
 
 export default function HeaderClient({
   user,
@@ -41,10 +42,18 @@ export default function HeaderClient({
   const minMobile = useMediaQuery({ minWidth: 600 });
 
   // 오늘 날짜 계산
-  const today = new Date();
-  const y = today.getFullYear();
-  const m = String(today.getMonth() + 1).padStart(2, "0");
-  const d = String(today.getDate()).padStart(2, "0");
+  // const today = new Date();
+  // const y = today.getFullYear();
+  // const m = String(today.getMonth() + 1).padStart(2, "0");
+  // const d = String(today.getDate()).padStart(2, "0");
+
+  const todayYmd = toYYYYMMDD(new Date(), "Asia/Seoul");
+
+  function goNewMedicine() {
+    setMenuOpen(false);
+    router.push("/medicines/new");
+    setGLoading(true, "정보를 불러오는 중이에요..");
+  }
 
   useEffect(() => {
     if (user) {
@@ -79,16 +88,13 @@ export default function HeaderClient({
 
   const desktopBtns = [
     {
+      id: "create_new_medicine",
       key: "new",
       label: "새로운 약 등록",
       iconLeft: Plus,
       iconColor: "#fff",
       className: baseWhiteBtn,
-      onClick: () => {
-        setMenuOpen(false);
-        router.push("/medicines/new");
-        setGLoading(true, "정보를 불러오는 중이에요..");
-      },
+      onClick: goNewMedicine,
     },
     {
       key: "calendar",
@@ -98,7 +104,7 @@ export default function HeaderClient({
       className: baseWhiteBtn,
       onClick: () => {
         setMenuOpen(false);
-        router.push(`/calendar?d=${y}-${m}-${d}`);
+        router.push(`/calendar?d=${todayYmd}`);
       },
     },
   ];
