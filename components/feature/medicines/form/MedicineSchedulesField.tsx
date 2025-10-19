@@ -46,38 +46,51 @@ export default function AutoCloseTimePicker({
   value,
   onCommit,
   closeAfterCommit = true,
-  allowClear = false,
   needConfirm = false,
+  allowClear = false,
   showSecond = false,
   showNow = false,
   inputReadOnly = true,
   ...rest
 }: Props) {
-  // 패널 open 제어
   const [open, setOpen] = React.useState(false);
-  // 임시 선택값(시/분 중 하나만 고른 상태)
   const [temp, setTemp] = React.useState<Dayjs | null>(null);
-  // 이번 오픈 동안 몇 번 선택했는지
-  const selectCountRef = React.useRef(0);
+  const pickCountRef = React.useRef(0);
   const inputRef = React.useRef<HTMLInputElement | null>(null);
 
-  // 패널 열릴 때 상태 초기화
   const handleOpenChange = (next: boolean) => {
     setOpen(next);
     if (next) {
-      selectCountRef.current = 0;
+      pickCountRef.current = 0;
       setTemp(null);
     }
   };
 
-  // 화면에 보일 값: 임시값이 있으면 그걸 우선 표시
+  // 한 번의 패널 오픈 동안 2회(시/분) 선택되면 커밋 & 닫기
+  const handlePartialPick = (v: Dayjs | null) => {
+    if (!open) return; // 외부 값 변경에 의해 트리거된 콜백 무시(안전장치)
+    pickCountRef.current += 1;
+
+    if (pickCountRef.current >= 2 || needConfirm) {
+      // needConfirm=true 인 경우엔 여기서 커밋하지 않고 onOk 쪽에서 처리해도 됨
+      if (!needConfirm) onCommit?.(v);
+      if (closeAfterCommit && !needConfirm) {
+        setOpen(false);
+        queueMicrotask(() => inputRef.current?.blur());
+      }
+      setTemp(null);
+      pickCountRef.current = 0;
+    } else {
+      setTemp(v);
+    }
+  };
+
   const displayValue = temp ?? value ?? null;
 
   return (
     <TimePicker
       {...rest}
       ref={(inst: any) => {
-        // antd 내부 input 추적 (재오픈 방지용 blur에 사용)
         inputRef.current =
           inst?.nativeElement ?? inst?.input ?? inst?.picker?.input ?? null;
       }}
@@ -89,24 +102,28 @@ export default function AutoCloseTimePicker({
       showNow={showNow}
       allowClear={allowClear}
       inputReadOnly={inputReadOnly}
-      // 패널에서 칸을 클릭할 때마다 호출됨(시/분 각각)
-      onSelect={(v) => {
-        selectCountRef.current += 1;
-        if (selectCountRef.current >= 2) {
-          // 2번째 선택: 최종 커밋
-          onCommit?.(v);
-          if (closeAfterCommit) {
-            setOpen(false);
-            // 즉시 재오픈 방지
-            queueMicrotask(() => inputRef.current?.blur());
-          }
-          // 커밋 후 임시 상태 초기화
-          setTemp(null);
-          selectCountRef.current = 0;
-        } else {
-          // 1번째 선택: 임시값만 보이게 하고 커밋은 보류
-          setTemp(v);
+      // 1) 공식 권장(가능 시): 진행 중 선택 감지
+      //    일부 버전에선 TimePicker도 onCalendarChange를 지원
+      onCalendarChange={(dates: any) => {
+        // dates는 Dayjs | null 이거나 배열일 수 있음 → 단일로 정규화
+        const d = Array.isArray(dates) ? dates[0] ?? null : dates ?? null;
+        handlePartialPick(d);
+      }}
+      // 2) 폴백: needConfirm=false일 때 시/분을 누를 때마다 onChange가 호출됨
+      onChange={(v) => {
+        if (needConfirm) return; // confirm 흐름에선 onOk로 확정
+        handlePartialPick(v ?? null);
+      }}
+      // needConfirm=true일 땐 OK 클릭에서 최종 확정
+      onOk={(v) => {
+        if (!needConfirm) return;
+        onCommit?.(Array.isArray(v) ? v?.[0] ?? null : v ?? null);
+        if (closeAfterCommit) {
+          setOpen(false);
+          queueMicrotask(() => inputRef.current?.blur());
         }
+        setTemp(null);
+        pickCountRef.current = 0;
       }}
     />
   );

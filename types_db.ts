@@ -196,6 +196,10 @@ export type Database = {
         Args: { p_from_date: string; p_schedule_id: number; p_to_date: string }
         Returns: undefined
       }
+      is_nickname_taken: {
+        Args: { exclude: string; nick: string }
+        Returns: boolean
+      }
       mark_missed_logs_rpc: {
         Args: Record<PropertyKey, never>
         Returns: undefined

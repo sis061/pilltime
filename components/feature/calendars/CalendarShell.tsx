@@ -11,6 +11,7 @@ import type {
   DayIntakeItem,
   DayIntakeResponse,
 } from "@/types/calendar";
+import { useGlobalLoading } from "@/store/useGlobalLoading";
 
 const STATUS = [
   {
@@ -148,6 +149,12 @@ export default function CalendarShell({
   React.useEffect(() => {
     fetchDay(selectedYmd);
   }, [selectedYmd]);
+
+  const setGLoading = useGlobalLoading((s) => s.setGLoading);
+
+  React.useEffect(() => {
+    setGLoading(false);
+  }, [setGLoading]);
 
   return (
     <div

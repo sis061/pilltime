@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useUserStore } from "@/store/useUserStore";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import NicknameDrawer from "@/components/feature/profiles/NicknameDrawer";
 import type { User } from "@supabase/supabase-js";
 import { useGlobalLoading } from "@/store/useGlobalLoading";
@@ -105,6 +105,7 @@ export default function HeaderClient({
       onClick: () => {
         setMenuOpen(false);
         router.push(`/calendar?d=${todayYmd}`);
+        setGLoading(true, "정보를 불러오는 중이에요..");
       },
     },
   ];
