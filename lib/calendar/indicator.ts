@@ -8,6 +8,21 @@ import type {
   DayDot,
 } from "@/types/calendar";
 
+/* ------
+ * CONST
+ * ------ */
+
+const ORDER: Record<PillStatusServer, number> = {
+  missed: 4,
+  skipped: 3,
+  taken: 2,
+  scheduled: 1,
+};
+
+/* ------
+ * function
+ * ------ */
+
 /** YYYY-MM 파생 + 월 경계 */
 function monthParts(centerYmd: string) {
   const [yy, mm] = centerYmd.split("-").map(Number);
@@ -28,12 +43,6 @@ function todayYMD_KST() {
   }).format(new Date());
 }
 
-const ORDER: Record<PillStatusServer, number> = {
-  missed: 4,
-  skipped: 3,
-  taken: 2,
-  scheduled: 1,
-};
 function isPillStatusServer(x: any): x is PillStatusServer {
   return (
     x === "scheduled" || x === "taken" || x === "missed" || x === "skipped"

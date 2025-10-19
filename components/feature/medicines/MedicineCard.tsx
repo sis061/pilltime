@@ -1,30 +1,35 @@
 "use client";
-
-// import Image from "next/image";
-import { Info, Settings } from "lucide-react";
-import ScheduleItem from "./ScheduleItem";
+// ---- REACT
+import { useEffect, useMemo, useState } from "react";
+// ---- NEXT
 import Link from "next/link";
+// ---- COMPONENT
+import ScheduleItem from "./ScheduleItem";
+import TodayProgress from "./TodayProgress";
+import { ZoomableImage } from "@/components/layout/ZoomableImage";
+// ---- UI
 import { IntakeLog, MedicineDetail } from "@/types/medicines";
 import {
   Popover,
   PopoverTrigger,
   PopoverContent,
 } from "@/components/ui/popover";
-import { ZoomableImage } from "@/components/layout/ZoomableImage";
-import { RenderTodaysMedicine } from "@/lib/medicine";
-
-import TodayProgress from "./TodayProgress";
-import { useEffect, useMemo, useState } from "react";
+import { Info, Settings } from "lucide-react";
+// ---- UTIL
 import { toYYYYMMDD } from "@/lib/date";
+import { RenderTodaysMedicine } from "@/lib/medicine";
+// ---- STORE
 import { useGlobalLoading } from "@/store/useGlobalLoading";
 
 export default function MedicineCard(medicine: MedicineDetail) {
   const { id, name, imageUrl, description, schedules } = medicine;
+
   // logId -> 원하는(낙관) status
   const [pending, setPending] = useState<Record<number, IntakeLog["status"]>>(
     {}
   );
   const setGLoading = useGlobalLoading((s) => s.setGLoading);
+
   const onOptimisticSet = (logId: number, status: IntakeLog["status"]) =>
     setPending((p) => ({ ...p, [logId]: status })); // ✅ 성공 시에는 더 이상 즉시 지우지 않음
   const onOptimisticClear = (logId: number) =>

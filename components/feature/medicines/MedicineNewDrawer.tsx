@@ -1,26 +1,22 @@
 "use client";
 
-import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
-
-import { FormProvider, useForm } from "react-hook-form";
-// import { Wizard } from "react-use-wizard";
-
-import { Step05Review } from "@/components/feature/medicines/steps/Step05Review";
-
 import { useRef, useTransition, useEffect } from "react";
-import { useMediaQuery } from "react-responsive";
-import { WizardHeader } from "./steps/WizardHeader";
-import { steps, StepWrapper } from "./steps/config";
-
-import { zodResolver } from "@hookform/resolvers/zod";
-import { MedicineSchema, MedicineFormValues } from "@/lib/schemas/medicine";
-import { deleteMedicineImage } from "@/lib/supabase/upload";
-import { useGlobalLoading } from "@/store/useGlobalLoading";
-import { toast } from "sonner";
+// ---- NEXT
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
+// ---- COMPONENT
+import { WizardHeader } from "./steps/WizardHeader";
+import { steps, StepWrapper } from "./steps/config";
+import { Step05Review } from "@/components/feature/medicines/steps/Step05Review";
+// ---- UI
+import { toast } from "sonner";
 import { PacmanLoader } from "react-spinners";
-
+import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
+// ---- UTIL
+import { MedicineSchema, MedicineFormValues } from "@/lib/schemas/medicine";
+import { deleteMedicineImage } from "@/lib/supabase/upload";
+// ---- LIB
+// import { Wizard } from "react-use-wizard";
 const Wizard = dynamic(() => import("react-use-wizard").then((m) => m.Wizard), {
   ssr: false,
   loading: () => (
@@ -29,6 +25,11 @@ const Wizard = dynamic(() => import("react-use-wizard").then((m) => m.Wizard), {
     </div>
   ),
 });
+import { FormProvider, useForm } from "react-hook-form";
+import { useMediaQuery } from "react-responsive";
+import { zodResolver } from "@hookform/resolvers/zod";
+// ---- STORE
+import { useGlobalLoading } from "@/store/useGlobalLoading";
 
 async function createMedicine(values: MedicineFormValues) {
   const res = await fetch("/api/medicines", {
@@ -51,10 +52,17 @@ export default function MedicineNewDrawer({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  // ---- REACT
+  const [isPendingNav, startTransition] = useTransition();
+  const submitBtnRef = useRef<HTMLButtonElement>(null);
+  // ---- NEXT
+  const router = useRouter();
+  // ---- LIB
+  const minTablet = useMediaQuery({ minWidth: 768 });
+  // ---- STORE
   const isLoading = useGlobalLoading((s) => s.isGLoading);
   const setGLoading = useGlobalLoading((s) => s.setGLoading);
-  const [isPendingNav, startTransition] = useTransition();
-  const router = useRouter();
+
   const methods = useForm<MedicineFormValues>({
     resolver: zodResolver(MedicineSchema),
     defaultValues: {
@@ -66,6 +74,13 @@ export default function MedicineNewDrawer({
       imageFilePath: null,
     },
   });
+
+  const {
+    handleSubmit,
+    formState: { isSubmitting },
+  } = methods;
+
+  const busy = isSubmitting || isLoading || isPendingNav;
 
   useEffect(() => {
     setGLoading(false);
@@ -83,10 +98,9 @@ export default function MedicineNewDrawer({
     }
   }
 
-  const {
-    handleSubmit,
-    formState: { isSubmitting },
-  } = methods;
+  /* ------
+   * SUBMIT
+   * ------ */
 
   const onSubmit = async (data: MedicineFormValues) => {
     const sortedSchedules = [...(data.schedules ?? [])].sort((a, b) =>
@@ -120,11 +134,6 @@ export default function MedicineNewDrawer({
       setGLoading(false);
     }
   };
-
-  const submitBtnRef = useRef<HTMLButtonElement>(null);
-  const minTablet = useMediaQuery({ minWidth: 768 });
-
-  const busy = isSubmitting || isLoading || isPendingNav;
 
   return (
     <Drawer

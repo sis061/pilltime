@@ -2,10 +2,10 @@
 "use client";
 
 import * as React from "react";
-import type { DayDot, DayIntakeItem } from "@/types/calendar";
-import { formatTime } from "@/lib/date";
 import { PacmanLoader } from "react-spinners";
+import { formatTime } from "@/lib/date";
 import { statusBadgeClass } from "./CalendarShell";
+import type { DayIntakeItem } from "@/types/calendar";
 
 function getIntakeSummary(intakes: DayIntakeItem[]): string[] {
   const statuses = intakes.map((i) => i.status);

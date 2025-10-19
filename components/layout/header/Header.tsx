@@ -1,7 +1,6 @@
 import Image from "next/image";
-
-import { createServerSupabaseClient } from "@/lib/supabase/server";
 import HeaderClient from "./HeaderClient";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export default async function Header() {
   const supabase = await createServerSupabaseClient();

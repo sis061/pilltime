@@ -1,8 +1,8 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { CirclePlus } from "lucide-react";
 import { useGlobalLoading } from "@/store/useGlobalLoading";
-import { useRouter } from "next/navigation";
 
 export default function EmptyMedicine() {
   const router = useRouter();

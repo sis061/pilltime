@@ -1,5 +1,13 @@
 "use client";
 
+import { useEffect, useState } from "react";
+// ---- NEXT
+import { useRouter } from "next/navigation";
+// ---- COMPONENT
+import ProfileDrawer from "./ProfileDrawer";
+import { SmartButtonGroup } from "./SmartButtons";
+import NicknameDrawer from "@/components/feature/profiles/NicknameDrawer";
+// ---- UI
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -7,14 +15,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
-import { useUserStore } from "@/store/useUserStore";
-import { useEffect, useState } from "react";
-import NicknameDrawer from "@/components/feature/profiles/NicknameDrawer";
-import type { User } from "@supabase/supabase-js";
-import { useGlobalLoading } from "@/store/useGlobalLoading";
-import { useMediaQuery } from "react-responsive";
-import ProfileDrawer from "./ProfileDrawer";
 import {
   CalendarSearch,
   LogOut,
@@ -23,8 +23,15 @@ import {
   UserCog,
   UserPen,
 } from "lucide-react";
-import { SmartButtonGroup } from "./SmartButtons";
+// ---- UTIL
 import { toYYYYMMDD } from "@/lib/date";
+// ---- LIB
+import { useMediaQuery } from "react-responsive";
+// ---- STORE
+import { useUserStore } from "@/store/useUserStore";
+import { useGlobalLoading } from "@/store/useGlobalLoading";
+// ---- TYPE
+import type { User } from "@supabase/supabase-js";
 
 export default function HeaderClient({
   user,
@@ -33,13 +40,17 @@ export default function HeaderClient({
   user: User | null;
   nickname: string | null;
 }) {
-  const router = useRouter();
-  const clearUser = useUserStore((s) => s.clearUser);
-  const setUser = useUserStore((s) => s.setUser);
+  // ---- REACT
   const [openNickname, setOpenNickname] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const setGLoading = useGlobalLoading((s) => s.setGLoading);
+  // ---- NEXT
+  const router = useRouter();
+  // ---- LIB
   const minMobile = useMediaQuery({ minWidth: 600 });
+  // ---- STORE
+  const setUser = useUserStore((s) => s.setUser);
+  const clearUser = useUserStore((s) => s.clearUser);
+  const setGLoading = useGlobalLoading((s) => s.setGLoading);
 
   // 오늘 날짜 계산
   // const today = new Date();
@@ -47,38 +58,11 @@ export default function HeaderClient({
   // const m = String(today.getMonth() + 1).padStart(2, "0");
   // const d = String(today.getDate()).padStart(2, "0");
 
+  /* ------
+   * CONST
+   * ------ */
+
   const todayYmd = toYYYYMMDD(new Date(), "Asia/Seoul");
-
-  function goNewMedicine() {
-    setMenuOpen(false);
-    router.push("/medicines/new");
-    setGLoading(true, "정보를 불러오는 중이에요..");
-  }
-
-  useEffect(() => {
-    if (user) {
-      setUser({
-        id: user.id,
-        email: user.email ?? null,
-        nickname: nickname ?? null,
-      });
-    } else {
-      clearUser();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, nickname]);
-
-  async function getSupabase() {
-    const { createClient } = await import("@/lib/supabase/client");
-    return createClient();
-  }
-
-  async function logout() {
-    const supabase = await getSupabase();
-    await supabase.auth.signOut();
-    clearUser();
-    router.replace("/login");
-  }
 
   /** 공통 버튼 config (props로 내려줄 것) */
   const baseWhiteBtn =
@@ -135,6 +119,41 @@ export default function HeaderClient({
       .replace("!text-white", "!text-pilltime-blue")
       .replace("!text-xs", "!text-sm"),
   }));
+
+  /* ------
+   * function
+   * ------ */
+
+  async function getSupabase() {
+    const { createClient } = await import("@/lib/supabase/client");
+    return createClient();
+  }
+
+  async function logout() {
+    const supabase = await getSupabase();
+    await supabase.auth.signOut();
+    clearUser();
+    router.replace("/login");
+  }
+
+  function goNewMedicine() {
+    setMenuOpen(false);
+    router.push("/medicines/new");
+    setGLoading(true, "정보를 불러오는 중이에요..");
+  }
+
+  useEffect(() => {
+    if (user) {
+      setUser({
+        id: user.id,
+        email: user.email ?? null,
+        nickname: nickname ?? null,
+      });
+    } else {
+      clearUser();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, nickname]);
 
   if (!minMobile)
     return (

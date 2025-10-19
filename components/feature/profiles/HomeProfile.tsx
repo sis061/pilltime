@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import NicknameDrawer from "@/components/feature/profiles/NicknameDrawer";
-import { useUserStore } from "@/store/useUserStore";
 import { User } from "@/types/profile";
+import { useUserStore } from "@/store/useUserStore";
 // import { useGlobalLoading } from "@/store/useGlobalLoading";
 
 export default function HomeProfile({ initialUser }: { initialUser: User }) {

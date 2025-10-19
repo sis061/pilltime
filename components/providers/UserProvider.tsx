@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
+import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { useUserStore } from "@/store/useUserStore";
-import { toast } from "sonner";
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const supabase = createClient();

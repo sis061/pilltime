@@ -1,5 +1,9 @@
 "use client";
 
+import { useState, useEffect, useRef } from "react";
+// ---- NEXT
+import { useRouter } from "next/navigation";
+// ---- UI
 import {
   Drawer,
   DrawerContent,
@@ -8,14 +12,14 @@ import {
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-
-import { useState, useEffect, useRef } from "react";
-import { createClient } from "@/lib/supabase/client";
-import { useUserStore } from "@/store/useUserStore";
-import { useMediaQuery } from "react-responsive";
-import { useGlobalLoading } from "@/store/useGlobalLoading";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+// ---- UTIL
+import { createClient } from "@/lib/supabase/client";
+// ---- LIB
+import { useMediaQuery } from "react-responsive";
+// ---- STORE
+import { useUserStore } from "@/store/useUserStore";
+import { useGlobalLoading } from "@/store/useGlobalLoading";
 
 interface Props {
   open: boolean;
@@ -28,18 +32,21 @@ export default function NicknameDrawer({
   onOpenChange,
   mode = "edit",
 }: Props) {
-  const supabase = createClient();
   const router = useRouter();
+  // ---- UTIL
+  const supabase = createClient();
+  // ---- STORE
   const user = useUserStore((s) => s.user);
   const setUser = useUserStore((s) => s.setUser);
   const isLoading = useGlobalLoading((s) => s.isGLoading);
   const setGLoading = useGlobalLoading((s) => s.setGLoading);
+  // ---- REACT
   const [submitting, setSubmitting] = useState(false);
-
   const [nickname, setNickname] = useState(user?.nickname || "");
   const submitBtnRef = useRef<HTMLButtonElement>(null);
   const modeAtOpenRef = useRef<"create" | "edit">(mode);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  // ---- LIB
   const minTablet = useMediaQuery({ minWidth: 768 });
 
   // Drawer가 열릴 때, 그 시점의 모드를 고정(부모 리렌더 영향 차단)
@@ -55,8 +62,11 @@ export default function NicknameDrawer({
     }
   }, [open, user]);
 
-  // -- 낙관적 업데이트 적용
+  /* ---------------------------
+   * API
+   * --------------------------- */
 
+  // -- 낙관적 업데이트 적용
   async function handleSave() {
     const openedMode = modeAtOpenRef.current;
 

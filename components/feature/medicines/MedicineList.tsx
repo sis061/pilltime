@@ -1,7 +1,7 @@
 import MedicineCard from "@/components/feature/medicines/MedicineCard";
 import EmptyMedicine from "./EmptyMedicine";
-import { mapToCardModel, sortMedicinesByToday } from "@/lib/medicine";
 import RealtimeBridge from "./RealtimeBridge"; // ⬅️ 클라 브리지
+import { mapToCardModel, sortMedicinesByToday } from "@/lib/medicine";
 
 export default function MedicineList({
   medicines,

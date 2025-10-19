@@ -1,5 +1,6 @@
 "use client";
 
+import { SmartButtonGroup } from "./SmartButtons";
 import {
   Drawer,
   DrawerContent,
@@ -7,8 +8,7 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
-import { SmartButtonGroup } from "./SmartButtons";
-import { UserCog, UserPen, LogOut } from "lucide-react";
+import { UserCog } from "lucide-react";
 
 interface Props {
   open: boolean;

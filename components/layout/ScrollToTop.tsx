@@ -1,14 +1,14 @@
 "use client";
 
-import { CircleChevronUp } from "lucide-react";
 import { useEffect, useState } from "react";
+import { CircleChevronUp } from "lucide-react";
 
 export default function ScrollTopBtn() {
+  const [isScrolled, setIsScrolled] = useState<boolean>(false);
+
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
-
-  const [isScrolled, setIsScrolled] = useState<boolean>(false);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 150);

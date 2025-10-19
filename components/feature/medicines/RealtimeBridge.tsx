@@ -4,8 +4,8 @@ import { useEffect, useRef, startTransition } from "react";
 import { useRouter } from "next/navigation";
 
 export default function RealtimeBridge({ userId }: { userId: string }) {
-  const router = useRouter();
   const t = useRef<number | null>(null);
+  const router = useRouter();
 
   const softRefresh = () => {
     if (t.current) window.clearTimeout(t.current);

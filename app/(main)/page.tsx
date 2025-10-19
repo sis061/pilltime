@@ -1,10 +1,13 @@
 // TODO 빌드 전에 필요없는 라이브러리 삭제 필요
 
+// ---- NEXT
 import { redirect } from "next/navigation";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+// ---- COMPONENT
 import HomeProfile from "@/components/feature/profiles/HomeProfile";
 import MedicineList from "@/components/feature/medicines/MedicineList";
 import HomeToday from "@/components/feature/calendars/HomeToday";
+// ---- UTIL
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "default-no-store";

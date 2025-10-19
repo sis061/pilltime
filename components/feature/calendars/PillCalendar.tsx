@@ -1,12 +1,15 @@
 "use client";
 
 import * as React from "react";
+// ---- UI
 import { Calendar, CalendarDayButton } from "@/components/ui/calendar";
+// ---- UTIL
+import { statusBadgeClass } from "./CalendarShell";
 import { toYYYYMMDD } from "@/lib/date";
 import { ko } from "date-fns/locale";
 import { format } from "date-fns";
+// ---- TYPE
 import type { DayDot } from "@/types/calendar"; // { medicine_id, label, status }
-import { statusBadgeClass } from "./CalendarShell";
 
 export default function PillCalendar({
   month,

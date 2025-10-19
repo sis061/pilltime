@@ -1,7 +1,7 @@
 "use client";
 
-import { useGlobalLoading } from "@/store/useGlobalLoading";
 import { PacmanLoader } from "react-spinners";
+import { useGlobalLoading } from "@/store/useGlobalLoading";
 
 export default function GlobalLoading() {
   const isLoading = useGlobalLoading((s) => s.isGLoading);

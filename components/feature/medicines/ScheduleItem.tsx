@@ -2,10 +2,8 @@
 
 // TODO 알람 기능 구현
 
-import { IntakeLog, MedicineSchedule } from "@/types/medicines";
-import { formatTime } from "@/lib/date";
-import { getTodayIntakeLog } from "@/lib/medicine";
 import { useEffect, useMemo, useState, useTransition } from "react";
+// ---- UI
 import { toast } from "sonner";
 import {
   ButtonGroup,
@@ -13,6 +11,11 @@ import {
 } from "@/components/ui/button-group";
 import { Button } from "@/components/ui/button";
 import { Check, SkipForward } from "lucide-react";
+// ---- UTIL
+import { formatTime } from "@/lib/date";
+import { getTodayIntakeLog } from "@/lib/medicine";
+// ---- TYPE
+import { IntakeLog, MedicineSchedule } from "@/types/medicines";
 
 type ScheduleItemProps = MedicineSchedule & {
   onOptimisticSet: (logId: number, status: IntakeLog["status"]) => void;
@@ -48,6 +51,7 @@ export default function ScheduleItem(schedule: ScheduleItemProps) {
 
   const [status, setStatus] = useState<IntakeLog["status"]>(initialStatus);
   const [_isPending, startTransition] = useTransition();
+
   const isTaken = status === "taken";
   const isSkipped = status === "skipped";
   const isMissed = status === "missed";
@@ -55,6 +59,15 @@ export default function ScheduleItem(schedule: ScheduleItemProps) {
   useEffect(() => {
     setStatus(todayLog?.status ?? "scheduled");
   }, [todayLog?.status]);
+
+  function onButtonClick(value: IntakeLog["status"]) {
+    if (!todayLog) return;
+    startTransition(() => void putIntakeLog(todayLog.id, value));
+  }
+
+  /* ---------------------------
+   * API
+   * --------------------------- */
 
   async function putIntakeLog(id: number, next: IntakeLog["status"]) {
     const prev = status;
@@ -90,11 +103,6 @@ export default function ScheduleItem(schedule: ScheduleItemProps) {
       schedule.onOptimisticSet(id, prev);
       schedule.onOptimisticClear(id);
     }
-  }
-
-  function onButtonClick(value: IntakeLog["status"]) {
-    if (!todayLog) return;
-    startTransition(() => void putIntakeLog(todayLog.id, value));
   }
 
   return (

@@ -1,8 +1,11 @@
 "use client";
 
+// ---- REACT
+import { useState } from "react";
+// ---- UI
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { useState } from "react";
+// ---- STORE
 import { useGlobalLoading } from "@/store/useGlobalLoading";
 
 export default function SocialLogin() {
@@ -10,6 +13,10 @@ export default function SocialLogin() {
     "google" | "apple" | null
   >(null);
   const setGLoading = useGlobalLoading((s) => s.setGLoading);
+
+  /* ------
+ function
+------ */
 
   async function getSupabase() {
     const { createClient } = await import("@/lib/supabase/client"); // ✅ 지연 로드

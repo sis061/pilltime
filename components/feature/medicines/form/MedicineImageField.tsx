@@ -1,29 +1,37 @@
 "use client";
+
+// ---- REACT
+import { useState } from "react";
+// ---- NEXT
+import Image from "next/image";
+import { usePathname } from "next/navigation";
+// ---- UI
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import {
   Drawer,
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import { Button } from "@/components/ui/button";
-import { useState } from "react";
+// ---- UTIL
+import { uploadMedicineImage } from "@/lib/supabase/upload";
+import ImageUploader from "../ImageUploader";
+// ---- LIB
 import { useFormContext } from "react-hook-form";
 import { useMediaQuery } from "react-responsive";
-import ImageUploader from "../ImageUploader";
-import { usePathname } from "next/navigation";
+// ---- STORE
 import { useUserStore } from "@/store/useUserStore";
-import { uploadMedicineImage } from "@/lib/supabase/upload";
-import { toast } from "sonner";
-import Image from "next/image";
 
 export function MedicineImageField() {
-  const minTablet = useMediaQuery({ minWidth: 768 });
-  const { watch, setValue } = useFormContext();
-  const imageUrl = watch("imageUrl");
-  // const imageFilePath = watch("imageFilePath");
-
   const pathname = usePathname();
   const isPathnameNew = pathname.includes("new");
+
+  const { watch, setValue } = useFormContext();
+  const imageUrl = watch("imageUrl");
+  const minTablet = useMediaQuery({ minWidth: 768 });
+  // const imageFilePath = watch("imageFilePath");
+
   const user = useUserStore((s) => s.user);
 
   // ✅ 서브 Drawer 상태

@@ -1,17 +1,21 @@
 // components/feature/calendars/CalendarShell.tsx
 "use client";
 
+// ---- REACT
 import * as React from "react";
+// ---- COMPONENT
 import PillCalendar from "./PillCalendar";
 import DayIntakeList from "./DayIntakeList";
+// ---- UTIL
 import { toYYYYMMDD } from "@/lib/date";
+// ---- TYPE
+import { useGlobalLoading } from "@/store/useGlobalLoading";
 import type {
   MonthIndicatorMap,
   DayDot,
   DayIntakeItem,
   DayIntakeResponse,
 } from "@/types/calendar";
-import { useGlobalLoading } from "@/store/useGlobalLoading";
 
 const STATUS = [
   {
@@ -36,6 +40,9 @@ const STATUS = [
   },
 ] as const;
 
+/* ------
+ function
+------ */
 const ymOf = (date: Date) =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
 

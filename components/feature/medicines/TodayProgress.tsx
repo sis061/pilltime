@@ -3,8 +3,8 @@
 import { useMemo } from "react";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
-import type { IntakeLog, MedicineSchedule } from "@/types/medicines";
 import { toYYYYMMDD } from "@/lib/date";
+import type { IntakeLog, MedicineSchedule } from "@/types/medicines";
 
 function getTodaysLogPercentage(
   schedules: MedicineSchedule[],
