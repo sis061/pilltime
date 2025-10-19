@@ -10,14 +10,16 @@ import { statusBadgeClass } from "./CalendarShell";
 function getIntakeSummary(intakes: DayIntakeItem[]): string[] {
   const statuses = intakes.map((i) => i.status);
 
+  const hasScheduled = statuses.includes("scheduled");
   const hasSkipped = statuses.includes("skipped");
   const hasMissed = statuses.includes("missed");
   const allTaken = statuses.length > 0 && statuses.every((s) => s === "taken");
 
   const messages: string[] = [];
 
-  if (hasSkipped) messages.push("건너뛴 약이 있어요.");
   if (hasMissed) messages.push("놓친 약이 있네요!");
+  if (hasSkipped) messages.push("건너뛴 약이 있어요");
+  if (hasScheduled) messages.push("아직 남은 약이 있어요");
   if (allTaken) messages.push("다 먹었어요!");
 
   return messages;

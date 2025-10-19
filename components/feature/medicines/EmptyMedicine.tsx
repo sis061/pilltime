@@ -2,9 +2,12 @@
 
 import { CirclePlus } from "lucide-react";
 import { useGlobalLoading } from "@/store/useGlobalLoading";
+import { useRouter } from "next/navigation";
 
 export default function EmptyMedicine() {
+  const router = useRouter();
   const setGLoading = useGlobalLoading((s) => s.setGLoading);
+
   return (
     <div className="!mt-6 text-center w-full">
       <div className="border-2 bg-white border-pilltime-blue/50 rounded-md !px-4 !py-8 flex flex-col gap-4 shadow-md items-center justify-center w-full min-h-[50dvh]">
@@ -22,7 +25,8 @@ export default function EmptyMedicine() {
           color="#3b82f6"
           className="cursor-pointer hover:stroke-pilltime-violet duration-200 transition-all"
           onClick={() => {
-            document.getElementById("create_new_medicine")?.click();
+            // document.getElementById("create_new_medicine")?.click();
+            router.push("/medicines/new");
             setGLoading(true, "정보를 불러오는 중이에요..");
           }}
         />
