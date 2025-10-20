@@ -16,11 +16,12 @@ const BodySchema = z.object({ enabled: z.boolean() });
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await context.params;
   try {
     // 0) 파라미터/바디 검증
-    const medicineId = Number(params.id);
+    const medicineId = Number(id);
     if (!Number.isFinite(medicineId)) {
       return NextResponse.json(
         { message: "Invalid medicine id" },

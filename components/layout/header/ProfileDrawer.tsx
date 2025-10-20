@@ -53,7 +53,7 @@ export default function ProfileDrawer({
           </div>
 
           <div className="flex flex-col w-full items-start !pl-2">
-            {menuButtons.map(({ key, label, iconLeft: Icon, onClick }) => (
+            {menuButtons.map(({ key, label, iconLeft: Icon }) => (
               <Button
                 key={key}
                 variant="ghost"

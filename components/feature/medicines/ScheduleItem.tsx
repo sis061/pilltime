@@ -10,7 +10,7 @@ import {
   ButtonGroupSeparator,
 } from "@/components/ui/button-group";
 import { Button } from "@/components/ui/button";
-import { Check, PinOff, Redo2, SkipForward } from "lucide-react";
+import { Check, PinOff, Redo2 } from "lucide-react";
 // ---- UTIL
 import { formatTime } from "@/lib/date";
 import { getTodayIntakeLog } from "@/lib/medicine";

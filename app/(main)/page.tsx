@@ -59,10 +59,10 @@ export default async function Home() {
       .order("time", { ascending: true, foreignTable: "medicine_schedules" }),
   ]);
 
-  const profile =
-    profileSettled.status === "fulfilled" && !profileSettled.value.error
-      ? profileSettled.value.data
-      : null;
+  // const profile =
+  //   profileSettled.status === "fulfilled" && !profileSettled.value.error
+  //     ? profileSettled.value.data
+  //     : null;
 
   const medicines =
     medicinesSettled.status === "fulfilled" && !medicinesSettled.value.error

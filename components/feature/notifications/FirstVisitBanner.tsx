@@ -10,14 +10,11 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
-  AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { usePush } from "@/lib/usePush"; // ✅ 경로 업데이트 반영
-import { Button } from "@/components/ui/button";
 import { BellRing } from "lucide-react";
 
 export default function FirstVisitBanner() {

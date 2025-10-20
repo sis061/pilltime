@@ -90,7 +90,7 @@ export default function PillCalendar({
         }}
         labels={{
           // ✅ 스크린리더용 라벨도 한글로
-          labelDayButton: (date, { locale }) =>
+          labelDayButton: (date) =>
             format(date, "yyyy년 M월 d일 (EEE)", { locale: ko }),
           // 필요시 다음/이전 달 버튼 라벨도 한글화
           labelNext: () => "다음 달",

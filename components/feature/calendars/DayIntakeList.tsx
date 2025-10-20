@@ -26,11 +26,11 @@ function getIntakeSummary(intakes: DayIntakeItem[]): string[] {
 }
 
 export default function DayIntakeList({
-  date,
+  // date,
   items,
   isLoading,
 }: {
-  date: string;
+  // date: string;
   items: DayIntakeItem[];
   isLoading: boolean;
 }) {

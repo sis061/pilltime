@@ -95,6 +95,8 @@ export function MedicineSchedulesField() {
     replace([{ id: null as any, time: "" } as any]);
   };
 
+  const wrapperRef = React.useRef<HTMLDivElement | null>(null);
+
   const isTimeFieldVisible =
     repeatedPattern.type === "DAILY" ||
     (Array.isArray(weekly) && weekly.length > 0) ||
@@ -232,9 +234,6 @@ export function MedicineSchedulesField() {
                   name={`schedules.${index}.time`}
                   rules={{ required: "필수 항목입니다!" }}
                   render={({ field, fieldState }) => {
-                    const wrapperRef = React.useRef<HTMLDivElement | null>(
-                      null
-                    );
                     return (
                       <div
                         ref={wrapperRef}

@@ -341,7 +341,7 @@ export default function MedicineEditDrawer({
                         router.refresh();
                         onOpenChange(false);
                       });
-                    } catch (err: any) {
+                    } catch {
                       toast.error("정보를 삭제하는 중 문제가 발생했어요");
                     }
                   }}

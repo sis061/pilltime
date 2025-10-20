@@ -195,7 +195,7 @@ export default function CalendarShell({
       </ul>
       <div className={"rounded-lg overflow-y-auto"}>
         <DayIntakeList
-          date={selectedYmd}
+          // date={selectedYmd}
           items={dayItems}
           isLoading={loading}
         />

@@ -78,7 +78,7 @@ export async function POST(req: Request) {
   // 4) 대상 사용자들의 구독 조회
   const targets = [...(onTime || []), ...(reminder || [])];
   const userIds = [...new Set(targets.map((l: any) => l.user_id))];
-  let subsByUser = new Map<string, any[]>();
+  const subsByUser = new Map<string, any[]>();
 
   if (userIds.length) {
     const { data: subs, error: subErr } = await sb
