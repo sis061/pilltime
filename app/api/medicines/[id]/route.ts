@@ -5,6 +5,10 @@ import { toHHMMSS, toYYYYMMDD } from "@/lib/date";
 
 export const runtime = "nodejs";
 
+/* -----------
+ * GET
+ * ----------- */
+
 export async function GET(
   req: Request,
   context: { params: Promise<{ id: string }> }
@@ -56,6 +60,10 @@ export async function GET(
 
   return NextResponse.json(data);
 }
+
+/* -----------
+ * PUT
+ * ----------- */
 
 export async function PUT(
   req: Request,
@@ -282,6 +290,10 @@ export async function PUT(
 
   return NextResponse.json({ success: true });
 }
+
+/* -----------
+ * DELETE
+ * ----------- */
 
 export async function DELETE(
   req: Request,

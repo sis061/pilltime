@@ -31,7 +31,7 @@ export const SmartButton = React.forwardRef<
       label,
       onClick,
       iconLeft: Icon,
-      variant = "default",
+      // variant = "default",
       loading = false,
       className,
       iconColor = "#fff",
@@ -39,17 +39,19 @@ export const SmartButton = React.forwardRef<
     ref
   ) => {
     return (
-      <Button
+      <button
         id={id}
         ref={ref}
-        variant={variant}
+        // variant={variant}
         onClick={onClick}
         disabled={loading}
         className={["rounded-2xl", className].join(" ")}
       >
-        {Icon ? <Icon className="!mr-2 h-4 w-4" color={iconColor} /> : null}
-        {loading ? "처리 중…" : label}
-      </Button>
+        {Icon ? (
+          <Icon size={28} className="max-sm:!mr-4" color={iconColor} />
+        ) : null}
+        <span className="sm:!pt-3">{loading ? "처리 중…" : label}</span>
+      </button>
     );
   }
 );
@@ -64,7 +66,7 @@ export interface SmartButtonGroupItem extends SmartButtonProps {
 
 export function SmartButtonGroup({ items }: { items: SmartButtonGroupItem[] }) {
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-2 ">
       {items.map(({ key, ...rest }) => (
         <SmartButton key={key} {...rest} />
       ))}

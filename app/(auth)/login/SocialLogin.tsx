@@ -14,10 +14,6 @@ export default function SocialLogin() {
   >(null);
   const setGLoading = useGlobalLoading((s) => s.setGLoading);
 
-  /* ------
- function
------- */
-
   async function getSupabase() {
     const { createClient } = await import("@/lib/supabase/client"); // ✅ 지연 로드
     return createClient();

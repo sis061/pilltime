@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import ProfileDrawer from "./ProfileDrawer";
 import { SmartButtonGroup } from "./SmartButtons";
 import NicknameDrawer from "@/components/feature/profiles/NicknameDrawer";
+import ProfileBadge from "@/components/feature/profiles/ProfileBadge";
 // ---- UI
 import {
   DropdownMenu,
@@ -31,22 +32,16 @@ import { useMediaQuery } from "react-responsive";
 import { useUserStore } from "@/store/useUserStore";
 import { useGlobalLoading } from "@/store/useGlobalLoading";
 // ---- TYPE
-import type { User } from "@supabase/supabase-js";
+import type { User } from "@/types/profile";
 
-export default function HeaderClient({
-  user,
-  nickname,
-}: {
-  user: User | null;
-  nickname: string | null;
-}) {
+export default function HeaderClient({ user }: { user: User }) {
   // ---- REACT
   const [openNickname, setOpenNickname] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   // ---- NEXT
   const router = useRouter();
   // ---- LIB
-  const minMobile = useMediaQuery({ minWidth: 600 });
+  const minMobile = useMediaQuery({ minWidth: 640 });
   // ---- STORE
   const setUser = useUserStore((s) => s.setUser);
   const clearUser = useUserStore((s) => s.clearUser);
@@ -66,9 +61,9 @@ export default function HeaderClient({
 
   /** 공통 버튼 config (props로 내려줄 것) */
   const baseWhiteBtn =
-    "font-bold cursor-pointer !text-white flex-col !text-xs !p-2 flex";
+    "font-bold cursor-pointer [&_*]:!text-white flex-col !text-xs !p-2 flex items-center justify-center h-full [&_svg:not([class*='size-'])]:size-7";
   const baseBlueBtn =
-    "font-bold cursor-pointer !text-pilltime-blue !text-xs !p-2 flex";
+    "font-bold cursor-pointer !text-pilltime-blue [&_*]:!text-pilltime-blue !text-xs !p-2 flex items-center [&_svg:not([class*='size-'])]:size-5";
 
   const desktopBtns = [
     {
@@ -144,27 +139,23 @@ export default function HeaderClient({
 
   useEffect(() => {
     if (user) {
-      setUser({
-        id: user.id,
-        email: user.email ?? null,
-        nickname: nickname ?? null,
-      });
+      setUser({ id: user.id, email: user.email, nickname: user.nickname });
     } else {
       clearUser();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, nickname]);
+  }, [user.id, user.email, user.nickname, setUser, clearUser]);
 
   if (!minMobile)
     return (
       <div className="flex items-center gap-2">
+        <ProfileBadge initialUser={user} />
         <Button
           variant="ghost"
           size="icon-lg"
           onClick={() => setMenuOpen(true)}
-          className="!text-white !p-2 flex-col text-xs"
+          className="!text-white !p-2 flex-col text-xs [&_svg:not([class*='size-'])]:size-6"
         >
-          <Menu className="h-6 w-6" color="#fff" />
+          <Menu color="#fff" />
         </Button>
         <ProfileDrawer
           open={menuOpen}
@@ -183,21 +174,22 @@ export default function HeaderClient({
     );
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 h-full">
       {/* 상단 버튼 그룹 */}
       <SmartButtonGroup items={desktopBtns} />
 
       {/* 드롭다운 */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            className={baseWhiteBtn}
+          <button
+            // variant="ghost"
+            className={`${baseWhiteBtn} rounded-2xl [&_svg:not([class*='size-'])]:size-6 `}
             aria-haspopup="dialog"
           >
-            <UserCog className="h-6 w-6" color="#fff" />
-            프로필 관리
-          </Button>
+            {/* <UserCog className="h-6 w-6" color="#fff" /> */}
+            <ProfileBadge initialUser={user} />
+            <span className="!pt-2">프로필 관리</span>
+          </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent
           side="bottom"

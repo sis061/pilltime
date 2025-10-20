@@ -3,7 +3,7 @@
 // ---- NEXT
 import { redirect } from "next/navigation";
 // ---- COMPONENT
-import HomeProfile from "@/components/feature/profiles/HomeProfile";
+// import HomeProfile from "@/components/feature/profiles/HomeProfile";
 import MedicineList from "@/components/feature/medicines/MedicineList";
 import HomeToday from "@/components/feature/calendars/HomeToday";
 // ---- UTIL
@@ -70,9 +70,9 @@ export default async function Home() {
 
   return (
     <section className="inner min-h-[calc(100dvh-11.5rem)] !text-pilltime-blue text-3xl !mx-auto !w-full h-full !mb-8 !p-2">
-      <div className="!mb-12 flex flex-col items-center gap-4 justify-center max-md:!pt-4">
+      <div className="flex flex-col items-center gap-4 justify-center !-mb-2">
         <HomeToday />
-        {profile ? (
+        {/* {profile ? (
           <HomeProfile
             initialUser={{
               id: user.id,
@@ -82,7 +82,7 @@ export default async function Home() {
           />
         ) : (
           <ProfileFallback />
-        )}
+        )} */}
       </div>
 
       {medicines ? (

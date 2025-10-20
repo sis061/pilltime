@@ -6,7 +6,7 @@ import { User } from "@/types/profile";
 import { useUserStore } from "@/store/useUserStore";
 // import { useGlobalLoading } from "@/store/useGlobalLoading";
 
-export default function HomeProfile({ initialUser }: { initialUser: User }) {
+export default function ProfileBadge({ initialUser }: { initialUser: User }) {
   const { user, setUser } = useUserStore();
   // const setGLoading = useGlobalLoading((s) => s.setGLoading);
   const [openDrawer, setOpenDrawer] = useState(false);
@@ -34,22 +34,18 @@ export default function HomeProfile({ initialUser }: { initialUser: User }) {
 
   if (!currentUser) {
     return (
-      <div className="!my-16 !text-sm text-center !text-pilltime-grayDark/50 font-bold">
-        <h1>로그인 상태를 불러오는 중입니다...</h1>
+      <div className="bg-pilltime-blue rounded-full flex items-center justify-center !py-2 !px-1.5 shadow-md">
+        <span className="!font-bold !text-white text-xs">...</span>
       </div>
     );
   }
 
   return (
     <>
-      <div className="!text-xs h-4 w-4 !px-4 text-center">
-        {currentUser?.nickname ? (
-          <span className="!font-bold !text-pilltime-blue h-4 w-4 border rounded-full">
-            {currentUser.nickname}
-          </span>
-        ) : (
-          "..."
-        )}
+      <div className="bg-pilltime-blue rounded-full flex items-center justify-center !py-2 !px-1.5 shadow-md">
+        <span className="!font-bold !text-white text-xs">
+          {currentUser.nickname ? currentUser?.nickname.slice(0, 2) : "..."}
+        </span>
       </div>
 
       <NicknameDrawer

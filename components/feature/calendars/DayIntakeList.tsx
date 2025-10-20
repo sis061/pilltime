@@ -19,7 +19,7 @@ function getIntakeSummary(intakes: DayIntakeItem[]): string[] {
 
   if (hasMissed) messages.push("놓친 약이 있네요!");
   if (hasSkipped) messages.push("건너뛴 약이 있어요");
-  if (hasScheduled) messages.push("아직 남은 약이 있어요");
+  if (hasScheduled) messages.push("남은 약이 있어요");
   if (allTaken) messages.push("다 먹었어요!");
 
   return messages;

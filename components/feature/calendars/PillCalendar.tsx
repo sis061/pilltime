@@ -129,7 +129,7 @@ export default function PillCalendar({
                 modifiers={modifiers}
                 {...props}
                 className={[
-                  "flex flex-col items-center justify-start gap-1",
+                  "flex flex-col items-center justify-start gap-1 cursor-pointer",
                   // modifiers.today && !modifiers.selected
                   //   ? "bg-pilltime-blue text-white ring-2 ring-pilltime-blue"
                   //   : "",

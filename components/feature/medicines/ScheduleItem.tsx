@@ -10,7 +10,7 @@ import {
   ButtonGroupSeparator,
 } from "@/components/ui/button-group";
 import { Button } from "@/components/ui/button";
-import { Check, SkipForward } from "lucide-react";
+import { Check, PinOff, SkipForward } from "lucide-react";
 // ---- UTIL
 import { formatTime } from "@/lib/date";
 import { getTodayIntakeLog } from "@/lib/medicine";
@@ -154,7 +154,8 @@ export default function ScheduleItem(schedule: ScheduleItemProps) {
           }`}
           onClick={() => onButtonClick("skipped")}
         >
-          <SkipForward strokeWidth={2.5} />
+          {/* <SkipForward strokeWidth={2.5} /> */}
+          <PinOff strokeWidth={2.5} />
         </Button>
       </ButtonGroup>
     </div>

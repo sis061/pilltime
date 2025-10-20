@@ -10,7 +10,7 @@ export default function HomeToday() {
   const todayYmd = toYYYYMMDD(new Date(), "Asia/Seoul");
 
   return (
-    <div className="flex items-center justify-center md:justify-end w-full [&_*]:!text-pilltime-grayDark/50">
+    <div className="flex items-center justify-center w-full [&_*]:!text-pilltime-grayDark/50">
       <Link
         href={`/calendar?d=${todayYmd}`}
         className="flex gap-2 items-center justify-center shadow-xs !py-2 !px-4 rounded-md [&_h3]:!text-lg [&_span]:!text-[16px] [&_span]:opacity-75 hover:opacity-90"
