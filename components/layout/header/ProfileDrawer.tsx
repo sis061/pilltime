@@ -47,17 +47,12 @@ export default function ProfileDrawer({
         </DrawerHeader>
 
         <div className="!mt-2">
-          <SmartButtonGroup
-            items={buttons}
-            // className="flex-col items-start pt-2"
-          />
-
-          <div className="font-bold !text-pilltime-blue text-sm !p-2 flex gap-2 !mt-2 [&_svg:not([class*='size-'])]:size-5">
+          <div className="font-bold !text-pilltime-blue text-sm !p-2 flex gap-2 [&_svg:not([class*='size-'])]:size-5">
             <UserCog className="!mr-2" color="#3B82F6" />
             프로필 관리
           </div>
 
-          <div className="flex flex-col w-full items-start !pl-1">
+          <div className="flex flex-col w-full items-start !pl-2">
             {menuButtons.map(({ key, label, iconLeft: Icon, onClick }) => (
               <Button
                 key={key}
@@ -67,15 +62,19 @@ export default function ProfileDrawer({
                   if (key === "logout") logout();
                   onOpenChange(false);
                 }}
-                className="font-bold cursor-pointer !text-pilltime-blue text-xs !p-2 flex"
+                className="font-bold cursor-pointer !text-pilltime-blue text-xs !p-2 h-8 flex"
               >
                 {Icon ? (
-                  <Icon className="!mr-2 h-5 w-5" color="#3B82F6" />
+                  <Icon className="!mr-1 h-5 w-5" color="#3B82F6" />
                 ) : null}
                 {label}
               </Button>
             ))}
           </div>
+          <SmartButtonGroup
+            items={buttons}
+            // className="flex-col items-start pt-2"
+          />
         </div>
       </DrawerContent>
     </Drawer>

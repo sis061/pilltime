@@ -22,11 +22,20 @@ export default async function Header() {
     .eq("id", user.id)
     .maybeSingle();
 
+  // ✅ 전역 알림 상태 (없으면 true로 간주)
+  const { data: settings } = await supabase
+    .from("user_notification_settings")
+    .select("global_notify_enabled")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
   const userMini: User = {
     id: user.id,
     email: user.email ?? null,
     nickname: profile?.nickname ?? null,
   };
+
+  const initialGlobalEnabled = settings?.global_notify_enabled ?? true;
 
   return (
     <header className="h-20 bg-pilltime-blue/75 flex items-center justify-between !px-4 shadow-sm">
@@ -42,7 +51,10 @@ export default async function Header() {
           />
         </div>
 
-        <HeaderClient user={userMini} />
+        <HeaderClient
+          user={userMini}
+          initialGlobalEnabled={initialGlobalEnabled}
+        />
       </div>
     </header>
   );

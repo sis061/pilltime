@@ -4,8 +4,8 @@
 import { useRouter } from "next/navigation";
 import CalendarShell from "./CalendarShell";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
-import { useMediaQuery } from "react-responsive";
 import type { MonthIndicatorMap } from "@/types/calendar";
+import { useSSRMediaquery } from "@/lib/useSSRMediaquery";
 
 export default function CalendarDrawer({
   open,
@@ -21,7 +21,7 @@ export default function CalendarDrawer({
   todayYmd?: string;
 }) {
   const router = useRouter();
-  const minTablet = useMediaQuery({ minWidth: 768 });
+  const minTablet = useSSRMediaquery(768);
 
   return (
     <Drawer

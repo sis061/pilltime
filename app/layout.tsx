@@ -1,5 +1,5 @@
 //TODO not-found 페이지 만들기
-//TODO FAVICON
+//TODO 가이드 라우터 만들기
 
 import "@ant-design/v5-patch-for-react-19";
 
@@ -22,8 +22,9 @@ const ScrollTopBtn = dynamic(() =>
 
 //TODO 동적 메타데이터 구현하기
 export const metadata: Metadata = {
-  title: "PillTime",
-  description: "약먹어",
+  title: "아맞다약!",
+  description:
+    "잊지 말고 약을 챙겨드세요. 기록을 확인하세요. 알람도 보내드려요.",
 };
 
 const pretendard = localFont({
@@ -50,6 +51,22 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko" className={`${pretendard.variable}  antialiased`}>
+      <head>
+        {/* PWA */}
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#3B82F6" />
+        <meta name="application-name" content="아맞다약!" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <link rel="apple-touch-icon" href="/icon-192.png" />
+        {/* 설치 환경 힌트 (선택) */}
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, viewport-fit=cover"
+        />
+      </head>
       <body>
         <UserProvider>{children}</UserProvider>
         {/* {children} */}

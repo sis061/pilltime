@@ -7,6 +7,7 @@ import Link from "next/link";
 import ScheduleItem from "./ScheduleItem";
 import TodayProgress from "./TodayProgress";
 import { ZoomableImage } from "@/components/layout/ZoomableImage";
+import { MedicineNotifyToggle } from "./MedicineNotifyToggle";
 // ---- UI
 import { IntakeLog, MedicineDetail } from "@/types/medicines";
 import {
@@ -23,6 +24,8 @@ import { useGlobalLoading } from "@/store/useGlobalLoading";
 
 export default function MedicineCard(medicine: MedicineDetail) {
   const { id, name, imageUrl, description, schedules } = medicine;
+
+  const isNotifyEnabled = schedules.some((s) => s.is_notify === true);
 
   // logId -> 원하는(낙관) status
   const [pending, setPending] = useState<Record<number, IntakeLog["status"]>>(
@@ -91,11 +94,16 @@ export default function MedicineCard(medicine: MedicineDetail) {
 
           <div className="absolute -top-8 right-0">
             <div className="flex items-center justify-between gap-2">
+              <MedicineNotifyToggle
+                medicineName={name}
+                medicineId={medicine.id}
+                initialEnabled={isNotifyEnabled}
+              />
               <Popover>
                 <PopoverTrigger asChild>
                   <Info
                     size={20}
-                    className="cursor-pointer"
+                    className="cursor-pointer transition-transform duration-200 ease-in-out scale-100 hover:scale-110 "
                     strokeWidth={2.5}
                     color="#F9731690"
                   />
@@ -126,7 +134,7 @@ export default function MedicineCard(medicine: MedicineDetail) {
               >
                 <Settings
                   size={20}
-                  className="cursor-pointer"
+                  className="cursor-pointer transition-transform duration-200 ease-in-out scale-100 hover:scale-110 "
                   strokeWidth={2.5}
                   color="#F97316"
                 />

@@ -26,10 +26,10 @@ const Wizard = dynamic(() => import("react-use-wizard").then((m) => m.Wizard), {
   ),
 });
 import { FormProvider, useForm } from "react-hook-form";
-import { useMediaQuery } from "react-responsive";
 import { zodResolver } from "@hookform/resolvers/zod";
 // ---- STORE
 import { useGlobalLoading } from "@/store/useGlobalLoading";
+import { useSSRMediaquery } from "@/lib/useSSRMediaquery";
 
 async function createMedicine(values: MedicineFormValues) {
   const res = await fetch("/api/medicines", {
@@ -57,8 +57,8 @@ export default function MedicineNewDrawer({
   const submitBtnRef = useRef<HTMLButtonElement>(null);
   // ---- NEXT
   const router = useRouter();
-  // ---- LIB
-  const minTablet = useMediaQuery({ minWidth: 768 });
+  // ---- CUSTOM HOOKS
+  const minTablet = useSSRMediaquery(768);
   // ---- STORE
   const isLoading = useGlobalLoading((s) => s.isGLoading);
   const setGLoading = useGlobalLoading((s) => s.setGLoading);

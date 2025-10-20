@@ -15,8 +15,8 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 // ---- UTIL
 import { createClient } from "@/lib/supabase/client";
-// ---- LIB
-import { useMediaQuery } from "react-responsive";
+// ---- CUSTOM HOOKS
+import { useSSRMediaquery } from "@/lib/useSSRMediaquery";
 // ---- STORE
 import { useUserStore } from "@/store/useUserStore";
 import { useGlobalLoading } from "@/store/useGlobalLoading";
@@ -46,8 +46,8 @@ export default function NicknameDrawer({
   const submitBtnRef = useRef<HTMLButtonElement>(null);
   const modeAtOpenRef = useRef<"create" | "edit">(mode);
   const inputRef = useRef<HTMLInputElement | null>(null);
-  // ---- LIB
-  const minTablet = useMediaQuery({ minWidth: 768 });
+  // ---- CUSTOM HOOKS
+  const minTablet = useSSRMediaquery(768);
 
   // Drawer가 열릴 때, 그 시점의 모드를 고정(부모 리렌더 영향 차단)
   useEffect(() => {

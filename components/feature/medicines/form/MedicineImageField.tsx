@@ -19,9 +19,10 @@ import { uploadMedicineImage } from "@/lib/supabase/upload";
 import ImageUploader from "../ImageUploader";
 // ---- LIB
 import { useFormContext } from "react-hook-form";
-import { useMediaQuery } from "react-responsive";
 // ---- STORE
 import { useUserStore } from "@/store/useUserStore";
+// ---- CUSTOM HOOKS
+import { useSSRMediaquery } from "@/lib/useSSRMediaquery";
 
 export function MedicineImageField() {
   const pathname = usePathname();
@@ -29,7 +30,7 @@ export function MedicineImageField() {
 
   const { watch, setValue } = useFormContext();
   const imageUrl = watch("imageUrl");
-  const minTablet = useMediaQuery({ minWidth: 768 });
+  const minTablet = useSSRMediaquery(768);
   // const imageFilePath = watch("imageFilePath");
 
   const user = useUserStore((s) => s.user);

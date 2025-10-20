@@ -40,7 +40,6 @@ import { toHHMMSS } from "@/lib/date";
 import { buildPatch } from "@/lib/medicine";
 import { deleteMedicineImage } from "@/lib/supabase/upload";
 // ---- LIB
-import { useMediaQuery } from "react-responsive";
 import { useForm, FormProvider } from "react-hook-form";
 // ---- STORE
 import { useGlobalLoading } from "@/store/useGlobalLoading";
@@ -50,6 +49,7 @@ import {
   RepeatedPattern,
   UISchedule,
 } from "@/types/medicines";
+import { useSSRMediaquery } from "@/lib/useSSRMediaquery";
 
 /* ---------------------------
  * API
@@ -103,8 +103,8 @@ export default function MedicineEditDrawer({
   // ---- NEXT
   const { id } = useParams();
   const router = useRouter();
-  // ---- LIB
-  const minTablet = useMediaQuery({ minWidth: 768 });
+  // ---- CUSTOM HOOKS
+  const minTablet = useSSRMediaquery(768);
   // ---- STORE
   const { isGLoading, setGLoading } = useGlobalLoading();
 
@@ -317,10 +317,12 @@ export default function MedicineEditDrawer({
                 정보 삭제
               </Button>
             </AlertDialogTrigger>
-            <AlertDialogContent className="bg-pilltime-grayLight !p-4">
+            <AlertDialogContent className="bg-pilltime-grayLight !p-4 !rounded-lg">
               <AlertDialogHeader>
-                <AlertDialogTitle>정말 삭제할까요?</AlertDialogTitle>
-                <AlertDialogDescription>
+                <AlertDialogTitle className="!text-pilltime-grayDark/90">
+                  정말 삭제할까요?
+                </AlertDialogTitle>
+                <AlertDialogDescription className="!text-pilltime-grayDark/50">
                   약과 관련된 모든 정보가 삭제됩니다!
                 </AlertDialogDescription>
               </AlertDialogHeader>

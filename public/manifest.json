@@ -1,0 +1,23 @@
+{
+  "name": "아맞다약!",
+  "short_name": "아맞다약!",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fafafa",
+  "theme_color": "#3B82F6",
+  "description": "아맞다약! 잊지 말고 약을 챙겨드세요. 기록을 확인하세요. 알람도 보내드려요.",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

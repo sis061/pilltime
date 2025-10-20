@@ -154,6 +154,35 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_dispatches: {
+        Row: {
+          id: number
+          kind: Database["public"]["Enums"]["notification_kind"]
+          log_id: number
+          sent_at: string
+        }
+        Insert: {
+          id?: number
+          kind: Database["public"]["Enums"]["notification_kind"]
+          log_id: number
+          sent_at?: string
+        }
+        Update: {
+          id?: number
+          kind?: Database["public"]["Enums"]["notification_kind"]
+          log_id?: number
+          sent_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_dispatches_log_id_fkey"
+            columns: ["log_id"]
+            isOneToOne: false
+            referencedRelation: "intake_logs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -172,6 +201,60 @@ export type Database = {
           id?: string
           nickname?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: number
+          p256dh: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: number
+          p256dh: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: number
+          p256dh?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_notification_settings: {
+        Row: {
+          global_notify_enabled: boolean
+          quiet_from: string | null
+          quiet_to: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          global_notify_enabled?: boolean
+          quiet_from?: string | null
+          quiet_to?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          global_notify_enabled?: boolean
+          quiet_from?: string | null
+          quiet_to?: string | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -204,6 +287,33 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      pilltime_fetch_due_on_time: {
+        Args: {
+          p_from_date: string
+          p_from_time: string
+          p_to_date: string
+          p_to_time: string
+        }
+        Returns: {
+          id: number
+          intake_date: string
+          intake_time: string
+          medicine_id: number
+          medicine_name: string
+          user_id: string
+        }[]
+      }
+      pilltime_fetch_due_reminder_missed: {
+        Args: { p_from_ts: string; p_to_ts: string }
+        Returns: {
+          id: number
+          intake_date: string
+          intake_time: string
+          medicine_id: number
+          medicine_name: string
+          user_id: string
+        }[]
+      }
       reset_future_logs_for_schedule: {
         Args: { p_schedule_id: number }
         Returns: undefined
@@ -216,6 +326,7 @@ export type Database = {
     Enums: {
       intake_source: "manual" | "auto"
       intake_status: "scheduled" | "taken" | "skipped" | "missed"
+      notification_kind: "on_time" | "reminder"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -345,6 +456,7 @@ export const Constants = {
     Enums: {
       intake_source: ["manual", "auto"],
       intake_status: ["scheduled", "taken", "skipped", "missed"],
+      notification_kind: ["on_time", "reminder"],
     },
   },
 } as const
