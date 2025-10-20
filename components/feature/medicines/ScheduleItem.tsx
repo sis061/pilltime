@@ -10,7 +10,7 @@ import {
   ButtonGroupSeparator,
 } from "@/components/ui/button-group";
 import { Button } from "@/components/ui/button";
-import { Check, PinOff, SkipForward } from "lucide-react";
+import { Check, PinOff, Redo2, SkipForward } from "lucide-react";
 // ---- UTIL
 import { formatTime } from "@/lib/date";
 import { getTodayIntakeLog } from "@/lib/medicine";
@@ -121,7 +121,18 @@ export default function ScheduleItem(schedule: ScheduleItemProps) {
           {RenderStatusText(status)}
         </span>
       </div>
-
+      {(isTaken || isSkipped) && (
+        <Button
+          type="button"
+          size="icon"
+          disabled={_isPending || !todayLog}
+          variant="secondary"
+          className={`[&_>svg]:stroke-pilltime-teal/50 hover:!bg-pilltime-teal/50 hover:[&_svg]:stroke-white cursor-pointer`}
+          onClick={() => onButtonClick("scheduled")}
+        >
+          <Redo2 strokeWidth={2.5} />
+        </Button>
+      )}
       <ButtonGroup className="[&_button]:!px-4 [&_button]:!py-2 [&_>button]:shadow-xs [&_>button]:cursor-pointer [&_>button]:transition-colors [&_>button]:duration-150 [&_>button]:focus-visible:outline-none [&_>button]:focus-visible:ring-2 [&_>button]:focus-visible:ring-offset-2 [&_>button]:focus-visible:ring-slate-300">
         <Button
           type="button"
