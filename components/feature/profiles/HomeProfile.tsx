@@ -26,7 +26,7 @@ export default function HomeProfile({ initialUser }: { initialUser: User }) {
       currentUser.nickname === null &&
       !openedOnceRef.current
     ) {
-      // setGLoading(true, "닉네임을 등록하러 가는중....");
+      // setGLoading(true, "별명을 등록하러 가는중....");
       setOpenDrawer(true);
       openedOnceRef.current = true;
     }

@@ -81,7 +81,7 @@ export default function NicknameDrawer({
 
     // 0) 빠른 가드
     if (!nextNickname) {
-      toast.error("닉네임을 입력하세요");
+      toast.error("별명을 입력하세요");
       inputRef.current?.focus();
       return;
     }
@@ -108,7 +108,7 @@ export default function NicknameDrawer({
     }
     if (taken) {
       // 중복 시: 여기서 종료. catch로 흘리지 않음 → 토스트 1번만
-      toast.error("이미 사용 중인 닉네임이에요");
+      toast.error("이미 사용 중인 별명이에요");
       setSubmitting(false);
       inputRef.current?.focus();
       return;
@@ -135,7 +135,7 @@ export default function NicknameDrawer({
       if (error) throw new Error(error.message);
 
       toast.success(
-        openedMode === "create" ? "닉네임을 등록했어요" : "닉네임을 수정했어요"
+        openedMode === "create" ? "별명을 등록했어요" : "별명을 수정했어요"
       );
       onOpenChange(false);
 
@@ -145,11 +145,11 @@ export default function NicknameDrawer({
       }
     } catch (err: any) {
       // 실패 시 롤백
-      console.error("닉네임 업데이트 실패:", err?.message || err);
+      console.error("별명 업데이트 실패:", err?.message || err);
       toast.error(
         openedMode === "create"
-          ? "닉네임을 등록하는 중 문제가 발생했어요"
-          : "닉네임을 수정하는 중 문제가 발생했어요"
+          ? "별명을 등록하는 중 문제가 발생했어요"
+          : "별명을 수정하는 중 문제가 발생했어요"
       );
       setUser({ ...user, nickname: prevNickname });
     } finally {
@@ -214,11 +214,11 @@ export default function NicknameDrawer({
                   가입을 환영해요!
                 </span>
                 <span className="text-sm font-bold !text-pilltime-grayDark/50 ">
-                  간단한 별명을 먼저 만들어주세요
+                  간단한 별명을 먼저 만들어볼까요?
                 </span>
               </div>
             ) : (
-              <label className="text-sm font-semibold">닉네임</label>
+              <label className="text-sm font-semibold">별명</label>
             )}
 
             <Input
@@ -232,7 +232,7 @@ export default function NicknameDrawer({
                   handleSave();
                 }
               }}
-              placeholder="닉네임을 입력하세요"
+              placeholder="별명을 입력하세요"
               autoFocus
               className="!px-2 !border-pilltime-grayLight w-[98%] !ml-1"
             />
@@ -254,7 +254,7 @@ export default function NicknameDrawer({
                 handleSave();
               }}
             >
-              닉네임 초기화
+              별명 초기화
             </Button>
           </DrawerFooter>
         )} */}

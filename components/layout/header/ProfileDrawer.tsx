@@ -57,7 +57,7 @@ export default function ProfileDrawer({
             프로필 관리
           </div>
 
-          <div className="flex flex-col w-full items-start !pl-2">
+          <div className="flex flex-col w-full items-start !pl-1">
             {menuButtons.map(({ key, label, iconLeft: Icon, onClick }) => (
               <Button
                 key={key}

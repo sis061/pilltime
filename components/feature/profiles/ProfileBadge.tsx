@@ -26,7 +26,7 @@ export default function ProfileBadge({ initialUser }: { initialUser: User }) {
       currentUser.nickname === null &&
       !openedOnceRef.current
     ) {
-      // setGLoading(true, "닉네임을 등록하러 가는중....");
+      // setGLoading(true, "별명을 등록하러 가는중....");
       setOpenDrawer(true);
       openedOnceRef.current = true;
     }
@@ -42,9 +42,15 @@ export default function ProfileBadge({ initialUser }: { initialUser: User }) {
 
   return (
     <>
-      <div className="bg-pilltime-blue rounded-full flex items-center justify-center !py-2 !px-1.5 shadow-md">
-        <span className="!font-bold !text-white text-xs">
-          {currentUser.nickname ? currentUser?.nickname.slice(0, 2) : "..."}
+      <div className="bg-pilltime-blue w-8 h-8 rounded-full flex items-center justify-center shadow-md">
+        <span
+          className={`!font-bold !text-white text-xs ${
+            currentUser.nickname && currentUser?.nickname?.length > 2
+              ? "text-[10px]"
+              : "text-xs"
+          }`}
+        >
+          {currentUser.nickname ? currentUser?.nickname.slice(0, 3) : "..."}
         </span>
       </div>
 
