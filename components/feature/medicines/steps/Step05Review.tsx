@@ -1,14 +1,20 @@
 "use client";
 
+// ---- REACT
+import { useEffect } from "react";
+// ---- NEXT
+import Image from "next/image";
+// ---- UI
+import { Button } from "@/components/ui/button";
+// ---- UTIL
+import { DAYS } from "../form/MedicineSchedulesField";
+import { formatTime } from "@/lib/date";
+import { MedicineFormValues } from "@/lib/schemas/medicine";
+// ---- LIB
 import { useWizard } from "react-use-wizard";
 import { useFormContext } from "react-hook-form";
-import { Button } from "@/components/ui/button";
-import { MedicineFormValues } from "@/lib/schemas/medicine";
-import { DAYS } from "../form/MedicineSchedulesField";
+// ---- STORE
 import { useReturnToStore } from "@/store/returnTo";
-import { formatTime } from "@/lib/date";
-import { useEffect } from "react";
-import Image from "next/image";
 
 export function Step05Review() {
   const { activeStep, goToStep } = useWizard();

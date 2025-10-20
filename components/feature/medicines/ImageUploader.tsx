@@ -1,10 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
 import ReactCrop, { PercentCrop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 // import imageCompression from "browser-image-compression";
-import { Button } from "@/components/ui/button";
+interface Props {
+  file: File | null;
+  onCropped: (cropped: File | Blob, previewUrl: string) => void;
+}
 
 // 동적 import + 1회 캐시
 let _imgCompPromise: Promise<
@@ -18,11 +22,6 @@ async function getImageCompression() {
     );
   }
   return _imgCompPromise;
-}
-
-interface Props {
-  file: File | null;
-  onCropped: (cropped: File | Blob, previewUrl: string) => void;
 }
 
 export default function ImageUploader({ file, onCropped }: Props) {

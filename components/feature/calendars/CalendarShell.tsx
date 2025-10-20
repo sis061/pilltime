@@ -1,10 +1,15 @@
 // components/feature/calendars/CalendarShell.tsx
 "use client";
 
+// ---- REACT
 import * as React from "react";
+// ---- COMPONENT
 import PillCalendar from "./PillCalendar";
 import DayIntakeList from "./DayIntakeList";
+// ---- UTIL
 import { toYYYYMMDD } from "@/lib/date";
+// ---- TYPE
+import { useGlobalLoading } from "@/store/useGlobalLoading";
 import type {
   MonthIndicatorMap,
   DayDot,
@@ -35,6 +40,9 @@ const STATUS = [
   },
 ] as const;
 
+/* ------
+ function
+------ */
 const ymOf = (date: Date) =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
 
@@ -148,6 +156,12 @@ export default function CalendarShell({
   React.useEffect(() => {
     fetchDay(selectedYmd);
   }, [selectedYmd]);
+
+  const setGLoading = useGlobalLoading((s) => s.setGLoading);
+
+  React.useEffect(() => {
+    setGLoading(false);
+  }, [setGLoading]);
 
   return (
     <div

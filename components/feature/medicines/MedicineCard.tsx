@@ -1,30 +1,38 @@
 "use client";
-
-// import Image from "next/image";
-import { Info, Settings } from "lucide-react";
-import ScheduleItem from "./ScheduleItem";
+// ---- REACT
+import { useEffect, useMemo, useState } from "react";
+// ---- NEXT
 import Link from "next/link";
+// ---- COMPONENT
+import ScheduleItem from "./ScheduleItem";
+import TodayProgress from "./TodayProgress";
+import { ZoomableImage } from "@/components/layout/ZoomableImage";
+import { MedicineNotifyToggle } from "./MedicineNotifyToggle";
+// ---- UI
 import { IntakeLog, MedicineDetail } from "@/types/medicines";
 import {
   Popover,
   PopoverTrigger,
   PopoverContent,
 } from "@/components/ui/popover";
-import { ZoomableImage } from "@/components/layout/ZoomableImage";
-import { RenderTodaysMedicine } from "@/lib/medicine";
-
-import TodayProgress from "./TodayProgress";
-import { useEffect, useMemo, useState } from "react";
+import { Info, Settings } from "lucide-react";
+// ---- UTIL
 import { toYYYYMMDD } from "@/lib/date";
+import { RenderTodaysMedicine } from "@/lib/medicine";
+// ---- STORE
 import { useGlobalLoading } from "@/store/useGlobalLoading";
 
 export default function MedicineCard(medicine: MedicineDetail) {
   const { id, name, imageUrl, description, schedules } = medicine;
+
+  const isNotifyEnabled = schedules.some((s) => s.is_notify === true);
+
   // logId -> 원하는(낙관) status
   const [pending, setPending] = useState<Record<number, IntakeLog["status"]>>(
     {}
   );
   const setGLoading = useGlobalLoading((s) => s.setGLoading);
+
   const onOptimisticSet = (logId: number, status: IntakeLog["status"]) =>
     setPending((p) => ({ ...p, [logId]: status })); // ✅ 성공 시에는 더 이상 즉시 지우지 않음
   const onOptimisticClear = (logId: number) =>
@@ -86,11 +94,16 @@ export default function MedicineCard(medicine: MedicineDetail) {
 
           <div className="absolute -top-8 right-0">
             <div className="flex items-center justify-between gap-2">
+              <MedicineNotifyToggle
+                medicineName={name}
+                medicineId={medicine.id}
+                initialEnabled={isNotifyEnabled}
+              />
               <Popover>
                 <PopoverTrigger asChild>
                   <Info
                     size={20}
-                    className="cursor-pointer"
+                    className="cursor-pointer transition-transform duration-200 ease-in-out scale-100 hover:scale-110 "
                     strokeWidth={2.5}
                     color="#F9731690"
                   />
@@ -121,7 +134,7 @@ export default function MedicineCard(medicine: MedicineDetail) {
               >
                 <Settings
                   size={20}
-                  className="cursor-pointer"
+                  className="cursor-pointer transition-transform duration-200 ease-in-out scale-100 hover:scale-110 "
                   strokeWidth={2.5}
                   color="#F97316"
                 />

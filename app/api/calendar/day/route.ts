@@ -6,6 +6,7 @@ import type { DayIntakeResponse } from "@/types/calendar";
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const date = searchParams.get("date");
+
   if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
     return NextResponse.json(
       { error: "date (YYYY-MM-DD) required" },
@@ -23,7 +24,6 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // ✅ 스키마 반영: date, time, status, schedule_id 사용. note 제거.
   // medicines join으로 name 가져오기.
   const { data, error } = await supabase
     .from("intake_logs")

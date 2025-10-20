@@ -2,22 +2,24 @@
 "use client";
 
 import * as React from "react";
-import type { DayDot, DayIntakeItem } from "@/types/calendar";
-import { formatTime } from "@/lib/date";
 import { PacmanLoader } from "react-spinners";
+import { formatTime } from "@/lib/date";
 import { statusBadgeClass } from "./CalendarShell";
+import type { DayIntakeItem } from "@/types/calendar";
 
 function getIntakeSummary(intakes: DayIntakeItem[]): string[] {
   const statuses = intakes.map((i) => i.status);
 
+  const hasScheduled = statuses.includes("scheduled");
   const hasSkipped = statuses.includes("skipped");
   const hasMissed = statuses.includes("missed");
   const allTaken = statuses.length > 0 && statuses.every((s) => s === "taken");
 
   const messages: string[] = [];
 
-  if (hasSkipped) messages.push("건너뛴 약이 있어요.");
   if (hasMissed) messages.push("놓친 약이 있네요!");
+  if (hasSkipped) messages.push("건너뛴 약이 있어요");
+  if (hasScheduled) messages.push("남은 약이 있어요");
   if (allTaken) messages.push("다 먹었어요!");
 
   return messages;

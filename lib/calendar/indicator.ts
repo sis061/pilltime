@@ -8,6 +8,21 @@ import type {
   DayDot,
 } from "@/types/calendar";
 
+/* ------
+ * CONST
+ * ------ */
+
+const ORDER: Record<PillStatusServer, number> = {
+  missed: 4,
+  skipped: 3,
+  taken: 2,
+  scheduled: 1,
+};
+
+/* ------
+ * function
+ * ------ */
+
 /** YYYY-MM 파생 + 월 경계 */
 function monthParts(centerYmd: string) {
   const [yy, mm] = centerYmd.split("-").map(Number);
@@ -28,16 +43,22 @@ function todayYMD_KST() {
   }).format(new Date());
 }
 
-const ORDER: Record<PillStatusServer, number> = {
-  missed: 4,
-  skipped: 3,
-  taken: 2,
-  scheduled: 1,
-};
 function isPillStatusServer(x: any): x is PillStatusServer {
   return (
     x === "scheduled" || x === "taken" || x === "missed" || x === "skipped"
   );
+}
+
+/** (날짜, 약) 그룹의 상태 집합을 최종 1개로 요약 */
+function summarizeStatus(statuses: Set<PillStatusServer>): PillStatusServer {
+  // 전부 taken인 경우에만 taken 인정
+  if (statuses.size === 1 && statuses.has("taken")) return "taken";
+  // 그 외엔 심각도 우선순위
+  if (statuses.has("missed")) return "missed";
+  if (statuses.has("skipped")) return "skipped";
+  if (statuses.has("scheduled")) return "scheduled";
+  // 방어적 디폴트 (이론상 도달 X)
+  return "taken";
 }
 
 /** 내부 빌더(캐시 대상). 쿠키 접근 금지 → service client 사용 */
@@ -51,7 +72,7 @@ async function _buildMonthIndicatorMap(
   const { data, error } = await supabase
     .from("intake_logs")
     .select(
-      "date,status,medicine_id, medicines!left(name, deleted_at),medicine_schedules!left(id, deleted_at) "
+      "date,status,medicine_id, medicines!left(name, deleted_at),medicine_schedules!left(id, deleted_at)"
     )
     .eq("user_id", userId)
     .gte("date", startYmd)
@@ -60,9 +81,11 @@ async function _buildMonthIndicatorMap(
   if (error) throw new Error(error.message);
 
   const today = todayYMD_KST();
+
+  // byDateByMed: 날짜 → 약 → { label, statuses(Set) }
   const byDateByMed = new Map<
     string,
-    Map<string, { worst: PillStatusServer; label: string }>
+    Map<string, { label: string; statuses: Set<PillStatusServer> }>
   >();
 
   for (const row of data ?? []) {
@@ -79,25 +102,29 @@ async function _buildMonthIndicatorMap(
     const first = Array.from(name)[0] ?? "?";
     const label = /^[a-z]/i.test(first) ? first.toUpperCase() : first;
 
-    const current = byDateByMed.get(ymd) ?? new Map();
-    const prev = current.get(mid);
-
-    const prevWorst = prev?.worst as PillStatusServer | undefined;
-    const prevRank = prevWorst ? ORDER[prevWorst] : -Infinity;
-    const rawRank = ORDER[raw];
-
-    if (!prev || rawRank > prevRank) {
-      current.set(mid, { worst: raw, label });
+    let medMap = byDateByMed.get(ymd);
+    if (!medMap) {
+      medMap = new Map();
+      byDateByMed.set(ymd, medMap);
     }
-    byDateByMed.set(ymd, current);
+
+    const existing = medMap.get(mid);
+    if (!existing) {
+      medMap.set(mid, { label, statuses: new Set([raw]) });
+    } else {
+      existing.statuses.add(raw);
+    }
   }
 
+  // 요약 결과 만들기
   const out: MonthIndicatorMap = {};
   for (const [ymd, medMap] of byDateByMed.entries()) {
     const dots: DayDot[] = [];
-    for (const [medicine_id, { worst, label }] of medMap.entries()) {
-      dots.push({ medicine_id, label, status: worst });
+    for (const [medicine_id, { label, statuses }] of medMap.entries()) {
+      const finalStatus = summarizeStatus(statuses);
+      dots.push({ medicine_id, label, status: finalStatus });
     }
+    // 심각도 높은 순 → 라벨 가나다(ko) 순
     dots.sort((a, b) => {
       const diff = ORDER[b.status] - ORDER[a.status];
       return diff !== 0 ? diff : a.label.localeCompare(b.label, "ko");
@@ -120,9 +147,7 @@ export async function getMonthIndicatorMap(userId: string, centerYmd: string) {
 
   const cached = unstable_cache(
     async () => _buildMonthIndicatorMap(userId, centerYmd),
-    // 캐시 키: user+yyy-mm 단위 요약
     ["intake", "summary", userId, ym],
-    // 태그/TTL 등록
     { revalidate: 600, tags: [tag] }
   );
   return cached();

@@ -1,4 +1,6 @@
+// ---- COMPONENT
 import CalendarDrawerClient from "@/components/feature/calendars/CalendarDrawerClient";
+// ---- UTIL
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getMonthIndicatorMap } from "@/lib/calendar/indicator";
 import { toYYYYMMDD } from "@/lib/date";

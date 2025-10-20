@@ -1,10 +1,14 @@
 // TODO 빌드 전에 필요없는 라이브러리 삭제 필요
 
+// ---- NEXT
 import { redirect } from "next/navigation";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
-import HomeProfile from "@/components/feature/profiles/HomeProfile";
+// ---- COMPONENT
+// import HomeProfile from "@/components/feature/profiles/HomeProfile";
 import MedicineList from "@/components/feature/medicines/MedicineList";
 import HomeToday from "@/components/feature/calendars/HomeToday";
+// ---- UTIL
+import { createServerSupabaseClient } from "@/lib/supabase/server";
+import FirstVisitBanner from "@/components/feature/notifications/FirstVisitBanner";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "default-no-store";
@@ -67,9 +71,10 @@ export default async function Home() {
 
   return (
     <section className="inner min-h-[calc(100dvh-11.5rem)] !text-pilltime-blue text-3xl !mx-auto !w-full h-full !mb-8 !p-2">
-      <div className="!mb-12 flex flex-col items-center gap-4 justify-center max-md:!pt-4">
+      <FirstVisitBanner />
+      <div className="flex flex-col items-center gap-4 justify-center !-mb-2">
         <HomeToday />
-        {profile ? (
+        {/* {profile ? (
           <HomeProfile
             initialUser={{
               id: user.id,
@@ -79,7 +84,7 @@ export default async function Home() {
           />
         ) : (
           <ProfileFallback />
-        )}
+        )} */}
       </div>
 
       {medicines ? (
@@ -91,15 +96,15 @@ export default async function Home() {
   );
 }
 
-function ProfileFallback() {
-  return (
-    <div className="!p-4 !my-8 text-center">
-      <p className="text-sm !text-pilltime-grayDark/50 !pb-2 font-bold ">
-        프로필 정보를 불러오지 못했습니다. 새로고침을 시도해보세요.
-      </p>
-    </div>
-  );
-}
+// function ProfileFallback() {
+//   return (
+//     <div className="!p-4 !my-8 text-center">
+//       <p className="text-sm !text-pilltime-grayDark/50 !pb-2 font-bold ">
+//         프로필 정보를 불러오지 못했습니다. 새로고침을 시도해보세요.
+//       </p>
+//     </div>
+//   );
+// }
 
 function MedicineListFallback() {
   return (

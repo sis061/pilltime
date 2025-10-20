@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { toHHMMSS, toYYYYMMDD } from "@/lib/date";
-// [NEW] 월 요약 캐시 무효화 헬퍼
 import { revalidateMonthIndicator } from "@/lib/calendar/indicator";
-// [NEW] revalidateTag는 Node 런타임 필요
+import { toHHMMSS, toYYYYMMDD } from "@/lib/date";
+
 export const runtime = "nodejs";
+
+/* -----------
+ * GET
+ * ----------- */
 
 export async function GET(
   req: Request,
@@ -58,6 +61,10 @@ export async function GET(
   return NextResponse.json(data);
 }
 
+/* -----------
+ * PUT
+ * ----------- */
+
 export async function PUT(
   req: Request,
   context: { params: Promise<{ id: string }> }
@@ -74,9 +81,9 @@ export async function PUT(
 
   const body = await req.json();
 
-  // [NEW] 이 요청에서 무효화할 월(YYYY-MM)을 모으는 Set
+  // 이 요청에서 무효화할 월(YYYY-MM)을 모으는 Set
   const ymToInvalidate = new Set<string>();
-  // [NEW] 오늘~+7일 월(기본 세이프가드: 이름만 바뀐 경우 등)
+  // 오늘~+7일 월(기본 세이프가드: 이름만 바뀐 경우 등)
   const today = new Date();
   const next7 = new Date(today);
   next7.setDate(today.getDate() + 7);
@@ -109,7 +116,7 @@ export async function PUT(
     if (medError)
       return NextResponse.json({ error: medError.message }, { status: 500 });
 
-    // [NEW] 이름이 바뀌면 배지 이니셜이 바뀌므로 최소 현재/다음 월은 무효화
+    // 이름이 바뀌면 배지 이니셜이 바뀌므로 최소 현재/다음 월은 무효화
     if (body.name !== undefined) {
       ymToInvalidate.add(todayYmd.slice(0, 7));
       ymToInvalidate.add(next7Ymd.slice(0, 7));
@@ -137,7 +144,7 @@ export async function PUT(
     to.setDate(now.getDate() + 7);
     const toStr = to.toISOString().slice(0, 10);
 
-    // [NEW] 이 윈도우가 걸치는 월 수집
+    // 이 윈도우가 걸치는 월 수집
     ymToInvalidate.add(fromStr.slice(0, 7));
     ymToInvalidate.add(toStr.slice(0, 7));
 
@@ -265,7 +272,7 @@ export async function PUT(
       if (softErr)
         return NextResponse.json({ error: softErr.message }, { status: 500 });
 
-      // [NEW] 삭제의 영향도 현재/다음 월에 걸칠 수 있으니 기본 윈도우 월을 다시 보장
+      // 삭제의 영향도 현재/다음 월에 걸칠 수 있으니 기본 윈도우 월을 다시 보장
       ymToInvalidate.add(today.slice(0, 7));
       const plus7 = new Date();
       plus7.setDate(plus7.getDate() + 7);
@@ -274,15 +281,19 @@ export async function PUT(
   }
 
   // -------------------------------
-  // 3️⃣ 완료 응답 + [NEW] 월 캐시 무효화
+  // 3️⃣ 완료 응답 + 월 캐시 무효화
   // -------------------------------
-  // [NEW] 수집한 월(YYYY-MM)들에 대해 revalidate
+  // 수집한 월(YYYY-MM)들에 대해 revalidate
   for (const ym of ymToInvalidate) {
     await revalidateMonthIndicator(user.id, `${ym}-01`);
   }
 
   return NextResponse.json({ success: true });
 }
+
+/* -----------
+ * DELETE
+ * ----------- */
 
 export async function DELETE(
   req: Request,
@@ -373,7 +384,7 @@ export async function DELETE(
   }
 
   // -------------------------------
-  // 5️⃣ 완료 + [NEW] 월 캐시 무효화
+  // 5️⃣ 완료 + 월 캐시 무효화
   // -------------------------------
   // 삭제의 영향은 보통 오늘/다음주에 집중 → 두 달만 무효화
   const base = new Date();

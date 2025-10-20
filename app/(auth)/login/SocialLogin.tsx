@@ -1,8 +1,11 @@
 "use client";
 
+// ---- REACT
+import { useState } from "react";
+// ---- UI
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { useState } from "react";
+// ---- STORE
 import { useGlobalLoading } from "@/store/useGlobalLoading";
 
 export default function SocialLogin() {
@@ -16,6 +19,13 @@ export default function SocialLogin() {
     return createClient();
   }
 
+  const redirectToURL =
+    process.env.NODE_ENV === "production"
+      ? `${process.env.NEXT_PUBLIC_SITE_URL}/callback`
+      : typeof window !== "undefined"
+      ? `${window.location.origin}/callback`
+      : "";
+
   async function handleLogin(provider: "google" | "apple") {
     try {
       setLoadingProvider(provider);
@@ -24,7 +34,7 @@ export default function SocialLogin() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/callback`,
+          redirectTo: redirectToURL,
         },
       });
       if (error) throw error;

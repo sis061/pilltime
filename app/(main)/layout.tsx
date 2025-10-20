@@ -1,7 +1,7 @@
-import { createServerSupabaseClient } from "@/lib/supabase/server";
-
 import Header from "@/components/layout/header/Header";
 import Footer from "@/components/layout/Footer";
+
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic"; // ✅ 개인화 화면: SSR 강제
 export const fetchCache = "default-no-store"; // ✅ 응답 캐시 비활성화

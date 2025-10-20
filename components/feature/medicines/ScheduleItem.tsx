@@ -2,17 +2,20 @@
 
 // TODO 알람 기능 구현
 
-import { IntakeLog, MedicineSchedule } from "@/types/medicines";
-import { formatTime } from "@/lib/date";
-import { getTodayIntakeLog } from "@/lib/medicine";
 import { useEffect, useMemo, useState, useTransition } from "react";
+// ---- UI
 import { toast } from "sonner";
 import {
   ButtonGroup,
   ButtonGroupSeparator,
 } from "@/components/ui/button-group";
 import { Button } from "@/components/ui/button";
-import { Check, SkipForward } from "lucide-react";
+import { Check, PinOff, Redo2, SkipForward } from "lucide-react";
+// ---- UTIL
+import { formatTime } from "@/lib/date";
+import { getTodayIntakeLog } from "@/lib/medicine";
+// ---- TYPE
+import { IntakeLog, MedicineSchedule } from "@/types/medicines";
 
 type ScheduleItemProps = MedicineSchedule & {
   onOptimisticSet: (logId: number, status: IntakeLog["status"]) => void;
@@ -48,6 +51,7 @@ export default function ScheduleItem(schedule: ScheduleItemProps) {
 
   const [status, setStatus] = useState<IntakeLog["status"]>(initialStatus);
   const [_isPending, startTransition] = useTransition();
+
   const isTaken = status === "taken";
   const isSkipped = status === "skipped";
   const isMissed = status === "missed";
@@ -55,6 +59,15 @@ export default function ScheduleItem(schedule: ScheduleItemProps) {
   useEffect(() => {
     setStatus(todayLog?.status ?? "scheduled");
   }, [todayLog?.status]);
+
+  function onButtonClick(value: IntakeLog["status"]) {
+    if (!todayLog) return;
+    startTransition(() => void putIntakeLog(todayLog.id, value));
+  }
+
+  /* ---------------------------
+   * API
+   * --------------------------- */
 
   async function putIntakeLog(id: number, next: IntakeLog["status"]) {
     const prev = status;
@@ -92,11 +105,6 @@ export default function ScheduleItem(schedule: ScheduleItemProps) {
     }
   }
 
-  function onButtonClick(value: IntakeLog["status"]) {
-    if (!todayLog) return;
-    startTransition(() => void putIntakeLog(todayLog.id, value));
-  }
-
   return (
     <div className="flex items-center w-full justify-between gap-4 border-t border-t-pilltime-teal/50 !pt-4 !px-4">
       <div className="flex-col flex grow items-start">
@@ -113,7 +121,18 @@ export default function ScheduleItem(schedule: ScheduleItemProps) {
           {RenderStatusText(status)}
         </span>
       </div>
-
+      {(isTaken || isSkipped) && (
+        <Button
+          type="button"
+          size="icon"
+          disabled={_isPending || !todayLog}
+          variant="secondary"
+          className={`[&_>svg]:stroke-pilltime-teal/50 hover:!bg-pilltime-teal/50 hover:[&_svg]:stroke-white cursor-pointer`}
+          onClick={() => onButtonClick("scheduled")}
+        >
+          <Redo2 strokeWidth={2.5} />
+        </Button>
+      )}
       <ButtonGroup className="[&_button]:!px-4 [&_button]:!py-2 [&_>button]:shadow-xs [&_>button]:cursor-pointer [&_>button]:transition-colors [&_>button]:duration-150 [&_>button]:focus-visible:outline-none [&_>button]:focus-visible:ring-2 [&_>button]:focus-visible:ring-offset-2 [&_>button]:focus-visible:ring-slate-300">
         <Button
           type="button"
@@ -146,7 +165,8 @@ export default function ScheduleItem(schedule: ScheduleItemProps) {
           }`}
           onClick={() => onButtonClick("skipped")}
         >
-          <SkipForward strokeWidth={2.5} />
+          {/* <SkipForward strokeWidth={2.5} /> */}
+          <PinOff strokeWidth={2.5} />
         </Button>
       </ButtonGroup>
     </div>

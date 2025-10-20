@@ -1,16 +1,19 @@
 "use client";
 
+// ---- REACT
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
+// ---- NEXT
 import Image, { type ImageProps as NextImageProps } from "next/image";
 import dynamic from "next/dynamic";
-import { Skeleton } from "@/components/ui/skeleton";
-
+// ---- COMPONENT
 //  모달용 컴포넌트만 framer-motion과 함께 동적 로드
 const MotionOverlay = dynamic(
   () => import("./MotionOverlay").then((m) => m.MotionOverlay),
   { ssr: false }
 );
+// ---- UI
+import { Skeleton } from "@/components/ui/skeleton";
 
 type ZoomableImageProps = Omit<NextImageProps, "onClick"> & {
   zoomable?: boolean;
@@ -31,12 +34,12 @@ export function ZoomableImage({
   const [isZoomed, setIsZoomed] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => setMounted(true), []);
-
   const stringSrc = useMemo(
     () => (typeof src === "string" ? src : (src as any)?.src ?? ""),
     [src]
   );
+
+  useEffect(() => setMounted(true), []);
 
   if (hasError) {
     return (

@@ -1,12 +1,15 @@
 "use client";
 
 import * as React from "react";
+// ---- UI
 import { Calendar, CalendarDayButton } from "@/components/ui/calendar";
+// ---- UTIL
+import { statusBadgeClass } from "./CalendarShell";
 import { toYYYYMMDD } from "@/lib/date";
 import { ko } from "date-fns/locale";
 import { format } from "date-fns";
+// ---- TYPE
 import type { DayDot } from "@/types/calendar"; // { medicine_id, label, status }
-import { statusBadgeClass } from "./CalendarShell";
 
 export default function PillCalendar({
   month,
@@ -126,7 +129,7 @@ export default function PillCalendar({
                 modifiers={modifiers}
                 {...props}
                 className={[
-                  "flex flex-col items-center justify-start gap-1",
+                  "flex flex-col items-center justify-start gap-1 cursor-pointer",
                   // modifiers.today && !modifiers.selected
                   //   ? "bg-pilltime-blue text-white ring-2 ring-pilltime-blue"
                   //   : "",

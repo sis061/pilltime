@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import Image from "next/image";
 import { X } from "lucide-react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 export function MotionOverlay({
   src,
@@ -15,6 +15,7 @@ export function MotionOverlay({
   onClose: () => void;
 }) {
   const prefersReduced = useReducedMotion();
+
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";

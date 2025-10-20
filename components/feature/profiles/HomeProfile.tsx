@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import NicknameDrawer from "@/components/feature/profiles/NicknameDrawer";
-import { useUserStore } from "@/store/useUserStore";
 import { User } from "@/types/profile";
+import { useUserStore } from "@/store/useUserStore";
 // import { useGlobalLoading } from "@/store/useGlobalLoading";
 
 export default function HomeProfile({ initialUser }: { initialUser: User }) {
@@ -26,7 +26,7 @@ export default function HomeProfile({ initialUser }: { initialUser: User }) {
       currentUser.nickname === null &&
       !openedOnceRef.current
     ) {
-      // setGLoading(true, "닉네임을 등록하러 가는중....");
+      // setGLoading(true, "별명을 등록하러 가는중....");
       setOpenDrawer(true);
       openedOnceRef.current = true;
     }
@@ -42,17 +42,15 @@ export default function HomeProfile({ initialUser }: { initialUser: User }) {
 
   return (
     <>
-      <h1 className="!text-4xl w-full !px-4 text-center !text-pilltime-grayDark/60">
-        안녕하세요{" "}
+      <div className="!text-xs h-4 w-4 !px-4 text-center">
         {currentUser?.nickname ? (
-          <span className="!font-bold !text-pilltime-blue">
+          <span className="!font-bold !text-pilltime-blue h-4 w-4 border rounded-full">
             {currentUser.nickname}
           </span>
         ) : (
           "..."
         )}
-        님!
-      </h1>
+      </div>
 
       <NicknameDrawer
         open={openDrawer}

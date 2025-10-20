@@ -1,12 +1,12 @@
 // app/api/medicines/route.ts
 import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import type { TablesInsert } from "@/types_db";
-import { MedicineSchema } from "@/lib/schemas/medicine";
-import { sevenDayWindow } from "@/lib/date";
-// [NEW] 월 요약 캐시 무효화 헬퍼
 import { revalidateMonthIndicator } from "@/lib/calendar/indicator";
-// [NEW] revalidateTag는 Node 런타임 필요
+import { sevenDayWindow } from "@/lib/date";
+
+import { MedicineSchema } from "@/lib/schemas/medicine";
+import type { TablesInsert } from "@/types_db";
+
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
@@ -125,12 +125,12 @@ export async function POST(req: Request) {
         console.log(`✅ ${insertedCount} logs generated for schedule ${s.id}`);
       }
 
-      // [NEW] 7일 범위가 걸치는 월만 dedupe 수집
+      // 7일 범위가 걸치는 월만 dedupe 수집
       ymToInvalidate.add(fromStr.slice(0, 7)); // "YYYY-MM"
       ymToInvalidate.add(toStr.slice(0, 7));
     }
 
-    // [NEW] 무효화: 수집된 월만 한 번씩 revalidate
+    // 무효화: 수집된 월만 한 번씩 revalidate
     for (const ym of ymToInvalidate) {
       await revalidateMonthIndicator(user.id, `${ym}-01`);
     }

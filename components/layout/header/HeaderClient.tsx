@@ -1,5 +1,16 @@
 "use client";
 
+import { useEffect, useState, useTransition } from "react";
+// ---- NEXT
+import { useRouter } from "next/navigation";
+// ---- CUSTOM HOOKS
+import { useGlobalNotify } from "@/lib/useGlobalNotify";
+// ---- COMPONENT
+import ProfileDrawer from "./ProfileDrawer";
+import { SmartButtonGroup } from "./SmartButtons";
+import NicknameDrawer from "@/components/feature/profiles/NicknameDrawer";
+import ProfileBadge from "@/components/feature/profiles/ProfileBadge";
+// ---- UI
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -7,39 +18,47 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
-import { useUserStore } from "@/store/useUserStore";
-import { useEffect, useMemo, useState } from "react";
-import NicknameDrawer from "@/components/feature/profiles/NicknameDrawer";
-import type { User } from "@supabase/supabase-js";
-import { useGlobalLoading } from "@/store/useGlobalLoading";
-import { useMediaQuery } from "react-responsive";
-import ProfileDrawer from "./ProfileDrawer";
 import {
+  Bell,
+  BellOff,
   CalendarSearch,
   LogOut,
   Menu,
   Plus,
-  UserCog,
   UserPen,
 } from "lucide-react";
-import { SmartButtonGroup } from "./SmartButtons";
+// ---- UTIL
 import { toYYYYMMDD } from "@/lib/date";
+// ---- STORE
+import { useUserStore } from "@/store/useUserStore";
+import { useGlobalLoading } from "@/store/useGlobalLoading";
+import { useSSRMediaquery } from "@/lib/useSSRMediaquery";
+// ---- TYPE
+import type { User } from "@/types/profile";
+import { toast } from "sonner";
 
 export default function HeaderClient({
   user,
-  nickname,
+  initialGlobalEnabled,
 }: {
-  user: User | null;
-  nickname: string | null;
+  user: User;
+  initialGlobalEnabled: boolean;
 }) {
-  const router = useRouter();
-  const clearUser = useUserStore((s) => s.clearUser);
-  const setUser = useUserStore((s) => s.setUser);
+  // ---- REACT
   const [openNickname, setOpenNickname] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  /** 🔔 전역 알림 토글 상태 + 낙관적 업데이트 */
+  const [globalOn, setGlobalOn] = useState<boolean>(initialGlobalEnabled);
+  const [pendingGlobal, startTransition] = useTransition();
+  // ---- NEXT
+  const router = useRouter();
+  // ---- CUSTOM HOOKS
+  const isMobile = useSSRMediaquery(640);
+  const { setEnabledOptimistic, mutateGlobal } = useGlobalNotify();
+  // ---- STORE
+  const setUser = useUserStore((s) => s.setUser);
+  const clearUser = useUserStore((s) => s.clearUser);
   const setGLoading = useGlobalLoading((s) => s.setGLoading);
-  const minMobile = useMediaQuery({ minWidth: 600 });
 
   // 오늘 날짜 계산
   // const today = new Date();
@@ -47,44 +66,19 @@ export default function HeaderClient({
   // const m = String(today.getMonth() + 1).padStart(2, "0");
   // const d = String(today.getDate()).padStart(2, "0");
 
+  /* ------
+   * CONST
+   * ------ */
+
   const todayYmd = toYYYYMMDD(new Date(), "Asia/Seoul");
-
-  function goNewMedicine() {
-    setMenuOpen(false);
-    router.push("/medicines/new");
-    setGLoading(true, "정보를 불러오는 중이에요..");
-  }
-
-  useEffect(() => {
-    if (user) {
-      setUser({
-        id: user.id,
-        email: user.email ?? null,
-        nickname: nickname ?? null,
-      });
-    } else {
-      clearUser();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, nickname]);
-
-  async function getSupabase() {
-    const { createClient } = await import("@/lib/supabase/client");
-    return createClient();
-  }
-
-  async function logout() {
-    const supabase = await getSupabase();
-    await supabase.auth.signOut();
-    clearUser();
-    router.replace("/login");
-  }
 
   /** 공통 버튼 config (props로 내려줄 것) */
   const baseWhiteBtn =
-    "font-bold cursor-pointer !text-white flex-col !text-xs !p-2 flex";
-  const baseBlueBtn =
-    "font-bold cursor-pointer !text-pilltime-blue !text-xs !p-2 flex";
+    "group font-bold cursor-pointer [&_*]:!text-white flex-col !text-xs !p-2 flex items-center justify-center h-full [&_svg:not([class*='size-'])]:size-7 [&_svg]:transition-transform [&_svg]:duration-200 [&_svg]:ease-in-out [&_svg]:scale-100 [&_svg]:group-hover:scale-110";
+  const baseBlueBtn = (mobile = false) =>
+    `font-bold cursor-pointer !text-pilltime-blue [&_*]:!text-pilltime-blue ${
+      mobile ? "!text-sm" : "!text-xs"
+    } !p-2 flex items-center [&_svg:not([class*='size-'])]:size-5`;
 
   const desktopBtns = [
     {
@@ -105,7 +99,16 @@ export default function HeaderClient({
       onClick: () => {
         setMenuOpen(false);
         router.push(`/calendar?d=${todayYmd}`);
+        setGLoading(true, "정보를 불러오는 중이에요..");
       },
+    },
+    {
+      key: "global",
+      label: globalOn ? "모든 알림 켜짐" : "모든 알림 꺼짐",
+      iconColor: "#fff",
+      iconLeft: globalOn ? Bell : BellOff,
+      className: baseWhiteBtn,
+      onClick: () => !pendingGlobal && toggleGlobal(),
     },
   ];
 
@@ -126,25 +129,79 @@ export default function HeaderClient({
     },
   ];
 
-  // 모바일용 버튼
+  // 모바일 드로어용 버튼/메뉴
   const drawerBtns = desktopBtns.map((b) => ({
     ...b,
     iconColor: "#3B82F6",
-    className: baseBlueBtn
-      .replace("!text-white", "!text-pilltime-blue")
-      .replace("!text-xs", "!text-sm"),
+    className: baseBlueBtn(true),
   }));
 
-  if (!minMobile)
+  /* ------
+   * function
+   * ------ */
+
+  async function getSupabase() {
+    const { createClient } = await import("@/lib/supabase/client");
+    return createClient();
+  }
+
+  async function logout() {
+    const supabase = await getSupabase();
+    await supabase.auth.signOut();
+    clearUser();
+    router.replace("/login");
+  }
+
+  function goNewMedicine() {
+    setMenuOpen(false);
+    router.push("/medicines/new");
+    setGLoading(true, "정보를 불러오는 중이에요..");
+  }
+
+  function toggleGlobal() {
+    const next = !globalOn;
+    const prev = globalOn;
+    const enableContent = prev === true ? "껐어요" : "켰어요!";
+    setGlobalOn(next); // 낙관적
+    setEnabledOptimistic(next);
+    startTransition(async () => {
+      try {
+        const res = await fetch("/api/push/global", {
+          method: "PATCH",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ enabled: next }),
+        });
+        if (!res.ok) throw new Error(String(res.status));
+        toast.info(`전체 알림을 ${enableContent}`);
+        mutateGlobal();
+      } catch (e) {
+        console.error("[global notify] toggle fail", e);
+        // 롤백
+        setGlobalOn(prev);
+        setEnabledOptimistic(prev);
+      }
+    });
+  }
+
+  useEffect(() => {
+    if (user) {
+      setUser({ id: user.id, email: user.email, nickname: user.nickname });
+    } else {
+      clearUser();
+    }
+  }, [user.id, user.email, user.nickname, setUser, clearUser]);
+
+  if (!isMobile)
     return (
       <div className="flex items-center gap-2">
+        <ProfileBadge initialUser={user} />
         <Button
           variant="ghost"
           size="icon-lg"
           onClick={() => setMenuOpen(true)}
-          className="!text-white !p-2 flex-col text-xs"
+          className="!text-white !p-2 flex-col text-xs [&_svg:not([class*='size-'])]:size-6"
         >
-          <Menu className="h-6 w-6" color="#fff" />
+          <Menu color="#fff" />
         </Button>
         <ProfileDrawer
           open={menuOpen}
@@ -163,21 +220,19 @@ export default function HeaderClient({
     );
 
   return (
-    <div className="flex items-center gap-2">
-      {/* 상단 버튼 그룹 */}
-      <SmartButtonGroup items={desktopBtns} />
-
+    <div className="flex items-center gap-2 h-full">
       {/* 드롭다운 */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            className={baseWhiteBtn}
+          <button
+            // variant="ghost"
+            className={`${baseWhiteBtn} rounded-2xl [&_svg:not([class*='size-'])]:size-6 group [&_div]:transition-transform [&_div]:duration-200 [&_div]:ease-in-out [&_div]:scale-100 [&_div]:group-hover:scale-110`}
             aria-haspopup="dialog"
           >
-            <UserCog className="h-6 w-6" color="#fff" />
-            프로필 관리
-          </Button>
+            {/* <UserCog className="h-6 w-6" color="#fff" /> */}
+            <ProfileBadge initialUser={user} />
+            <span className="!pt-2">프로필 관리</span>
+          </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent
           side="bottom"
@@ -203,6 +258,8 @@ export default function HeaderClient({
           )}
         </DropdownMenuContent>
       </DropdownMenu>
+      {/* 상단 버튼 그룹 */}
+      <SmartButtonGroup items={desktopBtns} />
 
       <NicknameDrawer
         open={openNickname}

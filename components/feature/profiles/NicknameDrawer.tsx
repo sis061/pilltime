@@ -1,5 +1,9 @@
 "use client";
 
+import { useState, useEffect, useRef } from "react";
+// ---- NEXT
+import { useRouter } from "next/navigation";
+// ---- UI
 import {
   Drawer,
   DrawerContent,
@@ -8,14 +12,14 @@ import {
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-
-import { useState, useEffect, useRef } from "react";
-import { createClient } from "@/lib/supabase/client";
-import { useUserStore } from "@/store/useUserStore";
-import { useMediaQuery } from "react-responsive";
-import { useGlobalLoading } from "@/store/useGlobalLoading";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+// ---- UTIL
+import { createClient } from "@/lib/supabase/client";
+// ---- CUSTOM HOOKS
+import { useSSRMediaquery } from "@/lib/useSSRMediaquery";
+// ---- STORE
+import { useUserStore } from "@/store/useUserStore";
+import { useGlobalLoading } from "@/store/useGlobalLoading";
 
 interface Props {
   open: boolean;
@@ -28,18 +32,22 @@ export default function NicknameDrawer({
   onOpenChange,
   mode = "edit",
 }: Props) {
-  const supabase = createClient();
   const router = useRouter();
+  // ---- UTIL
+  const supabase = createClient();
+  // ---- STORE
   const user = useUserStore((s) => s.user);
   const setUser = useUserStore((s) => s.setUser);
   const isLoading = useGlobalLoading((s) => s.isGLoading);
   const setGLoading = useGlobalLoading((s) => s.setGLoading);
+  // ---- REACT
   const [submitting, setSubmitting] = useState(false);
-
   const [nickname, setNickname] = useState(user?.nickname || "");
   const submitBtnRef = useRef<HTMLButtonElement>(null);
   const modeAtOpenRef = useRef<"create" | "edit">(mode);
-  const minTablet = useMediaQuery({ minWidth: 768 });
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  // ---- CUSTOM HOOKS
+  const minTablet = useSSRMediaquery(768);
 
   // Drawer가 열릴 때, 그 시점의 모드를 고정(부모 리렌더 영향 차단)
   useEffect(() => {
@@ -54,82 +62,97 @@ export default function NicknameDrawer({
     }
   }, [open, user]);
 
-  // -- 낙관적 업데이트 적용
+  /* ---------------------------
+   * API
+   * --------------------------- */
 
+  // -- 낙관적 업데이트 적용
   async function handleSave() {
     const openedMode = modeAtOpenRef.current;
+
     if (!user) {
       toast.error("로그인 정보가 없어요. 다시 시도해주세요.");
       return;
     }
+    if (submitting || isLoading) return;
 
-    if (submitting) return;
+    const prevNickname = user.nickname ?? "";
+    const nextNickname = nickname.trim();
+
+    // 0) 빠른 가드
+    if (!nextNickname) {
+      toast.error("별명을 입력하세요");
+      inputRef.current?.focus();
+      return;
+    }
+    if (nextNickname === prevNickname) {
+      toast.message("변경 사항이 없어요");
+      onOpenChange(false);
+      return;
+    }
+
+    // 1) 프리플라이트 — 중복만 검사 (스피너/낙관적 업데이트 없음)
+    setSubmitting(true);
+    const { data: taken, error: rpcErr } = await supabase.rpc(
+      "is_nickname_taken",
+      {
+        nick: nextNickname,
+        exclude: user.id,
+      }
+    );
+    if (rpcErr) {
+      console.error(rpcErr);
+      setSubmitting(false);
+      toast.error("중복 확인 중 오류가 발생했어요");
+      return;
+    }
+    if (taken) {
+      // 중복 시: 여기서 종료. catch로 흘리지 않음 → 토스트 1번만
+      toast.error("이미 사용 중인 별명이에요");
+      setSubmitting(false);
+      inputRef.current?.focus();
+      return;
+    }
+
+    // 2) 실제 저장 시작 — 이제 스피너 ON + 낙관적 업데이트
     setGLoading(
       true,
-      mode === "create"
+      openedMode === "create"
         ? "프로필을 생성 중이에요..."
         : "정보를 수정 중이에요..."
     );
 
-    const prevNickname = user.nickname;
-    const optimisticUser = { ...user, nickname };
-
-    // 1️⃣ UI 즉시 갱신 (낙관적 업데이트)
+    // 낙관적 업데이트
+    const optimisticUser = { ...user, nickname: nextNickname };
     setUser(optimisticUser);
 
     try {
-      setSubmitting(true);
-      // 2️⃣ 서버 업데이트
-      // 닉네임 중복 확인
-      const { data: duplicate } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("nickname", nickname)
-        .neq("id", user.id)
-        .maybeSingle();
-
-      if (duplicate) {
-        toast.error("이미 사용 중인 닉네임이에요");
-        throw new Error("이미 사용 중인 닉네임이에요");
-      }
-
-      // 실제 업데이트
       const { error } = await supabase
         .from("profiles")
-        .update({ nickname: nickname })
+        .update({ nickname: nextNickname })
         .eq("id", user.id);
 
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      // 3️⃣ 성공 시 — 그대로 유지
+      if (error) throw new Error(error.message);
 
       toast.success(
-        mode === "create" ? "닉네임을 등록했어요" : "닉네임을 수정했어요"
+        openedMode === "create" ? "별명을 등록했어요" : "별명을 수정했어요"
       );
-
       onOpenChange(false);
 
-      console.log(openedMode);
-
-      // 닉네임 최초 생성이라면 다음 단계 자동 진행
       if (openedMode === "create") {
         setGLoading(true, "새로운 약을 등록하러 가는중....");
-        // document.getElementById("create_new_medicine")?.click();
         router.push("/medicines/new");
       }
     } catch (err: any) {
-      // 4️⃣ 실패 시 — 이전 상태로 롤백
-      console.error("닉네임 업데이트 실패:", err?.message || err);
+      // 실패 시 롤백
+      console.error("별명 업데이트 실패:", err?.message || err);
       toast.error(
         openedMode === "create"
-          ? "닉네임을 등록하는 중 문제가 발생했어요"
-          : "닉네임을 수정하는 중 문제가 발생했어요"
+          ? "별명을 등록하는 중 문제가 발생했어요"
+          : "별명을 수정하는 중 문제가 발생했어요"
       );
       setUser({ ...user, nickname: prevNickname });
     } finally {
-      // 5️⃣ 로딩 해제 + 닫기
       setGLoading(false);
       setSubmitting(false);
     }
@@ -191,14 +214,15 @@ export default function NicknameDrawer({
                   가입을 환영해요!
                 </span>
                 <span className="text-sm font-bold !text-pilltime-grayDark/50 ">
-                  간단한 별명을 먼저 만들어주세요
+                  간단한 별명을 먼저 만들어볼까요?
                 </span>
               </div>
             ) : (
-              <label className="text-sm font-semibold">닉네임</label>
+              <label className="text-sm font-semibold">별명</label>
             )}
 
             <Input
+              ref={inputRef}
               value={nickname}
               required
               onChange={(e) => setNickname(e.target.value)}
@@ -208,7 +232,7 @@ export default function NicknameDrawer({
                   handleSave();
                 }
               }}
-              placeholder="닉네임을 입력하세요"
+              placeholder="별명을 입력하세요"
               autoFocus
               className="!px-2 !border-pilltime-grayLight w-[98%] !ml-1"
             />
@@ -230,7 +254,7 @@ export default function NicknameDrawer({
                 handleSave();
               }}
             >
-              닉네임 초기화
+              별명 초기화
             </Button>
           </DrawerFooter>
         )} */}

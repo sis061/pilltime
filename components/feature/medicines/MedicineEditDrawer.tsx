@@ -2,6 +2,17 @@
 
 //TODO 캐싱
 
+import { useEffect, useRef, useState, useTransition } from "react";
+// ---- NEXT
+import { useParams, useRouter } from "next/navigation";
+// ---- COMPONENT
+import {
+  MedicineNameField,
+  MedicineDescriptionField,
+  MedicineSchedulesField,
+  MedicineImageField,
+} from "@/components/feature/medicines/form";
+// ---- UI
 import {
   Drawer,
   DrawerContent,
@@ -20,29 +31,25 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { useForm, FormProvider } from "react-hook-form";
-import { useEffect, useRef, useState, useTransition } from "react";
-import { useMediaQuery } from "react-responsive";
-import {
-  MedicineNameField,
-  MedicineDescriptionField,
-  MedicineSchedulesField,
-  MedicineImageField,
-} from "@/components/feature/medicines/form";
+// ---- UTIL
 import { zodResolver } from "@hookform/resolvers/zod";
 import { MedicineSchema, MedicineFormValues } from "@/lib/schemas/medicine";
-import { useParams, useRouter } from "next/navigation";
+import { toHHMMSS } from "@/lib/date";
+import { buildPatch } from "@/lib/medicine";
 import { deleteMedicineImage } from "@/lib/supabase/upload";
+// ---- LIB
+import { useForm, FormProvider } from "react-hook-form";
+// ---- STORE
 import { useGlobalLoading } from "@/store/useGlobalLoading";
-import { toast } from "sonner";
+// ---- TYPE
 import {
   MedicineSchedule,
   RepeatedPattern,
   UISchedule,
 } from "@/types/medicines";
-import { toHHMMSS } from "@/lib/date";
-import { buildPatch } from "@/lib/medicine";
+import { useSSRMediaquery } from "@/lib/useSSRMediaquery";
 
 /* ---------------------------
  * API
@@ -88,13 +95,18 @@ export default function MedicineEditDrawer({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  // ---- REACT
   const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null);
   const submitBtnRef = useRef<HTMLButtonElement>(null);
-  const { isGLoading, setGLoading } = useGlobalLoading();
+  const initSchedulesRef = useRef<UISchedule[]>([]); // 서버 상태 스냅샷
   const [isPendingNav, startTransition] = useTransition();
+  // ---- NEXT
   const { id } = useParams();
   const router = useRouter();
-  const minTablet = useMediaQuery({ minWidth: 768 });
+  // ---- CUSTOM HOOKS
+  const minTablet = useSSRMediaquery(768);
+  // ---- STORE
+  const { isGLoading, setGLoading } = useGlobalLoading();
 
   const busy = isGLoading || isPendingNav;
 
@@ -112,27 +124,6 @@ export default function MedicineEditDrawer({
   });
 
   const { handleSubmit, formState, reset, getValues } = methods;
-
-  // supabase storage 에 orphan 파일 삭제용
-  async function handleCancel() {
-    const filePath = methods.getValues("imageFilePath");
-    const imageUrl = methods.getValues("imageUrl");
-    // 조건: 새 업로드는 있지만 DB 원본과 다를 때만 삭제
-    const isImageDirty =
-      !!methods.formState.dirtyFields?.imageUrl ||
-      imageUrl !== originalImageUrl;
-    if (filePath && isImageDirty) {
-      try {
-        await deleteMedicineImage(filePath);
-        console.log("orphan deleted:", filePath);
-      } catch (e) {
-        console.error("이미지 삭제 실패:", e);
-      }
-    }
-  }
-
-  // 서버 상태 스냅샷
-  const initSchedulesRef = useRef<UISchedule[]>([]);
 
   useEffect(() => {
     if (!id || !open) return;
@@ -187,6 +178,28 @@ export default function MedicineEditDrawer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, open, reset]);
 
+  /* ------
+ function
+------ */
+
+  // supabase storage 에 orphan 파일 삭제용
+  async function handleCancel() {
+    const filePath = methods.getValues("imageFilePath");
+    const imageUrl = methods.getValues("imageUrl");
+    // 조건: 새 업로드는 있지만 DB 원본과 다를 때만 삭제
+    const isImageDirty =
+      !!methods.formState.dirtyFields?.imageUrl ||
+      imageUrl !== originalImageUrl;
+    if (filePath && isImageDirty) {
+      try {
+        await deleteMedicineImage(filePath);
+        console.log("orphan deleted:", filePath);
+      } catch (e) {
+        console.error("이미지 삭제 실패:", e);
+      }
+    }
+  }
+
   const makeMedPatch = (v: MedicineFormValues) => {
     const df = formState.dirtyFields;
     const patch: any = {};
@@ -199,6 +212,10 @@ export default function MedicineEditDrawer({
     if (df.imageUrl) patch.imageUrl = v.imageUrl ?? null;
     return patch;
   };
+
+  /* ------
+   * SUBMIT
+   * ------ */
 
   const onSubmit = async (v: MedicineFormValues) => {
     const rp: RepeatedPattern = (v.repeated_pattern as any) ?? {
@@ -300,10 +317,12 @@ export default function MedicineEditDrawer({
                 정보 삭제
               </Button>
             </AlertDialogTrigger>
-            <AlertDialogContent className="bg-pilltime-grayLight !p-4">
+            <AlertDialogContent className="bg-pilltime-grayLight !p-4 !rounded-lg">
               <AlertDialogHeader>
-                <AlertDialogTitle>정말 삭제할까요?</AlertDialogTitle>
-                <AlertDialogDescription>
+                <AlertDialogTitle className="!text-pilltime-grayDark/90">
+                  정말 삭제할까요?
+                </AlertDialogTitle>
+                <AlertDialogDescription className="!text-pilltime-grayDark/50">
                   약과 관련된 모든 정보가 삭제됩니다!
                 </AlertDialogDescription>
               </AlertDialogHeader>
