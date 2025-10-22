@@ -64,9 +64,15 @@ export interface SmartButtonGroupItem extends SmartButtonProps {
   key: string;
 }
 
-export function SmartButtonGroup({ items }: { items: SmartButtonGroupItem[] }) {
+export function SmartButtonGroup({
+  items,
+  className,
+}: {
+  items: SmartButtonGroupItem[];
+  className?: string;
+}) {
   return (
-    <div className="flex flex-wrap gap-2 ">
+    <div className={`flex flex-wrap gap-4 sm:gap-2 ${className}`}>
       {items.map(({ key, ...rest }) => (
         <SmartButton key={key} {...rest} />
       ))}

@@ -19,7 +19,7 @@ interface Props {
   menuButtons: any[];
 }
 
-export default function ProfileDrawer({
+export default function NavbarDrawer({
   open,
   onOpenChange,
   logout,
@@ -45,8 +45,11 @@ export default function ProfileDrawer({
           </Button>
           <DrawerTitle className="hidden">메뉴 창</DrawerTitle>
         </DrawerHeader>
-
-        <div className="!mt-2">
+        <SmartButtonGroup
+          items={buttons}
+          className="flex-col items-start !pt-2"
+        />
+        <div className="!pt-4">
           <div className="font-bold !text-pilltime-blue text-sm !p-2 flex gap-2 [&_svg:not([class*='size-'])]:size-5">
             <UserCog className="!mr-2" color="#3B82F6" />
             프로필 관리
@@ -71,10 +74,6 @@ export default function ProfileDrawer({
               </Button>
             ))}
           </div>
-          <SmartButtonGroup
-            items={buttons}
-            // className="flex-col items-start pt-2"
-          />
         </div>
       </DrawerContent>
     </Drawer>
