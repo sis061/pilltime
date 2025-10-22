@@ -113,8 +113,8 @@ self.addEventListener("push", (event) => {
     self.registration.showNotification(title, {
       body,
       tag,
-      icon: "/icons/icon-192.png",
-      badge: "/icons/icon-192.png", // 안드로이드 위주
+      icon: "/icon-192.png",
+      badge: "/icon-192.png", // 안드로이드 위주
       data,
       requireInteraction: false,
       renotify: false,
