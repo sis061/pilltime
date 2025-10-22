@@ -8,35 +8,42 @@ const IS_DEV =
   self.location.hostname === "localhost" ||
   self.location.hostname === "127.0.0.1";
 
-const CACHE_NAME = "pilltime-cache-v1";
+const CACHE_NAME = "pilltime-cache-v2";
 const APP_SHELL = [
-  "/",
+  // "/",
   "/offline.html",
   "/pilltime_logo.svg",
-  "/icons/icon-192.png",
-  "/icons/icon-512.png",
+  "/icon-192.png",
+  "/icon-512.png",
 ];
 
 /* --- 공통: install/activate(캐시 준비는 prod에서만) --- */
 self.addEventListener("install", (event) => {
   if (!IS_DEV) {
-    event.waitUntil(caches.open(CACHE_NAME).then((c) => c.addAll(APP_SHELL)));
-  }
-  self.skipWaiting();
-});
-self.addEventListener("activate", (event) => {
-  if (!IS_DEV) {
     event.waitUntil(
-      caches
-        .keys()
-        .then((keys) =>
-          Promise.all(
-            keys.map((k) => (k !== CACHE_NAME ? caches.delete(k) : null))
-          )
-        )
+      (async () => {
+        const cache = await caches.open(CACHE_NAME);
+        const urls = APP_SHELL.map((u) => new URL(u, self.location).toString());
+
+        const results = await Promise.allSettled(
+          urls.map((u) => fetch(u, { cache: "reload" }))
+        );
+
+        await Promise.all(
+          results.map(async (res, i) => {
+            const url = urls[i];
+            if (res.status === "fulfilled" && res.value && res.value.ok) {
+              await cache.put(url, res.value.clone());
+            } else {
+              // 조용히 건너뜀 (로그만 남김)
+              console.warn("[SW] skip precache:", url, res);
+            }
+          })
+        );
+      })()
     );
   }
-  self.clients.claim();
+  self.skipWaiting();
 });
 
 /* --- fetch: 개발에선 네트워크만, 프로덕션에서만 캐싱 전략 --- */
@@ -54,9 +61,8 @@ self.addEventListener("fetch", (event) => {
         } catch {
           const cache = await caches.open(CACHE_NAME);
           return (
-            (await cache.match("/")) ||
-            (await cache.match("/offline.html")) ||
-            Response.error()
+            // (await cache.match("/")) ||
+            (await cache.match("/offline.html")) || Response.error()
           );
         }
       })()
@@ -130,8 +136,9 @@ self.addEventListener("notificationclick", (event) => {
         type: "window",
         includeUncontrolled: true,
       });
+      const ORIGIN = self.location.origin;
       const existing = allClients.find(
-        (c) => c.url.includes(self.origin) && "focus" in c
+        (c) => c.url.startsWith(ORIGIN) && "focus" in c
       );
       if (existing) {
         existing.focus();
