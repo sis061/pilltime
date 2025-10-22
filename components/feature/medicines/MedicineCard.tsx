@@ -67,20 +67,14 @@ export default function MedicineCard(medicine: MedicineDetail) {
     <>
       <div className="border-2 bg-white border-pilltime-blue/50 rounded-md !px-4 !pb-8 !pt-12 flex flex-col gap-4 shadow-md">
         <div className="flex items-center gap-4 w-full relative">
-          <div className="rounded-md overflow-hidden border border-pilltime-violet/50 shadow-sm">
-            <ZoomableImage
-              src={imageUrl}
-              alt="fallback-medicine"
-              width={120}
-              height={120}
-            />
-            {/* <Image
-              src={imageUrl}
-              alt="fallback-medicine"
-              width={120}
-              height={120}
-            /> */}
-          </div>
+          <ZoomableImage
+            zoomable={imageUrl.trim().length > 0}
+            className="rounded-md overflow-hidden border border-pilltime-violet/50 shadow-sm"
+            src={imageUrl}
+            alt="zoobable-medicine"
+            width={120}
+            height={120}
+          />
           <div className="grow self-start !z-10">
             <span className="font-bold !text-pilltime-grayDark text-2xl text-ellipsis text-shadow-sm backdrop-blur-2xl">
               {name}

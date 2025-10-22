@@ -5,6 +5,8 @@ import dayjs from "dayjs";
 dayjs.locale("ko");
 // ---- REACT
 import * as React from "react";
+// ---- UI
+import { toast } from "sonner";
 // ---- COMPONENT
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -14,6 +16,7 @@ import koKR from "antd/locale/ko_KR";
 import { MedicineFormValues } from "@/lib/schemas/medicine";
 // ---- LIB
 import { useFormContext, useFieldArray, Controller } from "react-hook-form";
+import { useHasTouch } from "@/hooks/useHasTouch";
 
 /* ------
  CONST
@@ -33,7 +36,22 @@ const tpLocale =
   // 없으면 DatePicker 안의 timePickerLocale로 폴백
   (koKR as any).DatePicker?.timePickerLocale;
 
+/* ------
+ FUNCTION
+------ */
+
+function snapToStep(hhmm: string, stepMin = 5): string {
+  if (!/^\d{2}:\d{2}$/.test(hhmm)) return hhmm;
+  const [h, m] = hhmm.split(":").map(Number);
+  const total = h * 60 + m;
+  const snapped = Math.round(total / stepMin) * stepMin;
+  const hh = String(Math.min(23, Math.floor(snapped / 60))).padStart(2, "0");
+  const mm = String(snapped % 60).padStart(2, "0");
+  return `${hh}:${mm}`;
+}
+
 export function MedicineSchedulesField() {
+  const hasTouch = useHasTouch();
   const {
     control,
     register,
@@ -41,6 +59,7 @@ export function MedicineSchedulesField() {
     setValue,
     formState: { errors },
     clearErrors,
+    setError,
   } = useFormContext<MedicineFormValues>();
 
   const { fields, append, remove, replace } = useFieldArray({
@@ -223,37 +242,88 @@ export function MedicineSchedulesField() {
                   name={`schedules.${index}.time`}
                   rules={{ required: "필수 항목입니다!" }}
                   render={({ field, fieldState }) => {
+                    const handleChange = (next: string) => {
+                      if (next) {
+                        const all = watch("schedules") ?? [];
+                        const dup = all.some(
+                          (s, idx) =>
+                            idx !== index && (s.time?.trim() ?? "") === next
+                        );
+                        if (dup) {
+                          setError(`schedules.${index}.time` as const, {
+                            type: "manual",
+                            message: "같은 시간은 한 번만 등록할 수 있어요",
+                          });
+                          return;
+                        } else {
+                          clearErrors(`schedules.${index}.time` as const);
+                        }
+                      }
+                      field.onChange(next); // 폼에는 항상 "HH:mm" 저장
+                    };
+
                     return (
-                      <div
-                        // ref={wrapperRef}
-                        className="w-full border-pilltime-grayLight"
-                      >
-                        <TimePicker
-                          locale={tpLocale}
-                          value={
-                            field.value ? dayjs(field.value, "HH:mm") : null
-                          }
-                          onChange={(v) =>
-                            field.onChange(v ? v.format("HH:mm") : "")
-                          }
-                          minuteStep={5}
-                          hideDisabledOptions
-                          needConfirm={false}
-                          showNow={false}
-                          showSecond={false}
-                          format={(val) =>
-                            val ? dayjs(val).locale("ko").format("A hh:mm") : ""
-                          }
-                          inputReadOnly
-                          variant="borderless"
-                          allowClear={false}
-                          placeholder="약 먹을 시간을 입력하세요"
-                          className="!px-2 !py-2 shadow-sm w-[98%] !ml-1"
-                          getPopupContainer={(trigger) =>
-                            (trigger?.parentElement as HTMLElement) ??
-                            document.body
-                          }
-                        />
+                      <div className="w-full border-pilltime-grayLight">
+                        {hasTouch ? (
+                          // ✅ 모바일: 네이티브 time 입력
+                          <input
+                            type="time"
+                            step={300} // 5분 간격
+                            min="00:00"
+                            max="23:59"
+                            value={field.value || ""}
+                            onChange={(e) => {
+                              const raw = e.target.value; // ex) "12:03"
+                              const snapped = snapToStep(raw); // ex) "12:05"
+                              handleChange(snapped);
+                              // 사용자가 고른 값과 다르면 토스트/문구:
+                              if (raw !== snapped)
+                                toast.info(
+                                  `5분 간격으로 자동 입력돼요 - ${snapped}`
+                                );
+                            }}
+                            onBlur={field.onBlur}
+                            className="!px-2 !py-2 shadow-sm w-[98%] !ml-1 rounded-md border border-transparent bg-white"
+                            aria-label="복용 시간"
+                          />
+                        ) : (
+                          // ✅ 태블릿/데스크톱: antd TimePicker
+                          <TimePicker
+                            locale={tpLocale}
+                            value={
+                              field.value
+                                ? dayjs(
+                                    field.value,
+                                    ["HH:mm", "HH:mm:ss"],
+                                    true
+                                  )
+                                : null
+                            }
+                            onChange={(v) =>
+                              handleChange(v ? v.format("HH:mm") : "")
+                            }
+                            minuteStep={5}
+                            hideDisabledOptions
+                            needConfirm={false}
+                            showNow={false}
+                            showSecond={false}
+                            format={(val) =>
+                              val
+                                ? dayjs(val).locale("ko").format("A hh:mm")
+                                : ""
+                            }
+                            inputReadOnly
+                            variant="borderless"
+                            allowClear={false}
+                            placeholder="약 먹을 시간을 입력하세요"
+                            className="!px-2 !py-2 shadow-sm w-[98%] !ml-1"
+                            getPopupContainer={(trigger) =>
+                              (trigger?.parentElement as HTMLElement) ??
+                              document.body
+                            }
+                          />
+                        )}
+
                         {fieldState.error && (
                           <p className="text-red-500 text-sm mt-1">
                             {fieldState.error.message}

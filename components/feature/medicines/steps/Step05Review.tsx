@@ -1,5 +1,6 @@
 "use client";
 
+import fallbackImg from "@/public/fallback-medicine.webp";
 // ---- REACT
 import { useEffect } from "react";
 // ---- NEXT
@@ -12,16 +13,18 @@ import { formatTime } from "@/lib/date";
 import { MedicineFormValues } from "@/lib/schemas/medicine";
 // ---- LIB
 import { useWizard } from "react-use-wizard";
-import { useFormContext } from "react-hook-form";
+import { useFormContext, useWatch } from "react-hook-form";
 // ---- STORE
 import { useReturnToStore } from "@/store/returnTo";
+import SmartImage from "@/components/layout/SmartImage";
 
 export function Step05Review() {
   const { activeStep, goToStep } = useWizard();
-  const { getValues, setValue } = useFormContext<MedicineFormValues>();
+  const { getValues, setValue, control } = useFormContext<MedicineFormValues>();
   const { setReturnTo } = useReturnToStore();
 
   const values = getValues();
+  const imageUrlValue = useWatch({ control, name: "imageUrl" });
 
   const sortedSchedules = [...values.schedules].sort((a, b) =>
     a.time.localeCompare(b.time)
@@ -31,17 +34,17 @@ export function Step05Review() {
     values.description &&
     [...values.description].filter((v) => v.value?.length > 0);
 
-  useEffect(() => {
-    setValue("description", filteredEmptyDescription);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [values.description, setValue]);
-
   const sortedDaysOfWeek = [
     ...(values.repeated_pattern.days_of_week ?? []),
   ].sort((a, b) => a - b);
   const sortedDaysOfMonth = [
     ...(values.repeated_pattern.days_of_month ?? []),
   ].sort((a, b) => a - b);
+
+  useEffect(() => {
+    setValue("description", filteredEmptyDescription);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [values.description, setValue]);
 
   return (
     <div className="flex flex-col gap-6 !pb-8 !-mt-4 overflow-y-auto">
@@ -152,15 +155,9 @@ export function Step05Review() {
       <div className="flex items-center justify-between !pb-2">
         <div className="flex flex-col gap-2">
           <strong>이미지</strong>
-          {values.imageUrl && (
-            <Image
-              src={values.imageUrl}
-              alt="약 이미지"
-              width={160}
-              height={160}
-              className="object-cover rounded-md mt-2"
-            />
-          )}
+          <div className="w-40 h-40 border !border-pilltime-violet/50 rounded-md overflow-hidden relative">
+            <SmartImage src={imageUrlValue} className="rounded-md" />
+          </div>
         </div>
         <Button
           type="button"

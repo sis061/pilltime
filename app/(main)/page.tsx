@@ -23,68 +23,46 @@ export default async function Home() {
   } = await supabase.auth.getUser();
 
   if (userErr || !user) {
-    redirect("/login"); // 로그인 안 된 경우 로그인 페이지로 이동
+    redirect(`/login?next=${encodeURIComponent("/")}`);
   }
 
-  const [profileSettled, medicinesSettled] = await Promise.allSettled([
-    supabase.from("profiles").select("nickname").eq("id", user.id).single(),
-    supabase
-      .from("medicines")
-      .select(
-        `
-        id,
-        name,
-        description,
-        image_url,
-        created_at,
-        medicine_schedules (
-          id,
-          time,
-          repeated_pattern,
-          is_notify,
-          intake_logs (
-            id,
-            date,
-            time,
-            status,
-            checked_at
-          )
-        )
+  const medicinesResult = await supabase
+    .from("medicines")
+    .select(
       `
+      id,
+      name,
+      description,
+      image_url,
+      created_at,
+      medicine_schedules (
+        id,
+        time,
+        repeated_pattern,
+        is_notify,
+        intake_logs (
+          id,
+          date,
+          time,
+          status,
+          checked_at
+        )
       )
-      .eq("user_id", user.id)
-      .is("deleted_at", null)
-      .order("created_at", { ascending: false })
-      .filter("medicine_schedules.deleted_at", "is", null)
-      .order("time", { ascending: true, foreignTable: "medicine_schedules" }),
-  ]);
+    `
+    )
+    .eq("user_id", user.id)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false })
+    .filter("medicine_schedules.deleted_at", "is", null)
+    .order("time", { ascending: true, foreignTable: "medicine_schedules" });
 
-  // const profile =
-  //   profileSettled.status === "fulfilled" && !profileSettled.value.error
-  //     ? profileSettled.value.data
-  //     : null;
-
-  const medicines =
-    medicinesSettled.status === "fulfilled" && !medicinesSettled.value.error
-      ? medicinesSettled.value.data ?? []
-      : null;
+  const medicines = !medicinesResult.error ? medicinesResult.data ?? [] : null;
 
   return (
     <section className="inner min-h-[calc(100dvh-11.5rem)] !text-pilltime-blue text-3xl !mx-auto !w-full h-full !mb-8 !p-2">
       <FirstVisitBanner />
       <div className="flex flex-col items-center gap-4 justify-center !-mb-2">
         <HomeToday />
-        {/* {profile ? (
-          <HomeProfile
-            initialUser={{
-              id: user.id,
-              email: user.email,
-              nickname: profile?.nickname ?? null,
-            }}
-          />
-        ) : (
-          <ProfileFallback />
-        )} */}
       </div>
 
       {medicines ? (
@@ -95,16 +73,6 @@ export default async function Home() {
     </section>
   );
 }
-
-// function ProfileFallback() {
-//   return (
-//     <div className="!p-4 !my-8 text-center">
-//       <p className="text-sm !text-pilltime-grayDark/50 !pb-2 font-bold ">
-//         프로필 정보를 불러오지 못했습니다. 새로고침을 시도해보세요.
-//       </p>
-//     </div>
-//   );
-// }
 
 function MedicineListFallback() {
   return (

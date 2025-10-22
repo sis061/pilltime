@@ -36,7 +36,7 @@ import { Button } from "@/components/ui/button";
 // ---- UTIL
 import { zodResolver } from "@hookform/resolvers/zod";
 import { MedicineSchema, MedicineFormValues } from "@/lib/schemas/medicine";
-import { toHHMMSS } from "@/lib/date";
+import { toHHmm } from "@/lib/date";
 import { buildPatch } from "@/lib/medicine";
 import { deleteMedicineImage } from "@/lib/supabase/upload";
 // ---- LIB
@@ -49,7 +49,7 @@ import {
   RepeatedPattern,
   UISchedule,
 } from "@/types/medicines";
-import { useSSRMediaquery } from "@/lib/useSSRMediaquery";
+import { useSSRMediaquery } from "@/hooks/useSSRMediaquery";
 
 /* ---------------------------
  * API
@@ -117,7 +117,7 @@ export default function MedicineEditDrawer({
       description: [{ value: "" }],
       schedules: [{ id: null as any, time: "" } as any],
       repeated_pattern: { type: "DAILY" },
-      imageUrl: "/fallback-medicine.png",
+      imageUrl: "",
       imageFilePath: null,
     },
     mode: "onSubmit",
@@ -149,17 +149,17 @@ export default function MedicineEditDrawer({
             data.description?.map((d: string) => ({ value: d })) ?? [],
           schedules: sortedSch.map((s: MedicineSchedule) => ({
             id: s.id,
-            time: toHHMMSS(s.time),
+            time: toHHmm(s.time),
           })) as any[],
           repeated_pattern: rp,
-          imageUrl: data.image_url ?? "/fallback-medicine.png",
+          imageUrl: data.image_url ?? "",
           imageFilePath: null,
         });
 
         initSchedulesRef.current = data.medicine_schedules.map(
           (s: MedicineSchedule) => ({
             id: s.id,
-            time: toHHMMSS(s.time),
+            time: toHHmm(s.time),
             repeated_pattern: s.repeated_pattern,
           })
         );
@@ -236,7 +236,6 @@ export default function MedicineEditDrawer({
       schedules_changed: !!schedules_patch,
       schedules_patch,
     };
-
     try {
       setGLoading(true, "수정 중이에요..");
       await updateMedicine(String(id), payload);

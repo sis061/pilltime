@@ -29,7 +29,7 @@ export default function MedicineList({
           <MedicineCard
             key={m.id.toString()}
             {...m}
-            imageUrl={m.imageUrl ?? "/fallback-medicine.png"}
+            imageUrl={m.imageUrl ?? "/fallback-medicine.webp"}
           />
         ))}
       </div>

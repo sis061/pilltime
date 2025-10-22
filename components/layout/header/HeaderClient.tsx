@@ -4,7 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 // ---- NEXT
 import { useRouter } from "next/navigation";
 // ---- CUSTOM HOOKS
-import { useGlobalNotify } from "@/lib/useGlobalNotify";
+import { useGlobalNotify } from "@/hooks/useGlobalNotify";
 // ---- COMPONENT
 import NavbarDrawer from "./NavbarDrawer";
 import { SmartButtonGroup } from "./SmartButtons";
@@ -33,8 +33,8 @@ import { toYYYYMMDD } from "@/lib/date";
 // ---- STORE
 import { useUserStore } from "@/store/useUserStore";
 import { useGlobalLoading } from "@/store/useGlobalLoading";
-import { useSSRMediaquery } from "@/lib/useSSRMediaquery";
-import { usePush } from "@/lib/usePush";
+import { useSSRMediaquery } from "@/hooks/useSSRMediaquery";
+import { usePush } from "@/hooks/usePush";
 // ---- TYPE
 import type { User } from "@/types/profile";
 

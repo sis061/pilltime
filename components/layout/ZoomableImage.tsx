@@ -8,6 +8,7 @@ import Image, { type ImageProps as NextImageProps } from "next/image";
 import dynamic from "next/dynamic";
 // ---- COMPONENT
 //  모달용 컴포넌트만 framer-motion과 함께 동적 로드
+import SmartImage, { SmartImageProps } from "./SmartImage";
 const MotionOverlay = dynamic(
   () => import("./MotionOverlay").then((m) => m.MotionOverlay),
   { ssr: false }
@@ -15,7 +16,7 @@ const MotionOverlay = dynamic(
 // ---- UI
 import { Skeleton } from "@/components/ui/skeleton";
 
-type ZoomableImageProps = Omit<NextImageProps, "onClick"> & {
+type ZoomableImageProps = Omit<SmartImageProps, "onClick"> & {
   zoomable?: boolean;
   className?: string;
 };
@@ -30,7 +31,7 @@ export function ZoomableImage({
   onError,
   ...rest
 }: ZoomableImageProps) {
-  const [hasError, setHasError] = useState(false);
+  // const [hasError, setHasError] = useState(false);
   const [isZoomed, setIsZoomed] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -41,26 +42,26 @@ export function ZoomableImage({
 
   useEffect(() => setMounted(true), []);
 
-  if (hasError) {
-    return (
-      <Skeleton
-        className={`w-full h-full rounded-none bg-[#333] ${className ?? ""}`}
-      />
-    );
-  }
+  // if (hasError) {
+  //   return (
+  //     <Skeleton
+  //       className={`w-full h-full rounded-none bg-[#333] ${className ?? ""}`}
+  //     />
+  //   );
+  // }
 
   return (
     <>
-      <Image
+      <SmartImage
         src={src}
         alt={alt ?? ""}
         width={width}
         height={height}
         onClick={() => zoomable && setIsZoomed(true)}
-        onError={(e) => {
-          setHasError(true);
-          onError?.(e);
-        }}
+        // onError={(e) => {
+        //   setHasError(true);
+        //   onError?.(e);
+        // }}
         className={`${zoomable ? "cursor-zoom-in" : ""} ${
           className ?? ""
         } aspect-square`}

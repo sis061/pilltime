@@ -1,4 +1,21 @@
 import { z } from "zod";
+import type { StaticImageData } from "next/image"; // ✅ 추가
+
+// ✅ StaticImageData 런타임 가드
+function isStaticImageData(x: unknown): x is StaticImageData {
+  if (!x || typeof x !== "object") return false;
+  const anyX = x as any;
+  return (
+    typeof anyX.src === "string" &&
+    typeof anyX.width === "number" &&
+    typeof anyX.height === "number"
+    // blurDataURL 등 다른 필드는 있으면 passthrough
+  );
+}
+
+const StaticImageDataZ = z.custom<StaticImageData>(isStaticImageData, {
+  message: "유효한 정적 이미지가 아닙니다",
+});
 
 export const MedicineSchema = z.object({
   name: z.string().min(1, "이름을 입력해주세요"),
@@ -26,8 +43,25 @@ export const MedicineSchema = z.object({
         time: z.string().min(1, "빈 복용 시간을 채워주세요"),
       })
     )
-    .min(1, "복용 시간을 최소 1개 이상 입력해주세요"),
-  imageUrl: z.string().optional(),
+    .min(1, "복용 시간을 최소 1개 이상 입력해주세요")
+    .superRefine((arr, ctx) => {
+      const seen = new Map<string, number>(); // time -> firstIndex
+      for (let i = 0; i < arr.length; i++) {
+        const t = arr[i]?.time?.trim();
+        if (!t) continue; // 빈 값은 중복 판정에서 제외
+        const norm = t; // 이미 "HH:mm"로 들어오므로 그대로 비교
+        if (seen.has(norm)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "같은 시간은 한 번만 등록할 수 있어요",
+            path: [i, "time"], // 개별 필드에 에러 표시
+          });
+        } else {
+          seen.set(norm, i);
+        }
+      }
+    }),
+  imageUrl: z.union([z.string(), StaticImageDataZ]).optional(),
   imageFilePath: z.string().optional().nullable(),
 });
 

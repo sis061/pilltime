@@ -19,12 +19,23 @@ export default function SocialLogin() {
     return createClient();
   }
 
-  const redirectToURL =
-    process.env.NODE_ENV === "production"
-      ? `${process.env.NEXT_PUBLIC_SITE_URL}/callback`
-      : typeof window !== "undefined"
-      ? `${window.location.origin}/callback`
-      : "";
+  function getRedirectToURL() {
+    // NEXT_PUBLIC_SITE_URL이 항상 정의되어 있지 않을 수 있으므로 안전 처리
+    const base =
+      process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "") ||
+      "http://localhost:3000";
+
+    if (typeof window === "undefined") {
+      // ✅ SSR 시점: 그냥 NEXT_PUBLIC_SITE_URL 기반으로 반환
+      return `${base}/callback`;
+    }
+
+    // ✅ CSR 시점 (Next Auth UI 등): 실제 origin 기준
+    const origin = window.location.origin?.replace(/\/+$/, "") || base;
+    return `${origin}/callback`;
+  }
+
+  const redirectToURL = getRedirectToURL();
 
   async function handleLogin(provider: "google" | "apple") {
     try {

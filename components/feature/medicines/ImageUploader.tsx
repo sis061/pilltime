@@ -4,6 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import ReactCrop, { PercentCrop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
+import { useGlobalLoading } from "@/store/useGlobalLoading";
+import { toast } from "sonner";
+import { dataURLToBlob, revokeObjectURL, toObjectURL } from "@/lib/image";
 // import imageCompression from "browser-image-compression";
 interface Props {
   file: File | null;
@@ -25,6 +28,7 @@ async function getImageCompression() {
 }
 
 export default function ImageUploader({ file, onCropped }: Props) {
+  const { isGLoading, setGLoading } = useGlobalLoading();
   const [src, setSrc] = useState<string | null>(null);
   const [crop, setCrop] = useState<PercentCrop>({
     unit: "%",
@@ -38,9 +42,9 @@ export default function ImageUploader({ file, onCropped }: Props) {
   // 파일이 들어오면 미리보기 생성
   useEffect(() => {
     if (file) {
-      const url = URL.createObjectURL(file);
+      const url = toObjectURL(file);
       setSrc(url);
-      return () => URL.revokeObjectURL(url);
+      return () => revokeObjectURL(url);
     }
   }, [file]);
 
@@ -86,58 +90,79 @@ export default function ImageUploader({ file, onCropped }: Props) {
     ctx.drawImage(image, px.x, px.y, px.w, px.h, 0, 0, px.w, px.h);
 
     return new Promise((resolve) => {
-      canvas.toBlob((blob) => resolve(blob), "image/jpeg", 0.95);
+      canvas.toBlob(
+        (blob) => {
+          if (blob) return resolve(blob);
+          // Safari 등에서 null이면 dataURL → Blob 폴백
+          try {
+            const dataUrl = canvas.toDataURL("image/jpeg", 0.95);
+            const b = dataURLToBlob(dataUrl);
+            resolve(b);
+          } catch {
+            resolve(null);
+          }
+        },
+        "image/jpeg",
+        0.95
+      );
     });
   }
 
   async function handleCropAndUpload() {
-    const blob = await getCroppedBlob();
-    if (!blob) return;
-
-    // iOS 탐지
-    const isIOS =
-      typeof navigator !== "undefined" &&
-      /iP(hone|ad|od)/.test(navigator.userAgent);
-
-    const input: Blob = blob;
-
-    let output: Blob = input;
+    setGLoading(true, "이미지를 처리 중이에요...");
     try {
-      const imageCompression = await getImageCompression();
-      // ✅ iOS/Safari에선 웹워커 비활성화
-      output = await imageCompression(input as any, {
-        maxSizeMB: 0.3,
-        maxWidthOrHeight: 512,
-        useWebWorker: !isIOS && typeof Worker !== "undefined",
-      });
-    } catch (_) {
-      // ✅ 압축 실패하면 원본 그대로 사용 (크래시 방지)
-      output = input;
-    }
+      const blob = await getCroppedBlob();
+      if (!blob) return;
 
-    // 프리뷰 URL
-    const previewUrl = URL.createObjectURL(output);
+      // iOS 탐지
+      const isIOS =
+        typeof navigator !== "undefined" &&
+        /iP(hone|ad|od)/.test(navigator.userAgent);
 
-    // 상위 콜백 타입을 Blob도 받도록 수정 권장: (cropped: File|Blob)
-    // onCropped(output as File, previewUrl); // <-- 기존이 File만 받는다면 아래처럼 변환 시도
+      const input: Blob = blob;
 
-    let maybeFile: File | Blob = output;
-    if (typeof File !== "undefined") {
+      let output: Blob = input;
       try {
-        // 지원되는 브라우저에서만 File로 감싸기 (이름 필요하면 부여)
-        maybeFile = new File([output], `pill-${Date.now()}.jpg`, {
-          type: output.type || "image/jpeg",
+        const imageCompression = await getImageCompression();
+        // ✅ iOS/Safari에선 웹워커 비활성화
+        output = await imageCompression(input as any, {
+          maxSizeMB: 0.3,
+          maxWidthOrHeight: 512,
+          useWebWorker: !isIOS && typeof Worker !== "undefined",
         });
-      } catch {
-        // iOS 구형 등 File 생성 실패 → Blob 유지
-        maybeFile = output;
+      } catch (_) {
+        // ✅ 압축 실패하면 원본 그대로 사용 (크래시 방지)
+        output = input;
       }
-    }
 
-    // 이제 상위 콜백으로 전달 (타입을 File | Blob 로 바꾸는 걸 추천)
-    // 콜백 시그니처를 onCropped: (fileOrBlob: File|Blob, previewUrl: string) 로 교체
-    // 임시로 기존 타입 유지해야 한다면 any 캐스팅:
-    onCropped(maybeFile as File, previewUrl);
+      // 프리뷰 URL
+      const previewUrl = toObjectURL(output);
+
+      // 상위 콜백 타입을 Blob도 받도록 수정 권장: (cropped: File|Blob)
+      // onCropped(output as File, previewUrl); // <-- 기존이 File만 받는다면 아래처럼 변환 시도
+
+      let maybeFile: File | Blob = output;
+      if (typeof File !== "undefined") {
+        try {
+          // 지원되는 브라우저에서만 File로 감싸기 (이름 필요하면 부여)
+          maybeFile = new File([output], `pill-${Date.now()}.jpg`, {
+            type: output.type || "image/jpeg",
+          });
+        } catch {
+          // iOS 구형 등 File 생성 실패 → Blob 유지
+          maybeFile = output;
+        }
+      }
+
+      // 이제 상위 콜백으로 전달 (타입을 File | Blob 로 바꾸는 걸 추천)
+      // 콜백 시그니처를 onCropped: (fileOrBlob: File|Blob, previewUrl: string) 로 교체
+      // 임시로 기존 타입 유지해야 한다면 any 캐스팅:
+      onCropped(maybeFile as File, previewUrl);
+    } catch (error: any) {
+      setGLoading(false);
+      console.error("error 발생 - CropAndUpload", error);
+      toast.error("이미지 처리 중 문제가 발생했어요 " + error?.message);
+    }
   }
 
   if (!file || !src) {
@@ -150,25 +175,29 @@ export default function ImageUploader({ file, onCropped }: Props) {
 
   return (
     <div className="flex flex-col gap-4">
-      <ReactCrop
-        crop={crop}
-        onChange={(_, percentCrop) => setCrop(percentCrop)}
-        aspect={1} // ✅ 정방형
-        keepSelection
-      >
-        <img
-          src={src}
-          alt="crop-target"
-          ref={imgRef}
-          onLoad={handleImageLoad}
-          className="object-contain mx-auto" // ✅ 원래 스타일 유지
-        />
-      </ReactCrop>
+      <div className="max-h-[60vh] overflow-auto">
+        <ReactCrop
+          crop={crop}
+          onChange={(_, percentCrop) => setCrop(percentCrop)}
+          aspect={1} // ✅ 정방형
+          keepSelection
+        >
+          <img
+            src={src}
+            alt="crop-target"
+            ref={imgRef}
+            onLoad={handleImageLoad}
+            className="object-contain mx-auto max-h-[60vh]" // ✅ 원래 스타일 유지
+            style={{ imageOrientation: "from-image" as any }} // 지원 브라우저에서 EXIF 반영 힌트
+          />
+        </ReactCrop>
+      </div>
 
       <div className="flex justify-end gap-2 absolute top-6 right-4">
         <Button
           type="button"
           variant={"ghost"}
+          disabled={isGLoading}
           onClick={handleCropAndUpload}
           className="font-bold !text-pilltime-violet cursor-pointer"
         >

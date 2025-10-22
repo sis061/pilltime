@@ -1,3 +1,5 @@
+import dayjs from "dayjs";
+
 const TZ = "Asia/Seoul";
 
 // export function sevenDayWindow(tz = "Asia/Seoul") {
@@ -38,6 +40,12 @@ export function toYYYYMMDD(date: Date, tz = TZ) {
 export const toHHMMSS = (t: string) => {
   const [h = "00", m = "00", s = "00"] = (t || "").split(":");
   return `${h.padStart(2, "0")}:${m.padStart(2, "0")}:${s.padStart(2, "0")}`;
+};
+
+export const toHHmm = (t?: string | null) => {
+  if (!t) return "";
+  const d = dayjs(t, ["HH:mm", "HH:mm:ss"], true);
+  return d.isValid() ? d.format("HH:mm") : "";
 };
 
 /** tz 기준 '오늘' 기준 7일 윈도우 */
