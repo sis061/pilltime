@@ -43,7 +43,7 @@ export async function POST(req: Request) {
       user_id: user.id,
       name,
       description: description?.map((d) => String(d.value)) ?? [],
-      image_url: imageUrl ?? null,
+      image_url: imageUrl && typeof imageUrl === "string" ? imageUrl : "",
       is_active: true,
     };
 
