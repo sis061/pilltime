@@ -6,11 +6,12 @@ import { useRouter } from "next/navigation";
 // ---- CUSTOM HOOKS
 import { useGlobalNotify } from "@/lib/useGlobalNotify";
 // ---- COMPONENT
-import ProfileDrawer from "./ProfileDrawer";
+import NavbarDrawer from "./NavbarDrawer";
 import { SmartButtonGroup } from "./SmartButtons";
 import NicknameDrawer from "@/components/feature/profiles/NicknameDrawer";
 import ProfileBadge from "@/components/feature/profiles/ProfileBadge";
 // ---- UI
+import { toast } from "sonner";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,9 +34,9 @@ import { toYYYYMMDD } from "@/lib/date";
 import { useUserStore } from "@/store/useUserStore";
 import { useGlobalLoading } from "@/store/useGlobalLoading";
 import { useSSRMediaquery } from "@/lib/useSSRMediaquery";
+import { usePush } from "@/lib/usePush";
 // ---- TYPE
 import type { User } from "@/types/profile";
-import { toast } from "sonner";
 
 export default function HeaderClient({
   user,
@@ -48,13 +49,16 @@ export default function HeaderClient({
   const [openNickname, setOpenNickname] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   /** 🔔 전역 알림 토글 상태 + 낙관적 업데이트 */
-  const [globalOn, setGlobalOn] = useState<boolean>(initialGlobalEnabled);
   const [pendingGlobal, startTransition] = useTransition();
   // ---- NEXT
   const router = useRouter();
   // ---- CUSTOM HOOKS
-  const isMobile = useSSRMediaquery(640);
-  const { setEnabledOptimistic, mutateGlobal } = useGlobalNotify();
+  const minMobile = useSSRMediaquery(640);
+  const { enabled, setEnabledOptimistic, mutateGlobal, revalidate } =
+    useGlobalNotify();
+  const vapid = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!;
+  const { permission, isSubscribed, subscribe, loading, refresh } =
+    usePush(vapid);
   // ---- STORE
   const setUser = useUserStore((s) => s.setUser);
   const clearUser = useUserStore((s) => s.clearUser);
@@ -71,6 +75,8 @@ export default function HeaderClient({
    * ------ */
 
   const todayYmd = toYYYYMMDD(new Date(), "Asia/Seoul");
+
+  const notifyOn = isSubscribed === true && enabled === true;
 
   /** 공통 버튼 config (props로 내려줄 것) */
   const baseWhiteBtn =
@@ -104,9 +110,15 @@ export default function HeaderClient({
     },
     {
       key: "global",
-      label: globalOn ? "모든 알림 켜짐" : "모든 알림 꺼짐",
-      iconColor: "#fff",
-      iconLeft: globalOn ? Bell : BellOff,
+      // label: notifyOn ? "모든 알림 켜짐" : "모든 알림 꺼짐",
+      label:
+        isSubscribed === false
+          ? "알림 비활성화됨"
+          : enabled === true
+          ? "모든 알림 켜짐"
+          : "모든 알림 꺼짐",
+      iconColor: notifyOn ? "#fff" : "#ffffff75",
+      iconLeft: notifyOn ? Bell : BellOff,
       className: baseWhiteBtn,
       onClick: () => !pendingGlobal && toggleGlobal(),
     },
@@ -159,29 +171,82 @@ export default function HeaderClient({
   }
 
   function toggleGlobal() {
-    const next = !globalOn;
-    const prev = globalOn;
-    const enableContent = prev === true ? "껐어요" : "켰어요!";
-    setGlobalOn(next); // 낙관적
-    setEnabledOptimistic(next);
     startTransition(async () => {
       try {
+        if (permission === "denied") {
+          toast.error(
+            "브라우저에서 알림이 차단되어 있어요. 사이트 설정에서 허용으로 바꿔주세요."
+          );
+          return;
+        }
+
+        // (A) 아직 구독이 없다면: 구독을 먼저 생성
+        if (!isSubscribed) {
+          const ok = await subscribe();
+          if (!ok) {
+            toast.error("알림 구독에 실패했어요. 잠시 후 다시 시도해 주세요.");
+            await refresh();
+            return;
+          }
+          // 구독 성공 → 서버 설정도 켬
+          setEnabledOptimistic(true); // SWR 캐시 즉시 on
+          const res = await fetch("/api/push/global", {
+            method: "PATCH",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ enabled: true }),
+          });
+          if (!res.ok) throw new Error(String(res.status));
+          mutateGlobal(true); // 전역 캐시 동기화
+          toast.success("모든 알림을 켰어요!");
+          await refresh(); // 실제 구독 상태 재동기화
+          return;
+        }
+
+        // (B) 구독은 있는데 서버 설정만 꺼짐 → 서버만 켬
+        if (isSubscribed && !enabled) {
+          setEnabledOptimistic(true);
+          const res = await fetch("/api/push/global", {
+            method: "PATCH",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ enabled: true }),
+          });
+          if (!res.ok) throw new Error(String(res.status));
+          mutateGlobal(true);
+          toast.success("모든 알림을 켰어요!");
+          return;
+        }
+
+        // (C) (isSubscribed && enabled) = 완전 켜짐 → 서버만 끔 (구독은 유지)
+        setEnabledOptimistic(false);
         const res = await fetch("/api/push/global", {
           method: "PATCH",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ enabled: next }),
+          body: JSON.stringify({ enabled: false }),
         });
         if (!res.ok) throw new Error(String(res.status));
-        toast.info(`전체 알림을 ${enableContent}`);
-        mutateGlobal();
+        mutateGlobal(false);
+        toast.info("모든 알림을 껐어요");
       } catch (e) {
         console.error("[global notify] toggle fail", e);
-        // 롤백
-        setGlobalOn(prev);
-        setEnabledOptimistic(prev);
+        // 롤백은 SWR 재검증으로 수습
+        await revalidate();
+      } finally {
+        await refresh();
       }
     });
   }
+
+  useEffect(() => {
+    mutateGlobal(initialGlobalEnabled);
+    // revalidate는 필요할 때만(지금은 서버값과 동일하므로 생략)
+    // revalidate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialGlobalEnabled]);
+
+  // 초기/권한 변화 시 실제 구독 상태 동기화
+  useEffect(() => {
+    refresh();
+  }, [refresh, permission]);
 
   useEffect(() => {
     if (user) {
@@ -191,26 +256,50 @@ export default function HeaderClient({
     }
   }, [user.id, user.email, user.nickname, setUser, clearUser]);
 
-  if (!isMobile)
+  /* ------
+   * render
+   * ------ */
+
+  if (minMobile)
     return (
-      <div className="flex items-center gap-2">
-        <ProfileBadge initialUser={user} />
-        <Button
-          variant="ghost"
-          size="icon-lg"
-          onClick={() => setMenuOpen(true)}
-          className="!text-white !p-2 flex-col text-xs [&_svg:not([class*='size-'])]:size-6"
-        >
-          <Menu color="#fff" />
-        </Button>
-        <ProfileDrawer
-          open={menuOpen}
-          onOpenChange={setMenuOpen}
-          logout={logout}
-          openNickname={() => setOpenNickname(true)}
-          buttons={drawerBtns}
-          menuButtons={menuBtns}
-        />
+      <div className="flex items-center gap-2 h-full">
+        {/* 드롭다운 */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              // variant="ghost"
+              className={`${baseWhiteBtn} rounded-2xl [&_svg:not([class*='size-'])]:size-6 group [&_div]:transition-transform [&_div]:duration-200 [&_div]:ease-in-out [&_div]:scale-100 [&_div]:group-hover:scale-110`}
+              aria-haspopup="dialog"
+            >
+              {/* <UserCog className="h-6 w-6" color="#fff" /> */}
+              <ProfileBadge initialUser={user} />
+              <span className="!pt-2">프로필 관리</span>
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            side="bottom"
+            align="end"
+            className="border-1 bg-white !border-pilltime-violet shadow-lg !w-28 !pl-2"
+          >
+            {menuBtns.map(
+              ({ key, label, iconLeft: Icon, onClick, className }) => (
+                <DropdownMenuItem
+                  key={key}
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    onClick?.();
+                  }}
+                  className={`hover:!bg-pilltime-violet/15 !text-sm font-bold !my-1 w-28 ${className}`}
+                >
+                  {Icon ? <Icon className="h-5 w-5" color="#3B82F6" /> : null}
+                  {label}
+                </DropdownMenuItem>
+              )
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+        {/* 상단 버튼 그룹 */}
+        <SmartButtonGroup items={desktopBtns} />
         <NicknameDrawer
           open={openNickname}
           onOpenChange={setOpenNickname}
@@ -220,47 +309,24 @@ export default function HeaderClient({
     );
 
   return (
-    <div className="flex items-center gap-2 h-full">
-      {/* 드롭다운 */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button
-            // variant="ghost"
-            className={`${baseWhiteBtn} rounded-2xl [&_svg:not([class*='size-'])]:size-6 group [&_div]:transition-transform [&_div]:duration-200 [&_div]:ease-in-out [&_div]:scale-100 [&_div]:group-hover:scale-110`}
-            aria-haspopup="dialog"
-          >
-            {/* <UserCog className="h-6 w-6" color="#fff" /> */}
-            <ProfileBadge initialUser={user} />
-            <span className="!pt-2">프로필 관리</span>
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent
-          side="bottom"
-          align="end"
-          className="border-1 bg-white *:text-[16px] !border-pilltime-violet shadow-lg"
-        >
-          {menuBtns.map(
-            ({ key, label, iconLeft: Icon, onClick, className }) => (
-              <DropdownMenuItem
-                key={key}
-                onSelect={(e) => {
-                  e.preventDefault();
-                  onClick?.();
-                }}
-                className={`hover:!bg-pilltime-violet/15 ${className}`}
-              >
-                {Icon ? (
-                  <Icon className="!mr-2 h-5 w-5" color="#3B82F6" />
-                ) : null}
-                {label}
-              </DropdownMenuItem>
-            )
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
-      {/* 상단 버튼 그룹 */}
-      <SmartButtonGroup items={desktopBtns} />
-
+    <div className="flex items-center gap-2">
+      <ProfileBadge initialUser={user} />
+      <Button
+        variant="ghost"
+        size="icon-lg"
+        onClick={() => setMenuOpen(true)}
+        className="!text-white !p-2 flex-col text-xs [&_svg:not([class*='size-'])]:size-6"
+      >
+        <Menu color="#fff" />
+      </Button>
+      <NavbarDrawer
+        open={menuOpen}
+        onOpenChange={setMenuOpen}
+        logout={logout}
+        openNickname={() => setOpenNickname(true)}
+        buttons={drawerBtns}
+        menuButtons={menuBtns}
+      />
       <NicknameDrawer
         open={openNickname}
         onOpenChange={setOpenNickname}

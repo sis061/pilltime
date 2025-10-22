@@ -93,7 +93,7 @@ export default function MedicineCard(medicine: MedicineDetail) {
           />
 
           <div className="absolute -top-8 right-0">
-            <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center justify-between gap-3 sm:gap-2 ">
               <MedicineNotifyToggle
                 medicineName={name}
                 medicineId={medicine.id}
@@ -102,7 +102,7 @@ export default function MedicineCard(medicine: MedicineDetail) {
               <Popover>
                 <PopoverTrigger asChild>
                   <Info
-                    size={20}
+                    size={24}
                     className="cursor-pointer transition-transform duration-200 ease-in-out scale-100 hover:scale-110 "
                     strokeWidth={2.5}
                     color="#F9731690"
@@ -133,7 +133,7 @@ export default function MedicineCard(medicine: MedicineDetail) {
                 onClick={() => setGLoading(true, "정보를 불러오는 중이에요..")}
               >
                 <Settings
-                  size={20}
+                  size={24}
                   className="cursor-pointer transition-transform duration-200 ease-in-out scale-100 hover:scale-110 "
                   strokeWidth={2.5}
                   color="#F97316"

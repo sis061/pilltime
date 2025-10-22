@@ -1,6 +1,7 @@
 import Header from "@/components/layout/header/Header";
 import Footer from "@/components/layout/Footer";
 
+import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic"; // ✅ 개인화 화면: SSR 강제
@@ -13,19 +14,20 @@ export default async function MainLayout({
   children: React.ReactNode;
   modal: React.ReactNode;
 }) {
-  let user = null;
-  try {
-    const supabase = await createServerSupabaseClient();
-    const { data, error } = await supabase.auth.getUser();
-    if (!error) user = data.user ?? null;
-  } catch {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    user = null;
+  const supabase = await createServerSupabaseClient();
+
+  const {
+    data: { user },
+    error: userErr,
+  } = await supabase.auth.getUser();
+
+  if (userErr || !user) {
+    redirect("/login"); // 로그인 안 된 경우 로그인 페이지로 이동
   }
 
   return (
     <div>
-      <Header />
+      <Header user={{ id: user.id, email: user.email ?? null }} />
       <main className="wrapper">{children}</main>
       {modal}
       <Footer />

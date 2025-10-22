@@ -65,3 +65,16 @@ a {
     lg:basis-2/3 lg:max-w-2/3
     flex-grow-0;
 }
+
+/* ------------------- lib customise --------------------- */
+
+/* 터치 모멘텀 & 세로 제스처 보장 */
+.pilltime-timepicker-popup .ant-picker-time-panel-column {
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+}
+
+/* (선택) 모바일 탭 타겟 넓히기 */
+.pilltime-timepicker-popup .ant-picker-time-panel-cell {
+  padding: 10px 0 !important;
+}
