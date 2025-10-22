@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import ReactCrop, { PercentCrop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
+import { useGlobalLoading } from "@/store/useGlobalLoading";
+import { toast } from "sonner";
 // import imageCompression from "browser-image-compression";
 interface Props {
   file: File | null;
@@ -25,6 +27,7 @@ async function getImageCompression() {
 }
 
 export default function ImageUploader({ file, onCropped }: Props) {
+  const { isGLoading, setGLoading } = useGlobalLoading();
   const [src, setSrc] = useState<string | null>(null);
   const [crop, setCrop] = useState<PercentCrop>({
     unit: "%",
@@ -91,53 +94,60 @@ export default function ImageUploader({ file, onCropped }: Props) {
   }
 
   async function handleCropAndUpload() {
-    const blob = await getCroppedBlob();
-    if (!blob) return;
-
-    // iOS 탐지
-    const isIOS =
-      typeof navigator !== "undefined" &&
-      /iP(hone|ad|od)/.test(navigator.userAgent);
-
-    const input: Blob = blob;
-
-    let output: Blob = input;
+    setGLoading(true, "이미지 처리 중이에요...");
     try {
-      const imageCompression = await getImageCompression();
-      // ✅ iOS/Safari에선 웹워커 비활성화
-      output = await imageCompression(input as any, {
-        maxSizeMB: 0.3,
-        maxWidthOrHeight: 512,
-        useWebWorker: !isIOS && typeof Worker !== "undefined",
-      });
-    } catch (_) {
-      // ✅ 압축 실패하면 원본 그대로 사용 (크래시 방지)
-      output = input;
-    }
+      const blob = await getCroppedBlob();
+      if (!blob) return;
 
-    // 프리뷰 URL
-    const previewUrl = URL.createObjectURL(output);
+      // iOS 탐지
+      const isIOS =
+        typeof navigator !== "undefined" &&
+        /iP(hone|ad|od)/.test(navigator.userAgent);
 
-    // 상위 콜백 타입을 Blob도 받도록 수정 권장: (cropped: File|Blob)
-    // onCropped(output as File, previewUrl); // <-- 기존이 File만 받는다면 아래처럼 변환 시도
+      const input: Blob = blob;
 
-    let maybeFile: File | Blob = output;
-    if (typeof File !== "undefined") {
+      let output: Blob = input;
       try {
-        // 지원되는 브라우저에서만 File로 감싸기 (이름 필요하면 부여)
-        maybeFile = new File([output], `pill-${Date.now()}.jpg`, {
-          type: output.type || "image/jpeg",
+        const imageCompression = await getImageCompression();
+        // ✅ iOS/Safari에선 웹워커 비활성화
+        output = await imageCompression(input as any, {
+          maxSizeMB: 0.3,
+          maxWidthOrHeight: 512,
+          useWebWorker: !isIOS && typeof Worker !== "undefined",
         });
-      } catch {
-        // iOS 구형 등 File 생성 실패 → Blob 유지
-        maybeFile = output;
+      } catch (_) {
+        // ✅ 압축 실패하면 원본 그대로 사용 (크래시 방지)
+        output = input;
       }
-    }
 
-    // 이제 상위 콜백으로 전달 (타입을 File | Blob 로 바꾸는 걸 추천)
-    // 콜백 시그니처를 onCropped: (fileOrBlob: File|Blob, previewUrl: string) 로 교체
-    // 임시로 기존 타입 유지해야 한다면 any 캐스팅:
-    onCropped(maybeFile as File, previewUrl);
+      // 프리뷰 URL
+      const previewUrl = URL.createObjectURL(output);
+
+      // 상위 콜백 타입을 Blob도 받도록 수정 권장: (cropped: File|Blob)
+      // onCropped(output as File, previewUrl); // <-- 기존이 File만 받는다면 아래처럼 변환 시도
+
+      let maybeFile: File | Blob = output;
+      if (typeof File !== "undefined") {
+        try {
+          // 지원되는 브라우저에서만 File로 감싸기 (이름 필요하면 부여)
+          maybeFile = new File([output], `pill-${Date.now()}.jpg`, {
+            type: output.type || "image/jpeg",
+          });
+        } catch {
+          // iOS 구형 등 File 생성 실패 → Blob 유지
+          maybeFile = output;
+        }
+      }
+
+      // 이제 상위 콜백으로 전달 (타입을 File | Blob 로 바꾸는 걸 추천)
+      // 콜백 시그니처를 onCropped: (fileOrBlob: File|Blob, previewUrl: string) 로 교체
+      // 임시로 기존 타입 유지해야 한다면 any 캐스팅:
+      onCropped(maybeFile as File, previewUrl);
+    } catch (error: any) {
+      setGLoading(false);
+      console.error("error 발생 - CropAndUpload", error);
+      toast.error("이미지 처리 중 문제가 발생했어요 " + error?.message);
+    }
   }
 
   if (!file || !src) {
@@ -169,6 +179,7 @@ export default function ImageUploader({ file, onCropped }: Props) {
         <Button
           type="button"
           variant={"ghost"}
+          disabled={isGLoading}
           onClick={handleCropAndUpload}
           className="font-bold !text-pilltime-violet cursor-pointer"
         >

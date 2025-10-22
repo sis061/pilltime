@@ -1,7 +1,8 @@
 "use client";
 
+import fallbackImg from "@/public/fallback-medicine.webp";
 // ---- REACT
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 // ---- NEXT
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -23,25 +24,32 @@ import { useFormContext } from "react-hook-form";
 import { useUserStore } from "@/store/useUserStore";
 // ---- CUSTOM HOOKS
 import { useSSRMediaquery } from "@/lib/useSSRMediaquery";
+import { useGlobalLoading } from "@/store/useGlobalLoading";
+import SmartImage from "@/components/layout/SmartImage";
 
 export function MedicineImageField() {
+  const user = useUserStore((s) => s.user);
+
   const pathname = usePathname();
   const isPathnameNew = pathname.includes("new");
 
+  const minTablet = useSSRMediaquery(768);
+  const { isGLoading, setGLoading } = useGlobalLoading();
+
   const { watch, setValue } = useFormContext();
   const imageUrl = watch("imageUrl");
-  const minTablet = useSSRMediaquery(768);
+
   // const imageFilePath = watch("imageFilePath");
 
-  const user = useUserStore((s) => s.user);
-
   // ✅ 서브 Drawer 상태
+
   const [cropOpen, setCropOpen] = useState(false);
   const [rawFile, setRawFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
 
   // ✅ 파일 선택 핸들러 (변경 버튼 눌렀을 때)
   const handleSelectFile = () => {
+    if (uploading) return;
     const input = document.createElement("input");
     input.type = "file";
     input.accept = "image/*";
@@ -55,18 +63,81 @@ export function MedicineImageField() {
     input.click();
   };
 
+  const lastBlobUrlRef = useRef<string | null>(null); // revoke용
+
+  const handleCroppedImage = useCallback(
+    async (croppedFile: File | Blob, localPreviewUrl?: string | null) => {
+      if (!user) {
+        toast.error("로그인이 필요해요");
+        return;
+      }
+
+      // 1) 프리뷰를 곧장 imageUrl에 넣기 (optimistic)
+      if (localPreviewUrl) {
+        // 이전 Blob URL 정리
+        if (lastBlobUrlRef.current) URL.revokeObjectURL(lastBlobUrlRef.current);
+        lastBlobUrlRef.current = localPreviewUrl;
+
+        setValue("imageUrl", localPreviewUrl, { shouldDirty: true }); // ✅ 프리뷰도 imageUrl 사용
+      }
+
+      try {
+        setGLoading(true, "이미지 업로드 중이에요...");
+        setUploading(true);
+
+        // 2) 업로드
+        const { publicUrl, filePath } = await uploadMedicineImage(
+          croppedFile,
+          user.id
+        );
+        setValue("imageFilePath", filePath, { shouldDirty: true });
+
+        // 3) prefetch 후 같은 필드를 최종 URL로 교체
+        await new Promise<void>((resolve, reject) => {
+          const img = new window.Image();
+          img.onload = () => {
+            setValue("imageUrl", publicUrl, { shouldDirty: true }); // ✅ 같은 필드 교체
+            // 프리뷰 Blob 정리
+            if (lastBlobUrlRef.current) {
+              URL.revokeObjectURL(lastBlobUrlRef.current);
+              lastBlobUrlRef.current = null;
+            }
+            resolve();
+          };
+          img.onerror = () => reject(new Error("원격 이미지 로딩 실패"));
+          img.src = publicUrl;
+        });
+      } catch (err: any) {
+        // 에러 시 프리뷰 Blob 정리 & 비우기(선택)
+        if (lastBlobUrlRef.current) {
+          URL.revokeObjectURL(lastBlobUrlRef.current);
+          lastBlobUrlRef.current = null;
+        }
+        // 실패했으면 기존 imageUrl을 원상복구하거나 빈 값으로 둘 수도 있음(옵션)
+        toast.error(
+          "이미지 업로드 중 문제가 발생했어요 " + (err?.message ?? "")
+        );
+      } finally {
+        setUploading(false);
+        setCropOpen(false);
+        setGLoading(false);
+      }
+    },
+    [user, setValue, setGLoading]
+  );
+
   return (
     <>
       <div className="flex flex-col gap-2">
         <label className="text-sm font-bold">이미지</label>
         <div className="flex flex-col items-center justify-center gap-2">
-          {imageUrl && (
-            <div
-              className="w-40 h-40 border !border-pilltime-violet/50 rounded-md overflow-hidden "
-              onClick={() => {
-                if (!uploading) handleSelectFile();
-              }}
-            >
+          <div
+            className="w-40 h-40 border !border-pilltime-violet/50 rounded-md overflow-hidden relative"
+            onClick={() => {
+              if (!uploading) handleSelectFile();
+            }}
+          >
+            {imageUrl ? (
               <Image
                 src={imageUrl}
                 alt="medicine-preview"
@@ -74,15 +145,17 @@ export function MedicineImageField() {
                 width={160}
                 height={160}
               />
-            </div>
-          )}
+            ) : (
+              <SmartImage src={imageUrl} className="rounded-md" />
+            )}
+          </div>
           <Button
             type="button"
             variant="ghost"
             size="sm"
             className="max-w-12 w-full self-center cursor-pointer"
             onClick={handleSelectFile}
-            disabled={uploading}
+            disabled={uploading || isGLoading}
           >
             {uploading ? "업로드 중..." : isPathnameNew ? "추가" : "변경"}
           </Button>
@@ -99,6 +172,7 @@ export function MedicineImageField() {
           <DrawerHeader className="grid grid-cols-3 items-center !mb-8">
             <Button
               variant="ghost"
+              disabled={isGLoading}
               className="font-bold cursor-pointer !text-pilltime-violet justify-self-start"
               onClick={() => {
                 setRawFile(null);
@@ -111,33 +185,7 @@ export function MedicineImageField() {
             <div />
           </DrawerHeader>
 
-          <ImageUploader
-            file={rawFile}
-            onCropped={async (croppedFile) => {
-              if (!user) {
-                toast.error("로그인이 필요해요");
-                return;
-              }
-
-              try {
-                setUploading(true);
-                const { publicUrl, filePath } = await uploadMedicineImage(
-                  croppedFile,
-                  user.id
-                );
-
-                setValue("imageUrl", publicUrl, { shouldDirty: true });
-                setValue("imageFilePath", filePath, { shouldDirty: true });
-              } catch (err: any) {
-                toast.error(
-                  "이미지 업로드 중 문제가 발생했어요 " + err.message
-                );
-              } finally {
-                setUploading(false);
-                setCropOpen(false);
-              }
-            }}
-          />
+          <ImageUploader file={rawFile} onCropped={handleCroppedImage} />
         </DrawerContent>
       </Drawer>
     </>

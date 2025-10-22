@@ -70,7 +70,7 @@ export default function MedicineNewDrawer({
       description: [{ value: "" }],
       schedules: [{ time: "" }],
       repeated_pattern: { type: "DAILY" },
-      imageUrl: "/fallback-medicine.png",
+      imageUrl: "",
       imageFilePath: null,
     },
   });
@@ -116,6 +116,7 @@ export default function MedicineNewDrawer({
       description: filteredEmptyDescription,
       schedules: sortedSchedules,
     };
+
     try {
       setGLoading(true, "새로운 약을 등록 중이에요...");
       await createMedicine(_data);

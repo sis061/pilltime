@@ -117,7 +117,7 @@ export default function MedicineEditDrawer({
       description: [{ value: "" }],
       schedules: [{ id: null as any, time: "" } as any],
       repeated_pattern: { type: "DAILY" },
-      imageUrl: "/fallback-medicine.png",
+      imageUrl: "",
       imageFilePath: null,
     },
     mode: "onSubmit",
@@ -152,7 +152,7 @@ export default function MedicineEditDrawer({
             time: toHHmm(s.time),
           })) as any[],
           repeated_pattern: rp,
-          imageUrl: data.image_url ?? "/fallback-medicine.png",
+          imageUrl: data.image_url ?? "",
           imageFilePath: null,
         });
 
@@ -236,7 +236,6 @@ export default function MedicineEditDrawer({
       schedules_changed: !!schedules_patch,
       schedules_patch,
     };
-
     try {
       setGLoading(true, "수정 중이에요..");
       await updateMedicine(String(id), payload);

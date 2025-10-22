@@ -1,4 +1,21 @@
 import { z } from "zod";
+import type { StaticImageData } from "next/image"; // ✅ 추가
+
+// ✅ StaticImageData 런타임 가드
+function isStaticImageData(x: unknown): x is StaticImageData {
+  if (!x || typeof x !== "object") return false;
+  const anyX = x as any;
+  return (
+    typeof anyX.src === "string" &&
+    typeof anyX.width === "number" &&
+    typeof anyX.height === "number"
+    // blurDataURL 등 다른 필드는 있으면 passthrough
+  );
+}
+
+const StaticImageDataZ = z.custom<StaticImageData>(isStaticImageData, {
+  message: "유효한 정적 이미지가 아닙니다",
+});
 
 export const MedicineSchema = z.object({
   name: z.string().min(1, "이름을 입력해주세요"),
@@ -44,7 +61,7 @@ export const MedicineSchema = z.object({
         }
       }
     }),
-  imageUrl: z.string().optional(),
+  imageUrl: z.union([z.string(), StaticImageDataZ]).optional(),
   imageFilePath: z.string().optional().nullable(),
 });
 
