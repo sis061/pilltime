@@ -12,6 +12,8 @@ import * as React from "react";
 import { AlarmClock, AlarmClockOff } from "lucide-react";
 import { toast } from "sonner";
 import { useGlobalNotify } from "@/lib/useGlobalNotify";
+import { useSSRMediaquery } from "@/lib/useSSRMediaquery";
+import { usePush } from "@/lib/usePush";
 import { cn } from "@/lib/utils"; // shadcn 기본 유틸
 
 type Props = {
@@ -28,12 +30,19 @@ export function MedicineNotifyToggle({
   const [enabled, setEnabled] = React.useState(initialEnabled);
   const [pending, startTransition] = React.useTransition();
   const { enabled: globalOn, loading: globalLoading } = useGlobalNotify();
+  const vapid = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!;
+  const { isSubscribed, refresh } = usePush(vapid);
+  const minMobile = useSSRMediaquery(640);
 
   const handleToggle = () => {
     if (pending) return;
 
-    if (globalOn === false) {
-      toast.info("전체 알림이 꺼져 있어요. 상단에서 먼저 켜 주세요.");
+    if (!isSubscribed || globalOn === false) {
+      toast.info(
+        `전체 알림이 꺼져 있어요. ${
+          minMobile ? "상단" : "메뉴"
+        }에서 먼저 켜 주세요.`
+      );
       return;
     }
 
@@ -55,12 +64,14 @@ export function MedicineNotifyToggle({
         console.error("알림 토글 실패:", err);
         setEnabled(prev);
         toast.error("알림 설정 변경에 실패했어요. 다시 시도해 주세요.");
+      } finally {
+        await refresh();
       }
     });
   };
 
   const isDisabled = pending || globalLoading;
-  const visuallyOff = globalOn === false ? true : !enabled;
+  const visuallyOff = !isSubscribed || globalOn === false || !enabled;
 
   return (
     <button
@@ -76,20 +87,20 @@ export function MedicineNotifyToggle({
           : "알림 켜기"
       }
       className={cn(
-        "relative flex items-center justify-center p-2 rounded-md transition-colors",
+        "relative flex items-center justify-center p-2 rounded-md transition-colors cursor-pointer",
         (pending || globalLoading) && "opacity-50 cursor-wait"
       )}
     >
       {visuallyOff ? (
         <AlarmClockOff
-          size={20}
+          size={24}
           strokeWidth={2.5}
           color="#1F293775"
           className="transition-transform duration-200 ease-in-out scale-100 hover:scale-110"
         />
       ) : (
         <AlarmClock
-          size={20}
+          size={24}
           strokeWidth={2.5}
           color="#3B82F6"
           className="transition-transform duration-200 ease-in-out scale-100 hover:scale-110"
