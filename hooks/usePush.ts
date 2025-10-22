@@ -18,6 +18,21 @@ function b64ToU8(base64: string) {
   return out;
 }
 
+const bufToB64 = (buf: ArrayBuffer) =>
+  btoa(String.fromCharCode(...new Uint8Array(buf)));
+
+// helper: PushSubscription -> { endpoint,p256dh,auth }
+function serializeSubscription(sub: PushSubscription) {
+  const p256dh = sub.getKey("p256dh");
+  const auth = sub.getKey("auth");
+  if (!p256dh || !auth) throw new Error("subscription keys missing");
+  return {
+    endpoint: sub.endpoint,
+    p256dh: bufToB64(p256dh),
+    auth: bufToB64(auth),
+  };
+}
+
 /** 활성화된 ServiceWorkerRegistration을 확보 */
 async function getActiveRegistration(): Promise<ServiceWorkerRegistration | null> {
   if (typeof window === "undefined" || !("serviceWorker" in navigator))
@@ -127,11 +142,14 @@ export function usePush(vapidPublicKey: string) {
       // 3) 기존 구독 재사용
       const existing = await reg.pushManager.getSubscription();
       if (existing) {
-        await fetch("/api/push/subscribe", {
+        const payload = serializeSubscription(existing);
+        const res = await fetch("/api/push/subscribe", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify(existing),
+          body: JSON.stringify(payload),
         });
+        if (!res.ok)
+          throw new Error(await res.text().catch(() => "subscribe failed"));
         setIsSubscribed(true);
         return true;
       }
@@ -142,12 +160,15 @@ export function usePush(vapidPublicKey: string) {
         applicationServerKey: b64ToU8(vapidPublicKey),
       });
 
-      // 5) 서버 저장
-      await fetch("/api/push/subscribe", {
+      // 서버 저장(직렬화!)
+      const payload = serializeSubscription(sub);
+      const res = await fetch("/api/push/subscribe", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(sub),
+        body: JSON.stringify(payload),
       });
+      if (!res.ok)
+        throw new Error(await res.text().catch(() => "subscribe failed"));
 
       setIsSubscribed(true);
       return true;

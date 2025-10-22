@@ -20,19 +20,14 @@ export default function SocialLogin() {
   }
 
   function getRedirectToURL() {
-    // NEXT_PUBLIC_SITE_URL이 항상 정의되어 있지 않을 수 있으므로 안전 처리
-    const base =
-      process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "") ||
-      "http://localhost:3000";
-
-    if (typeof window === "undefined") {
-      // ✅ SSR 시점: 그냥 NEXT_PUBLIC_SITE_URL 기반으로 반환
-      return `${base}/callback`;
+    if (typeof window !== "undefined") {
+      return `${window.location.origin.replace(/\/+$/, "")}/callback`;
     }
-
-    // ✅ CSR 시점 (Next Auth UI 등): 실제 origin 기준
-    const origin = window.location.origin?.replace(/\/+$/, "") || base;
-    return `${origin}/callback`;
+    // (Server 사이드 렌더일 일은 거의 없지만) fallback
+    const base =
+      process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "") ??
+      "http://localhost:3000";
+    return `${base}/callback`;
   }
 
   const redirectToURL = getRedirectToURL();
@@ -46,6 +41,7 @@ export default function SocialLogin() {
         provider,
         options: {
           redirectTo: redirectToURL,
+          queryParams: { prompt: "consent" }, // 선택
         },
       });
       if (error) throw error;

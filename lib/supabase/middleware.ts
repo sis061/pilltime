@@ -58,6 +58,15 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL(to, req.url));
   }
 
+  // 루트나 임의 경로에 ?code가 붙어서 오면, /callback으로 리다이렉트
+  const url = new URL(req.url);
+  if (url.searchParams.has("code")) {
+    const to = new URL("/callback", url.origin);
+    // state/next 등도 넘겨주고 싶다면 그대로 붙여줍니다.
+    to.search = url.search;
+    return NextResponse.redirect(to, 307);
+  }
+
   return res;
 }
 
