@@ -26,7 +26,24 @@ export const MedicineSchema = z.object({
         time: z.string().min(1, "빈 복용 시간을 채워주세요"),
       })
     )
-    .min(1, "복용 시간을 최소 1개 이상 입력해주세요"),
+    .min(1, "복용 시간을 최소 1개 이상 입력해주세요")
+    .superRefine((arr, ctx) => {
+      const seen = new Map<string, number>(); // time -> firstIndex
+      for (let i = 0; i < arr.length; i++) {
+        const t = arr[i]?.time?.trim();
+        if (!t) continue; // 빈 값은 중복 판정에서 제외
+        const norm = t; // 이미 "HH:mm"로 들어오므로 그대로 비교
+        if (seen.has(norm)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "같은 시간은 한 번만 등록할 수 있어요",
+            path: [i, "time"], // 개별 필드에 에러 표시
+          });
+        } else {
+          seen.set(norm, i);
+        }
+      }
+    }),
   imageUrl: z.string().optional(),
   imageFilePath: z.string().optional().nullable(),
 });

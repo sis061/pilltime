@@ -41,6 +41,7 @@ export function MedicineSchedulesField() {
     setValue,
     formState: { errors },
     clearErrors,
+    setError,
   } = useFormContext<MedicineFormValues>();
 
   const { fields, append, remove, replace } = useFieldArray({
@@ -233,9 +234,31 @@ export function MedicineSchedulesField() {
                           value={
                             field.value ? dayjs(field.value, "HH:mm") : null
                           }
-                          onChange={(v) =>
-                            field.onChange(v ? v.format("HH:mm") : "")
-                          }
+                          onChange={(v) => {
+                            const next = v ? v.format("HH:mm") : "";
+
+                            if (next) {
+                              // 같은 schedules 내에서 중복 있는지 검사
+                              const all = watch("schedules") ?? [];
+                              const dup = all.some(
+                                (s, idx) =>
+                                  idx !== index &&
+                                  (s.time?.trim() ?? "") === next
+                              );
+                              if (dup) {
+                                setError(`schedules.${index}.time` as const, {
+                                  type: "manual",
+                                  message:
+                                    "같은 시간은 한 번만 등록할 수 있어요",
+                                });
+                                return;
+                              } else {
+                                clearErrors(`schedules.${index}.time` as const);
+                              }
+                            }
+
+                            field.onChange(next);
+                          }}
                           minuteStep={5}
                           hideDisabledOptions
                           needConfirm={false}

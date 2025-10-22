@@ -36,7 +36,7 @@ import { Button } from "@/components/ui/button";
 // ---- UTIL
 import { zodResolver } from "@hookform/resolvers/zod";
 import { MedicineSchema, MedicineFormValues } from "@/lib/schemas/medicine";
-import { toHHMMSS } from "@/lib/date";
+import { toHHmm } from "@/lib/date";
 import { buildPatch } from "@/lib/medicine";
 import { deleteMedicineImage } from "@/lib/supabase/upload";
 // ---- LIB
@@ -149,7 +149,7 @@ export default function MedicineEditDrawer({
             data.description?.map((d: string) => ({ value: d })) ?? [],
           schedules: sortedSch.map((s: MedicineSchedule) => ({
             id: s.id,
-            time: toHHMMSS(s.time),
+            time: toHHmm(s.time),
           })) as any[],
           repeated_pattern: rp,
           imageUrl: data.image_url ?? "/fallback-medicine.png",
@@ -159,7 +159,7 @@ export default function MedicineEditDrawer({
         initSchedulesRef.current = data.medicine_schedules.map(
           (s: MedicineSchedule) => ({
             id: s.id,
-            time: toHHMMSS(s.time),
+            time: toHHmm(s.time),
             repeated_pattern: s.repeated_pattern,
           })
         );
