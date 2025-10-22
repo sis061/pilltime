@@ -49,7 +49,7 @@ import {
   RepeatedPattern,
   UISchedule,
 } from "@/types/medicines";
-import { useSSRMediaquery } from "@/lib/useSSRMediaquery";
+import { useSSRMediaquery } from "@/hooks/useSSRMediaquery";
 
 /* ---------------------------
  * API

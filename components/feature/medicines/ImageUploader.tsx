@@ -6,6 +6,7 @@ import ReactCrop, { PercentCrop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 import { useGlobalLoading } from "@/store/useGlobalLoading";
 import { toast } from "sonner";
+import { dataURLToBlob, revokeObjectURL, toObjectURL } from "@/lib/image";
 // import imageCompression from "browser-image-compression";
 interface Props {
   file: File | null;
@@ -41,9 +42,9 @@ export default function ImageUploader({ file, onCropped }: Props) {
   // 파일이 들어오면 미리보기 생성
   useEffect(() => {
     if (file) {
-      const url = URL.createObjectURL(file);
+      const url = toObjectURL(file);
       setSrc(url);
-      return () => URL.revokeObjectURL(url);
+      return () => revokeObjectURL(url);
     }
   }, [file]);
 
@@ -89,12 +90,26 @@ export default function ImageUploader({ file, onCropped }: Props) {
     ctx.drawImage(image, px.x, px.y, px.w, px.h, 0, 0, px.w, px.h);
 
     return new Promise((resolve) => {
-      canvas.toBlob((blob) => resolve(blob), "image/jpeg", 0.95);
+      canvas.toBlob(
+        (blob) => {
+          if (blob) return resolve(blob);
+          // Safari 등에서 null이면 dataURL → Blob 폴백
+          try {
+            const dataUrl = canvas.toDataURL("image/jpeg", 0.95);
+            const b = dataURLToBlob(dataUrl);
+            resolve(b);
+          } catch {
+            resolve(null);
+          }
+        },
+        "image/jpeg",
+        0.95
+      );
     });
   }
 
   async function handleCropAndUpload() {
-    setGLoading(true, "이미지 처리 중이에요...");
+    setGLoading(true, "이미지를 처리 중이에요...");
     try {
       const blob = await getCroppedBlob();
       if (!blob) return;
@@ -121,7 +136,7 @@ export default function ImageUploader({ file, onCropped }: Props) {
       }
 
       // 프리뷰 URL
-      const previewUrl = URL.createObjectURL(output);
+      const previewUrl = toObjectURL(output);
 
       // 상위 콜백 타입을 Blob도 받도록 수정 권장: (cropped: File|Blob)
       // onCropped(output as File, previewUrl); // <-- 기존이 File만 받는다면 아래처럼 변환 시도
@@ -160,20 +175,23 @@ export default function ImageUploader({ file, onCropped }: Props) {
 
   return (
     <div className="flex flex-col gap-4">
-      <ReactCrop
-        crop={crop}
-        onChange={(_, percentCrop) => setCrop(percentCrop)}
-        aspect={1} // ✅ 정방형
-        keepSelection
-      >
-        <img
-          src={src}
-          alt="crop-target"
-          ref={imgRef}
-          onLoad={handleImageLoad}
-          className="object-contain mx-auto" // ✅ 원래 스타일 유지
-        />
-      </ReactCrop>
+      <div className="max-h-[60vh] overflow-auto">
+        <ReactCrop
+          crop={crop}
+          onChange={(_, percentCrop) => setCrop(percentCrop)}
+          aspect={1} // ✅ 정방형
+          keepSelection
+        >
+          <img
+            src={src}
+            alt="crop-target"
+            ref={imgRef}
+            onLoad={handleImageLoad}
+            className="object-contain mx-auto max-h-[60vh]" // ✅ 원래 스타일 유지
+            style={{ imageOrientation: "from-image" as any }} // 지원 브라우저에서 EXIF 반영 힌트
+          />
+        </ReactCrop>
+      </div>
 
       <div className="flex justify-end gap-2 absolute top-6 right-4">
         <Button

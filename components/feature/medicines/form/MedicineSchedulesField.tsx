@@ -16,7 +16,7 @@ import koKR from "antd/locale/ko_KR";
 import { MedicineFormValues } from "@/lib/schemas/medicine";
 // ---- LIB
 import { useFormContext, useFieldArray, Controller } from "react-hook-form";
-import { useHasTouch } from "@/lib/useHasTouch";
+import { useHasTouch } from "@/hooks/useHasTouch";
 
 /* ------
  CONST

@@ -11,9 +11,9 @@
 import * as React from "react";
 import { AlarmClock, AlarmClockOff } from "lucide-react";
 import { toast } from "sonner";
-import { useGlobalNotify } from "@/lib/useGlobalNotify";
-import { useSSRMediaquery } from "@/lib/useSSRMediaquery";
-import { usePush } from "@/lib/usePush";
+import { useGlobalNotify } from "@/hooks/useGlobalNotify";
+import { useSSRMediaquery } from "@/hooks/useSSRMediaquery";
+import { usePush } from "@/hooks/usePush";
 import { cn } from "@/lib/utils"; // shadcn 기본 유틸
 
 type Props = {

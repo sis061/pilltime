@@ -1,11 +1,12 @@
 "use client";
 
-import fallbackImg from "@/public/fallback-medicine.webp";
 // ---- REACT
 import { useCallback, useRef, useState } from "react";
 // ---- NEXT
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+// ---- COMPONENT
+import SmartImage from "@/components/layout/SmartImage";
 // ---- UI
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -18,17 +19,18 @@ import {
 // ---- UTIL
 import { uploadMedicineImage } from "@/lib/supabase/upload";
 import ImageUploader from "../ImageUploader";
+import { preparePickedFile, revokeObjectURL } from "@/lib/image";
 // ---- LIB
 import { useFormContext } from "react-hook-form";
 // ---- STORE
 import { useUserStore } from "@/store/useUserStore";
 // ---- CUSTOM HOOKS
-import { useSSRMediaquery } from "@/lib/useSSRMediaquery";
+import { useSSRMediaquery } from "@/hooks/useSSRMediaquery";
 import { useGlobalLoading } from "@/store/useGlobalLoading";
-import SmartImage from "@/components/layout/SmartImage";
 
 export function MedicineImageField() {
   const user = useUserStore((s) => s.user);
+  const lastBlobUrlRef = useRef<string | null>(null); // revoke용
 
   const pathname = usePathname();
   const isPathnameNew = pathname.includes("new");
@@ -39,12 +41,10 @@ export function MedicineImageField() {
   const { watch, setValue } = useFormContext();
   const imageUrl = watch("imageUrl");
 
-  // const imageFilePath = watch("imageFilePath");
-
   // ✅ 서브 Drawer 상태
 
   const [cropOpen, setCropOpen] = useState(false);
-  const [rawFile, setRawFile] = useState<File | null>(null);
+  const [rawFile, setRawFile] = useState<File | Blob | null>(null);
   const [uploading, setUploading] = useState(false);
 
   // ✅ 파일 선택 핸들러 (변경 버튼 눌렀을 때)
@@ -52,18 +52,27 @@ export function MedicineImageField() {
     if (uploading) return;
     const input = document.createElement("input");
     input.type = "file";
-    input.accept = "image/*";
-    input.onchange = (e: any) => {
-      const file = e.target.files?.[0];
-      if (file) {
-        setRawFile(file);
-        setCropOpen(true); // ✅ 파일 선택 후 서브 Drawer 오픈
+    input.accept = "image/*,.heic,.heif";
+    input.onchange = async (e: any) => {
+      const file: File | undefined = e.target.files?.[0];
+      if (!file) return;
+
+      try {
+        setGLoading(true, "이미지를 불러오는 중이에요...");
+        const preparedBlob = await preparePickedFile(file); // ← 핵심 전처리
+        setRawFile(preparedBlob);
+        setCropOpen(true); // 전처리 끝난 후 Drawer 오픈
+      } catch (err: any) {
+        console.error(err);
+        toast.error(
+          err?.message ?? "이미지를 열 수 없어요. 다른 사진으로 시도해 보세요."
+        );
+      } finally {
+        setGLoading(false);
       }
     };
     input.click();
   };
-
-  const lastBlobUrlRef = useRef<string | null>(null); // revoke용
 
   const handleCroppedImage = useCallback(
     async (croppedFile: File | Blob, localPreviewUrl?: string | null) => {
@@ -74,15 +83,13 @@ export function MedicineImageField() {
 
       // 1) 프리뷰를 곧장 imageUrl에 넣기 (optimistic)
       if (localPreviewUrl) {
-        // 이전 Blob URL 정리
-        if (lastBlobUrlRef.current) URL.revokeObjectURL(lastBlobUrlRef.current);
+        revokeObjectURL(lastBlobUrlRef.current);
         lastBlobUrlRef.current = localPreviewUrl;
-
-        setValue("imageUrl", localPreviewUrl, { shouldDirty: true }); // ✅ 프리뷰도 imageUrl 사용
+        setValue("imageUrl", localPreviewUrl, { shouldDirty: true });
       }
 
       try {
-        setGLoading(true, "이미지 업로드 중이에요...");
+        setGLoading(true, "이미지를 업로드 중이에요...");
         setUploading(true);
 
         // 2) 업로드
@@ -92,28 +99,21 @@ export function MedicineImageField() {
         );
         setValue("imageFilePath", filePath, { shouldDirty: true });
 
-        // 3) prefetch 후 같은 필드를 최종 URL로 교체
+        // 3) 원격 이미지 사전 로드 후 교체
         await new Promise<void>((resolve, reject) => {
           const img = new window.Image();
           img.onload = () => {
-            setValue("imageUrl", publicUrl, { shouldDirty: true }); // ✅ 같은 필드 교체
-            // 프리뷰 Blob 정리
-            if (lastBlobUrlRef.current) {
-              URL.revokeObjectURL(lastBlobUrlRef.current);
-              lastBlobUrlRef.current = null;
-            }
+            setValue("imageUrl", publicUrl, { shouldDirty: true });
+            revokeObjectURL(lastBlobUrlRef.current);
+            lastBlobUrlRef.current = null;
             resolve();
           };
           img.onerror = () => reject(new Error("원격 이미지 로딩 실패"));
           img.src = publicUrl;
         });
       } catch (err: any) {
-        // 에러 시 프리뷰 Blob 정리 & 비우기(선택)
-        if (lastBlobUrlRef.current) {
-          URL.revokeObjectURL(lastBlobUrlRef.current);
-          lastBlobUrlRef.current = null;
-        }
-        // 실패했으면 기존 imageUrl을 원상복구하거나 빈 값으로 둘 수도 있음(옵션)
+        revokeObjectURL(lastBlobUrlRef.current);
+        lastBlobUrlRef.current = null;
         toast.error(
           "이미지 업로드 중 문제가 발생했어요 " + (err?.message ?? "")
         );
@@ -185,7 +185,7 @@ export function MedicineImageField() {
             <div />
           </DrawerHeader>
 
-          <ImageUploader file={rawFile} onCropped={handleCroppedImage} />
+          <ImageUploader file={rawFile as any} onCropped={handleCroppedImage} />
         </DrawerContent>
       </Drawer>
     </>

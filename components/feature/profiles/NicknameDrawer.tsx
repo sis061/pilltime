@@ -16,7 +16,7 @@ import { toast } from "sonner";
 // ---- UTIL
 import { createClient } from "@/lib/supabase/client";
 // ---- CUSTOM HOOKS
-import { useSSRMediaquery } from "@/lib/useSSRMediaquery";
+import { useSSRMediaquery } from "@/hooks/useSSRMediaquery";
 // ---- STORE
 import { useUserStore } from "@/store/useUserStore";
 import { useGlobalLoading } from "@/store/useGlobalLoading";

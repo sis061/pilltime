@@ -1,11 +1,5 @@
 import { createClient } from "@/lib/supabase/client";
-
-function toFile(fileOrBlob: File | Blob) {
-  if (fileOrBlob instanceof File) return fileOrBlob;
-  return new File([fileOrBlob], `pill-${Date.now()}.jpg`, {
-    type: fileOrBlob.type || "image/jpeg",
-  });
-}
+import { toFile } from "../image";
 
 export async function uploadMedicineImage(
   fileOrBlob: File | Blob,
@@ -13,7 +7,7 @@ export async function uploadMedicineImage(
 ) {
   const supabase = createClient();
   const file = toFile(fileOrBlob);
-  const fileExt = file.name.split(".").pop();
+  const fileExt = (file.name.split(".").pop() || "jpg").toLowerCase();
   const fileName = `${userId}_${Date.now()}.${fileExt}`;
   const filePath = `medicines/${fileName}`;
 

@@ -29,7 +29,7 @@ import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 // ---- STORE
 import { useGlobalLoading } from "@/store/useGlobalLoading";
-import { useSSRMediaquery } from "@/lib/useSSRMediaquery";
+import { useSSRMediaquery } from "@/hooks/useSSRMediaquery";
 
 async function createMedicine(values: MedicineFormValues) {
   const res = await fetch("/api/medicines", {
