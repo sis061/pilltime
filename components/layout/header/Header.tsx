@@ -1,20 +1,10 @@
 import Image from "next/image";
-import { redirect } from "next/navigation";
 import HeaderClient from "./HeaderClient";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { User } from "@/types/profile";
 
-export default async function Header() {
+export default async function Header({ user }: { user: User }) {
   const supabase = await createServerSupabaseClient();
-
-  const {
-    data: { user },
-    error: userErr,
-  } = await supabase.auth.getUser();
-
-  if (userErr || !user) {
-    redirect("/login"); // 로그인 안 된 경우 로그인 페이지로 이동
-  }
 
   const { data: profile } = await supabase
     .from("profiles")
