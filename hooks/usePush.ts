@@ -130,7 +130,7 @@ export function usePush(vapidPublicKey: string) {
         await fetch("/api/push/subscribe", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify(existing),
+          body: JSON.stringify(existing.toJSON()),
         });
         setIsSubscribed(true);
         return true;
@@ -146,7 +146,7 @@ export function usePush(vapidPublicKey: string) {
       await fetch("/api/push/subscribe", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(sub),
+        body: JSON.stringify(sub.toJSON()),
       });
 
       setIsSubscribed(true);

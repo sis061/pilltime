@@ -51,6 +51,11 @@ self.addEventListener("fetch", (event) => {
   if (IS_DEV) return; // ← 개발모드: 아무 것도 가로채지 않음
 
   const req = event.request;
+  const url = new URL(req.url);
+  if (url.pathname.startsWith("/callback")) return;
+  if (req.mode === "navigate" && url.searchParams.has("code")) {
+    return;
+  }
 
   // 네비게이션 요청: 네트워크 우선 → 실패 시 캐시 → offline.html
   if (req.mode === "navigate") {
