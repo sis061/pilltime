@@ -99,12 +99,17 @@ export async function POST(req: Request) {
     // const deltaMs = 5 * 60 * 1000;
     // const fromTs = new Date(base.getTime() - deltaMs).toISOString();
     // const toTs = base.toISOString();
+    // const { data: reminder, error: e2 } = await sb.rpc(
+    //   "pilltime_fetch_due_reminder_missed_v4"
+    //   // {
+    //   //   p_from_ts: fromTs,
+    //   //   p_to_ts: toTs,
+    //   // }
+    // );
     const { data: reminder, error: e2 } = await sb.rpc(
-      "pilltime_fetch_due_reminder_missed_v4"
-      // {
-      //   p_from_ts: fromTs,
-      //   p_to_ts: toTs,
-      // }
+      "pilltime_fetch_due_reminder_missed_v5"
+      // 필요하면 회수 범위 확장:
+      // { p_now: new Date().toISOString(), p_max_age: '3 days' }
     );
     if (e2)
       return NextResponse.json(
