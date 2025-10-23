@@ -17,6 +17,7 @@ import { MedicineFormValues } from "@/lib/schemas/medicine";
 // ---- LIB
 import { useFormContext, useFieldArray, Controller } from "react-hook-form";
 import { useHasTouch } from "@/hooks/useHasTouch";
+import { Input } from "@/components/ui/input";
 
 /* ------
  CONST
@@ -266,7 +267,7 @@ export function MedicineSchedulesField() {
                       <div className="w-full border-pilltime-grayLight">
                         {hasTouch ? (
                           // ✅ 모바일: 네이티브 time 입력
-                          <input
+                          <Input
                             type="time"
                             step={300} // 5분 간격
                             min="00:00"
@@ -283,7 +284,7 @@ export function MedicineSchedulesField() {
                                 );
                             }}
                             onBlur={field.onBlur}
-                            className="!px-2 !py-2 shadow-sm w-[95%] !ml-1 rounded-md border border-transparent bg-white"
+                            className="!px-2 !border-pilltime-grayLight shadow-sm w-[95%] !ml-1 "
                             aria-label="복용 시간"
                           />
                         ) : (
