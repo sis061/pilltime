@@ -95,16 +95,16 @@ export async function POST(req: Request) {
         { status: 500 }
       );
 
-    // 4) 리마인더 대상(Δ=90s)
-    const deltaMs = 90 * 1000;
-    const fromTs = new Date(base.getTime() - deltaMs).toISOString();
-    const toTs = base.toISOString();
+    // 4) 리마인더 대상(Δ = 5min)
+    // const deltaMs = 5 * 60 * 1000;
+    // const fromTs = new Date(base.getTime() - deltaMs).toISOString();
+    // const toTs = base.toISOString();
     const { data: reminder, error: e2 } = await sb.rpc(
-      "pilltime_fetch_due_reminder_missed",
-      {
-        p_from_ts: fromTs,
-        p_to_ts: toTs,
-      }
+      "pilltime_fetch_due_reminder_missed_v4"
+      // {
+      //   p_from_ts: fromTs,
+      //   p_to_ts: toTs,
+      // }
     );
     if (e2)
       return NextResponse.json(
