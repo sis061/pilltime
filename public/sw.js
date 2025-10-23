@@ -8,7 +8,7 @@ const IS_DEV =
   self.location.hostname === "localhost" ||
   self.location.hostname === "127.0.0.1";
 
-const CACHE_NAME = "pilltime-cache-v2";
+const CACHE_NAME = "pilltime-cache-v3";
 const APP_SHELL = [
   // "/",
   "/offline.html",
