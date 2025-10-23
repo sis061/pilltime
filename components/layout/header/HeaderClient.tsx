@@ -41,9 +41,11 @@ import type { User } from "@/types/profile";
 export default function HeaderClient({
   user,
   initialGlobalEnabled,
+  todayYmd,
 }: {
   user: User;
   initialGlobalEnabled: boolean;
+  todayYmd: string;
 }) {
   // ---- REACT
   const [openNickname, setOpenNickname] = useState(false);
@@ -74,9 +76,8 @@ export default function HeaderClient({
    * CONST
    * ------ */
 
-  const todayYmd = toYYYYMMDD(new Date(), "Asia/Seoul");
-
-  const notifyOn = isSubscribed === true && enabled === true;
+  const enabledForRender = enabled ?? initialGlobalEnabled;
+  const notifyOn = isSubscribed === true && enabledForRender === true;
 
   /** 공통 버튼 config (props로 내려줄 것) */
   const baseWhiteBtn =
@@ -237,9 +238,8 @@ export default function HeaderClient({
   }
 
   useEffect(() => {
-    mutateGlobal(initialGlobalEnabled);
-    // revalidate는 필요할 때만(지금은 서버값과 동일하므로 생략)
-    // revalidate();
+    // 클라 마운트 후 서버 스냅샷과 동기화
+    if (enabled === undefined) mutateGlobal(initialGlobalEnabled);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialGlobalEnabled]);
 
@@ -260,9 +260,108 @@ export default function HeaderClient({
    * render
    * ------ */
 
-  if (minMobile)
-    return (
-      <div className="flex items-center gap-2 h-full">
+  // if (minMobile)
+  //   return (
+  //     <div className="flex items-center gap-2 h-full">
+  //       {/* 드롭다운 */}
+  //       <DropdownMenu>
+  //         <DropdownMenuTrigger asChild>
+  //           <button
+  //             // variant="ghost"
+  //             className={`${baseWhiteBtn} rounded-2xl [&_svg:not([class*='size-'])]:size-6 group [&_div]:transition-transform [&_div]:duration-200 [&_div]:ease-in-out [&_div]:scale-100 [&_div]:group-hover:scale-110`}
+  //             aria-haspopup="dialog"
+  //           >
+  //             {/* <UserCog className="h-6 w-6" color="#fff" /> */}
+  //             <ProfileBadge initialUser={user} />
+  //             <span className="!pt-2">프로필 관리</span>
+  //           </button>
+  //         </DropdownMenuTrigger>
+  //         <DropdownMenuContent
+  //           side="bottom"
+  //           align="end"
+  //           className="border-1 bg-white !border-pilltime-violet shadow-lg !w-28 !pl-2"
+  //         >
+  //           {menuBtns.map(
+  //             ({ key, label, iconLeft: Icon, onClick, className }) => (
+  //               <DropdownMenuItem
+  //                 key={key}
+  //                 onSelect={(e) => {
+  //                   e.preventDefault();
+  //                   onClick?.();
+  //                 }}
+  //                 className={`hover:!bg-pilltime-violet/15 !text-sm font-bold !my-1 w-28 ${className}`}
+  //               >
+  //                 {Icon ? <Icon className="h-5 w-5" color="#3B82F6" /> : null}
+  //                 {label}
+  //               </DropdownMenuItem>
+  //             )
+  //           )}
+  //         </DropdownMenuContent>
+  //       </DropdownMenu>
+  //       {/* 상단 버튼 그룹 */}
+  //       <SmartButtonGroup items={desktopBtns} />
+  //       <NicknameDrawer
+  //         open={openNickname}
+  //         onOpenChange={setOpenNickname}
+  //         mode="edit"
+  //       />
+  //     </div>
+  //   );
+
+  // return (
+  //   <div className="flex items-center gap-2">
+  //     <ProfileBadge initialUser={user} />
+  //     <Button
+  //       variant="ghost"
+  //       size="icon-lg"
+  //       onClick={() => setMenuOpen(true)}
+  //       className="!text-white !p-2 flex-col text-xs [&_svg:not([class*='size-'])]:size-6"
+  //     >
+  //       <Menu color="#fff" />
+  //     </Button>
+  //     <NavbarDrawer
+  //       open={menuOpen}
+  //       onOpenChange={setMenuOpen}
+  //       logout={logout}
+  //       openNickname={() => setOpenNickname(true)}
+  //       buttons={drawerBtns}
+  //       menuButtons={menuBtns}
+  //     />
+  //     <NicknameDrawer
+  //       open={openNickname}
+  //       onOpenChange={setOpenNickname}
+  //       mode="edit"
+  //     />
+  //   </div>
+  // );
+
+  return (
+    <div>
+      <div className="sm:hidden flex items-center gap-2">
+        <ProfileBadge initialUser={user} />
+        <Button
+          variant="ghost"
+          size="icon-lg"
+          onClick={() => setMenuOpen(true)}
+          className="!text-white !p-2 flex-col text-xs [&_svg:not([class*='size-'])]:size-6"
+        >
+          <Menu color="#fff" />
+        </Button>
+        <NavbarDrawer
+          open={menuOpen}
+          onOpenChange={setMenuOpen}
+          logout={logout}
+          openNickname={() => setOpenNickname(true)}
+          buttons={drawerBtns}
+          menuButtons={menuBtns}
+        />
+        <NicknameDrawer
+          open={openNickname}
+          onOpenChange={setOpenNickname}
+          mode="edit"
+        />
+      </div>
+      <div className="sm:flex hidden items-center gap-2 h-full">
         {/* 드롭다운 */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -306,32 +405,6 @@ export default function HeaderClient({
           mode="edit"
         />
       </div>
-    );
-
-  return (
-    <div className="flex items-center gap-2">
-      <ProfileBadge initialUser={user} />
-      <Button
-        variant="ghost"
-        size="icon-lg"
-        onClick={() => setMenuOpen(true)}
-        className="!text-white !p-2 flex-col text-xs [&_svg:not([class*='size-'])]:size-6"
-      >
-        <Menu color="#fff" />
-      </Button>
-      <NavbarDrawer
-        open={menuOpen}
-        onOpenChange={setMenuOpen}
-        logout={logout}
-        openNickname={() => setOpenNickname(true)}
-        buttons={drawerBtns}
-        menuButtons={menuBtns}
-      />
-      <NicknameDrawer
-        open={openNickname}
-        onOpenChange={setOpenNickname}
-        mode="edit"
-      />
     </div>
   );
 }

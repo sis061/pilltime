@@ -2,6 +2,7 @@ import Image from "next/image";
 import HeaderClient from "./HeaderClient";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { User } from "@/types/profile";
+import { toYYYYMMDD } from "@/lib/date";
 
 export default async function Header({ user }: { user: User }) {
   const supabase = await createServerSupabaseClient();
@@ -26,6 +27,7 @@ export default async function Header({ user }: { user: User }) {
   };
 
   const initialGlobalEnabled = settings?.global_notify_enabled ?? true;
+  const todayYmd = toYYYYMMDD(new Date());
 
   return (
     <header className="h-20 bg-pilltime-blue/75 flex items-center justify-between !px-4 shadow-sm">
@@ -44,6 +46,7 @@ export default async function Header({ user }: { user: User }) {
         <HeaderClient
           user={userMini}
           initialGlobalEnabled={initialGlobalEnabled}
+          todayYmd={todayYmd}
         />
       </div>
     </header>
