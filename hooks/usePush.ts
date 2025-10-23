@@ -1,14 +1,12 @@
 "use client";
 /**
- * usePush 훅 (경로: /lib/usePush.ts)
- * - 역할: 클라이언트에서 알림 권한 요청, SW 등록, Push 구독 생성/해제
- * - 의존: 브라우저 환경(SSR에서 직접 호출 금지), /public/sw.js 존재
- * - 사용: const { permission, isSubscribed, subscribe, unsubscribe, loading } = usePush(PUBLIC_VAPID_KEY)
+ * usePush 훅
+ * - 권한/구독 생성/해제 + 자동 복구(auto-heal)
  */
 
 import { useCallback, useEffect, useState } from "react";
 
-/** Base64(URL-safe) → Uint8Array 변환 (VAPID public key를 위해 필요) */
+/** Base64(URL-safe) → Uint8Array (VAPID A.S.PublicKey) */
 function b64ToU8(base64: string) {
   const padding = "=".repeat((4 - (base64.length % 4)) % 4);
   const safe = (base64 + padding).replace(/-/g, "+").replace(/_/g, "/");
@@ -44,7 +42,7 @@ function isBrowserOK() {
   );
 }
 
-/** 활성화된 ServiceWorkerRegistration을 확보 */
+/** 활성 ServiceWorkerRegistration 확보 */
 async function getActiveRegistration(): Promise<ServiceWorkerRegistration | null> {
   if (!isBrowserOK()) return null;
 
@@ -70,7 +68,6 @@ async function getActiveRegistration(): Promise<ServiceWorkerRegistration | null
 /** 안전한 toJSON (사파리/일부 브라우저 호환) */
 function subToJSON(sub: PushSubscription) {
   const json = sub.toJSON();
-  // 일부 구현체 보호: 키가 없는 경우 방어
   return {
     endpoint: json.endpoint,
     expirationTime: json.expirationTime ?? null,
@@ -81,19 +78,18 @@ function subToJSON(sub: PushSubscription) {
   };
 }
 
+/** 로컬 키 저장용 */
+const FP_STORAGE_KEY = "vapid:keyhash";
+
 export function usePush(vapidPublicKey: string, userId?: string) {
-  /** 로딩 상태 (subscribe/unsubscribe 중 버튼 비활성 등 UX에 사용) */
   const [loading, setLoading] = useState(false);
-  /** 브라우저 Notifications 권한: 'default' | 'granted' | 'denied' */
   const [permission, setPermission] = useState<NotificationPermission>(
     typeof window !== "undefined" && "Notification" in window
       ? Notification.permission
       : "default"
   );
-  /** 현재 푸시 구독 여부(알 수 없을 땐 null) */
   const [isSubscribed, setIsSubscribed] = useState<boolean | null>(null);
 
-  // (선택) 진입 시 사전 등록 시도 — dev에선 아무 일도 안 함
   // 프로덕션에서만 SW 사전 등록
   useEffect(() => {
     if (!isBrowserOK()) return;
@@ -104,18 +100,7 @@ export function usePush(vapidPublicKey: string, userId?: string) {
     }
   }, []);
 
-  /** Service Worker 등록 보장 */
-  //   const ensureReg = async () => {
-  //     if (!("serviceWorker" in navigator))
-  //       throw new Error("Service Worker not supported");
-  //     // 동일 경로로 여러 번 호출돼도 브라우저가 알아서 중복 처리
-  //     const reg = await navigator.serviceWorker.register("/sw.js", {
-  //       scope: "/",
-  //     });
-  //     return reg;
-  //   };
-
-  /** 현재 구독 상태를 갱신(초기 마운트/권한 변화 시) */
+  /** 현재 구독 상태 동기화 */
   const refresh = useCallback(async () => {
     if (!isBrowserOK()) {
       setIsSubscribed(false);
@@ -133,21 +118,20 @@ export function usePush(vapidPublicKey: string, userId?: string) {
 
   useEffect(() => {
     refresh();
-    // 탭 포커스 돌아올 때 상태 동기화 (권한/구독이 밖에서 바뀐 경우 대비)
+    // 탭 포커스 복귀 시 상태 동기화
     const onVis = () => document.visibilityState === "visible" && refresh();
     document.addEventListener("visibilitychange", onVis);
     return () => document.removeEventListener("visibilitychange", onVis);
   }, [refresh]);
 
-  /** ✅ VAPID 키 변경 감지 → 기존 구독 강제 해지 후 재구독 */
+  /** ✅ VAPID 변경 시 기존 구독 정리 (401/403 예방) */
   const ensureVAPIDMatch = useCallback(
     async (reg: ServiceWorkerRegistration) => {
       const sub = await reg.pushManager.getSubscription();
       const currentHash = await sha256b64url(vapidPublicKey);
-      const stored = localStorage.getItem("vapid:keyhash");
+      const stored = localStorage.getItem(FP_STORAGE_KEY);
 
       if (stored && stored !== currentHash && sub) {
-        // 공개키가 바뀌었는데 구독이 남아있음 → 서버 401/403 방지 위해 정리
         try {
           await fetch("/api/push/unsubscribe", {
             method: "POST",
@@ -160,7 +144,7 @@ export function usePush(vapidPublicKey: string, userId?: string) {
         } catch {}
       }
 
-      localStorage.setItem("vapid:keyhash", currentHash);
+      localStorage.setItem(FP_STORAGE_KEY, currentHash);
     },
     [vapidPublicKey]
   );
@@ -172,7 +156,7 @@ export function usePush(vapidPublicKey: string, userId?: string) {
       if (!isBrowserOK())
         throw new Error("이 브라우저는 Web Push를 지원하지 않습니다.");
 
-      // 1) SW 확보 + VAPID 키 정합성 체크
+      // 1) SW 확보 + VAPID 정합
       const reg = await getActiveRegistration();
       if (!reg) throw new Error("Service Worker가 활성화되지 않았습니다.");
       await ensureVAPIDMatch(reg);
@@ -184,10 +168,8 @@ export function usePush(vapidPublicKey: string, userId?: string) {
       if (perm !== "granted")
         throw new Error("알림 권한이 허용되지 않았습니다.");
 
-      // 3) 재사용 가능한 기존 구독?
+      // 3) 기존 구독 재사용 또는 신규
       let sub = await reg.pushManager.getSubscription();
-
-      // 4) 없으면 신규 구독
       if (!sub) {
         sub = await reg.pushManager.subscribe({
           userVisibleOnly: true,
@@ -195,7 +177,7 @@ export function usePush(vapidPublicKey: string, userId?: string) {
         });
       }
 
-      // 5) 서버에 upsert(+메타)
+      // 4) 서버 저장(+메타)
       const json = subToJSON(sub);
       const platform = detectPlatform(json.endpoint!);
       const ua = typeof navigator !== "undefined" ? navigator.userAgent : null;
@@ -247,11 +229,67 @@ export function usePush(vapidPublicKey: string, userId?: string) {
     }
   }, []);
 
-  /** 강제 재구독(설정 화면에서 ‘연결 새로고침’ 같은 UX에 사용) */
+  /** 강제 재구독 */
   const resubscribe = useCallback(async () => {
     await unsubscribe();
     return subscribe();
   }, [unsubscribe, subscribe]);
+
+  /* ---------------------------------------------------------
+   * 🔁 자동 복구(auto-heal)
+   * - 조건:
+   *   1) 권한이 granted인데 구독이 없음 → 즉시 재구독
+   *   2) 저장된 VAPID 지문과 현재 지문이 다름 → 재구독
+   * - 트리거:
+   *   - 컴포넌트 마운트/권한 변경 시
+   *   - 탭이 다시 활성화될 때
+   *   - SW 컨트롤러가 바뀔 때
+   * --------------------------------------------------------- */
+  const autoHeal = useCallback(async () => {
+    if (!isBrowserOK()) return;
+    if (Notification.permission !== "granted") return;
+
+    const reg = await getActiveRegistration();
+    if (!reg) return;
+
+    const sub = await reg.pushManager.getSubscription();
+    const current = await sha256b64url(vapidPublicKey);
+    const stored = localStorage.getItem(FP_STORAGE_KEY);
+
+    const needResub = !sub || (stored && stored !== current);
+
+    if (needResub) {
+      const ok = await resubscribe();
+      if (ok) localStorage.setItem(FP_STORAGE_KEY, current);
+      return;
+    }
+
+    // 정상: 지문 동기화만
+    if (!stored) localStorage.setItem(FP_STORAGE_KEY, current);
+  }, [vapidPublicKey, resubscribe]);
+
+  // 마운트/권한 변경 시 시도
+  useEffect(() => {
+    autoHeal().catch(() => {});
+  }, [autoHeal, permission]);
+
+  // 탭 활성화 때도 시도 (외부에서 권한/구독 바뀐 경우 대비)
+  useEffect(() => {
+    const onVis = () => {
+      if (document.visibilityState === "visible") autoHeal().catch(() => {});
+    };
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, [autoHeal]);
+
+  // SW 컨트롤러 교체 시도(업데이트/하드 리로드 후)
+  useEffect(() => {
+    if (!("serviceWorker" in navigator)) return;
+    const onCtrl = () => autoHeal().catch(() => {});
+    navigator.serviceWorker.addEventListener("controllerchange", onCtrl);
+    return () =>
+      navigator.serviceWorker.removeEventListener("controllerchange", onCtrl);
+  }, [autoHeal]);
 
   return {
     permission,

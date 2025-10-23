@@ -112,7 +112,7 @@ self.addEventListener("push", (event) => {
   const title = payload.title || "PillTime";
   const body = payload.body || "알림이 도착했어요";
   const data = payload.data || {};
-  const tag = payload.tag || "pilltime-push";
+  const tag = payload.tag || `pilltime-${Date.now()}`;
 
   event.waitUntil(
     self.registration.showNotification(title, {

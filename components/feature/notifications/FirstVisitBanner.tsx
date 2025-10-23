@@ -48,7 +48,7 @@ export default function FirstVisitBanner() {
     } else {
       setOpen(false);
     }
-  }, [permission]);
+  }, [permission, user]);
 
   const handleEnable = async () => {
     try {
