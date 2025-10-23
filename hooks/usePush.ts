@@ -42,7 +42,7 @@ async function getActiveRegistration(): Promise<ServiceWorkerRegistration | null
   }
 }
 
-export function usePush(vapidPublicKey: string) {
+export function usePush(vapidPublicKey: string, userId?: string) {
   /** 로딩 상태 (subscribe/unsubscribe 중 버튼 비활성 등 UX에 사용) */
   const [loading, setLoading] = useState(false);
   /** 브라우저 Notifications 권한: 'default' | 'granted' | 'denied' */
@@ -126,6 +126,7 @@ export function usePush(vapidPublicKey: string) {
 
       // 3) 기존 구독 재사용
       const existing = await reg.pushManager.getSubscription();
+
       if (existing) {
         await fetch("/api/push/subscribe", {
           method: "POST",
@@ -150,11 +151,12 @@ export function usePush(vapidPublicKey: string) {
       });
 
       setIsSubscribed(true);
+      await refresh();
       return true;
     } finally {
       setLoading(false);
     }
-  }, [vapidPublicKey]);
+  }, [vapidPublicKey, userId]);
 
   /** 구독 해제 */
   const unsubscribe = useCallback(async () => {
