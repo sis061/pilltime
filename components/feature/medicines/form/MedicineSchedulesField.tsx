@@ -284,7 +284,7 @@ export function MedicineSchedulesField() {
                                 );
                             }}
                             onBlur={field.onBlur}
-                            className="!px-2 !border-pilltime-grayLight shadow-sm w-[95%] !ml-1 "
+                            className="!px-2 !border-pilltime-grayLight !shadow-sm max-w-[90%] !ml-1 "
                             aria-label="복용 시간"
                           />
                         ) : (
