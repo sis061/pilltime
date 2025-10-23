@@ -18,10 +18,35 @@ function b64ToU8(base64: string) {
   return out;
 }
 
+/** SHA-256 → base64url (VAPID 공개키 변경 감지용) */
+async function sha256b64url(input: string) {
+  const enc = new TextEncoder().encode(input);
+  const buf = await crypto.subtle.digest("SHA-256", enc);
+  const bytes = new Uint8Array(buf);
+  let s = "";
+  for (const b of bytes) s += String.fromCharCode(b);
+  return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+/** 플랫폼 라벨링 (서버 디버깅용) */
+function detectPlatform(endpoint: string) {
+  if (endpoint.includes("fcm.googleapis.com")) return "chrome_like";
+  if (endpoint.includes("web.push.apple.com")) return "apple_push";
+  return "unknown";
+}
+
+function isBrowserOK() {
+  return (
+    typeof window !== "undefined" &&
+    "Notification" in window &&
+    "serviceWorker" in navigator &&
+    "PushManager" in window
+  );
+}
+
 /** 활성화된 ServiceWorkerRegistration을 확보 */
 async function getActiveRegistration(): Promise<ServiceWorkerRegistration | null> {
-  if (typeof window === "undefined" || !("serviceWorker" in navigator))
-    return null;
+  if (!isBrowserOK()) return null;
 
   try {
     let reg = await navigator.serviceWorker.getRegistration();
@@ -35,11 +60,25 @@ async function getActiveRegistration(): Promise<ServiceWorkerRegistration | null
     );
     const ready = await Promise.race([navigator.serviceWorker.ready, timeout]);
 
-    return ready || reg;
+    return (ready as ServiceWorkerRegistration | null) || reg;
   } catch (err) {
     console.error("[PillTime SW] registration failed:", err);
     return null;
   }
+}
+
+/** 안전한 toJSON (사파리/일부 브라우저 호환) */
+function subToJSON(sub: PushSubscription) {
+  const json = sub.toJSON();
+  // 일부 구현체 보호: 키가 없는 경우 방어
+  return {
+    endpoint: json.endpoint,
+    expirationTime: json.expirationTime ?? null,
+    keys: {
+      p256dh: json.keys?.p256dh ?? "",
+      auth: json.keys?.auth ?? "",
+    },
+  };
 }
 
 export function usePush(vapidPublicKey: string, userId?: string) {
@@ -55,9 +94,9 @@ export function usePush(vapidPublicKey: string, userId?: string) {
   const [isSubscribed, setIsSubscribed] = useState<boolean | null>(null);
 
   // (선택) 진입 시 사전 등록 시도 — dev에선 아무 일도 안 함
+  // 프로덕션에서만 SW 사전 등록
   useEffect(() => {
-    if (typeof window === "undefined" || !("serviceWorker" in navigator))
-      return;
+    if (!isBrowserOK()) return;
     if (process.env.NODE_ENV === "production") {
       navigator.serviceWorker
         .register("/sw.js", { scope: "/" })
@@ -78,7 +117,7 @@ export function usePush(vapidPublicKey: string, userId?: string) {
 
   /** 현재 구독 상태를 갱신(초기 마운트/권한 변화 시) */
   const refresh = useCallback(async () => {
-    if (typeof window === "undefined" || !("serviceWorker" in navigator)) {
+    if (!isBrowserOK()) {
       setIsSubscribed(false);
       return;
     }
@@ -89,80 +128,97 @@ export function usePush(vapidPublicKey: string, userId?: string) {
     }
     const sub = await reg.pushManager.getSubscription();
     setIsSubscribed(!!sub);
+    setPermission(Notification.permission);
   }, []);
 
   useEffect(() => {
-    setPermission(
-      typeof Notification !== "undefined" ? Notification.permission : "default"
-    );
     refresh();
+    // 탭 포커스 돌아올 때 상태 동기화 (권한/구독이 밖에서 바뀐 경우 대비)
+    const onVis = () => document.visibilityState === "visible" && refresh();
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
   }, [refresh]);
+
+  /** ✅ VAPID 키 변경 감지 → 기존 구독 강제 해지 후 재구독 */
+  const ensureVAPIDMatch = useCallback(
+    async (reg: ServiceWorkerRegistration) => {
+      const sub = await reg.pushManager.getSubscription();
+      const currentHash = await sha256b64url(vapidPublicKey);
+      const stored = localStorage.getItem("vapid:keyhash");
+
+      if (stored && stored !== currentHash && sub) {
+        // 공개키가 바뀌었는데 구독이 남아있음 → 서버 401/403 방지 위해 정리
+        try {
+          await fetch("/api/push/unsubscribe", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ endpoint: sub.endpoint }),
+          });
+        } catch {}
+        try {
+          await sub.unsubscribe();
+        } catch {}
+      }
+
+      localStorage.setItem("vapid:keyhash", currentHash);
+    },
+    [vapidPublicKey]
+  );
 
   /** 구독 생성 */
   const subscribe = useCallback(async () => {
     setLoading(true);
     try {
-      if (
-        !("Notification" in window) ||
-        !("serviceWorker" in navigator) ||
-        !("PushManager" in window)
-      ) {
+      if (!isBrowserOK())
         throw new Error("이 브라우저는 Web Push를 지원하지 않습니다.");
-      }
 
-      // 1) SW 등록/활성 확보
+      // 1) SW 확보 + VAPID 키 정합성 체크
       const reg = await getActiveRegistration();
-      if (!reg) {
-        // dev 환경이거나 등록 실패
-        throw new Error("Service Worker가 활성화되지 않았습니다.");
-      }
+      if (!reg) throw new Error("Service Worker가 활성화되지 않았습니다.");
+      await ensureVAPIDMatch(reg);
 
-      // 2) 권한 요청
+      // 2) 권한
       let perm: NotificationPermission = Notification.permission;
       if (perm === "default") perm = await Notification.requestPermission();
       setPermission(perm);
       if (perm !== "granted")
         throw new Error("알림 권한이 허용되지 않았습니다.");
 
-      // 3) 기존 구독 재사용
-      const existing = await reg.pushManager.getSubscription();
+      // 3) 재사용 가능한 기존 구독?
+      let sub = await reg.pushManager.getSubscription();
 
-      if (existing) {
-        await fetch("/api/push/subscribe", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify(existing.toJSON()),
+      // 4) 없으면 신규 구독
+      if (!sub) {
+        sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: b64ToU8(vapidPublicKey),
         });
-        setIsSubscribed(true);
-        return true;
       }
 
-      // 4) 신규 구독
-      const sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: b64ToU8(vapidPublicKey),
-      });
+      // 5) 서버에 upsert(+메타)
+      const json = subToJSON(sub);
+      const platform = detectPlatform(json.endpoint!);
+      const ua = typeof navigator !== "undefined" ? navigator.userAgent : null;
 
-      // 5) 서버 저장
       await fetch("/api/push/subscribe", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(sub.toJSON()),
+        body: JSON.stringify({ ...json, ua, platform }),
       });
 
       setIsSubscribed(true);
-      await refresh();
       return true;
     } finally {
       setLoading(false);
+      refresh();
     }
-  }, [vapidPublicKey, userId]);
+  }, [vapidPublicKey, ensureVAPIDMatch, refresh]);
 
   /** 구독 해제 */
   const unsubscribe = useCallback(async () => {
     setLoading(true);
     try {
-      if (!("serviceWorker" in navigator)) {
+      if (!isBrowserOK()) {
         setIsSubscribed(false);
         return true;
       }
@@ -173,12 +229,16 @@ export function usePush(vapidPublicKey: string, userId?: string) {
       }
       const sub = await reg.pushManager.getSubscription();
       if (sub) {
-        await fetch("/api/push/unsubscribe", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ endpoint: sub.endpoint }),
-        }).catch(() => {});
-        await sub.unsubscribe().catch(() => {});
+        try {
+          await fetch("/api/push/unsubscribe", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ endpoint: sub.endpoint }),
+          });
+        } catch {}
+        try {
+          await sub.unsubscribe();
+        } catch {}
       }
       setIsSubscribed(false);
       return true;
@@ -187,5 +247,19 @@ export function usePush(vapidPublicKey: string, userId?: string) {
     }
   }, []);
 
-  return { permission, isSubscribed, subscribe, unsubscribe, loading, refresh };
+  /** 강제 재구독(설정 화면에서 ‘연결 새로고침’ 같은 UX에 사용) */
+  const resubscribe = useCallback(async () => {
+    await unsubscribe();
+    return subscribe();
+  }, [unsubscribe, subscribe]);
+
+  return {
+    permission,
+    isSubscribed,
+    subscribe,
+    unsubscribe,
+    resubscribe,
+    loading,
+    refresh,
+  };
 }
