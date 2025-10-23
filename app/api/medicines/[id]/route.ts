@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+// app/api/medicines/[id]/route.ts
+import { NextResponse, type NextRequest } from "next/server";
+import { createRouteSupabaseClient } from "@/lib/supabase/route";
 import { revalidateMonthIndicator } from "@/lib/calendar/indicator";
 import { toHHMMSS, toYYYYMMDD } from "@/lib/date";
 
@@ -8,19 +9,31 @@ export const runtime = "nodejs";
 /* -----------
  * GET
  * ----------- */
-
 export async function GET(
-  req: Request,
-  context: { params: Promise<{ id: string }> }
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await context.params;
-  const supabase = await createServerSupabaseClient();
+  const { id } = await params;
+  const { supabase, res } = await createRouteSupabaseClient(req);
+
   const {
     data: { user },
     error: authError,
   } = await supabase.auth.getUser();
+
   if (authError || !user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json(
+      { error: "Unauthorized" },
+      { status: 401, headers: res.headers }
+    );
+  }
+
+  const idNum = Number(id);
+  if (!Number.isFinite(idNum)) {
+    return NextResponse.json(
+      { error: "Invalid id" },
+      { status: 400, headers: res.headers }
+    );
   }
 
   const { data, error } = await supabase
@@ -49,87 +62,100 @@ export async function GET(
       )
     `
     )
-    .eq("id", Number(id))
+    .eq("id", idNum)
     .eq("user_id", user.id)
     .is("deleted_at", null)
     .filter("medicine_schedules.deleted_at", "is", null)
     .maybeSingle();
 
-  if (error)
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    return NextResponse.json(
+      { error: error.message },
+      { status: 500, headers: res.headers }
+    );
+  }
 
-  return NextResponse.json(data);
+  return NextResponse.json(data, { headers: res.headers });
 }
 
 /* -----------
  * PUT
  * ----------- */
-
 export async function PUT(
-  req: Request,
-  context: { params: Promise<{ id: string }> }
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await context.params;
-  const supabase = await createServerSupabaseClient();
+  const { id } = await params;
+  const { supabase, res } = await createRouteSupabaseClient(req);
+
   const {
     data: { user },
     error: authError,
   } = await supabase.auth.getUser();
+
   if (authError || !user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json(
+      { error: "Unauthorized" },
+      { status: 401, headers: res.headers }
+    );
+  }
+
+  const idNum = Number(id);
+  if (!Number.isFinite(idNum)) {
+    return NextResponse.json(
+      { error: "Invalid id" },
+      { status: 400, headers: res.headers }
+    );
   }
 
   const body = await req.json();
 
-  // 이 요청에서 무효화할 월(YYYY-MM)을 모으는 Set
+  // 무효화할 월(YYYY-MM) 수집
   const ymToInvalidate = new Set<string>();
-  // 오늘~+7일 월(기본 세이프가드: 이름만 바뀐 경우 등)
   const today = new Date();
   const next7 = new Date(today);
   next7.setDate(today.getDate() + 7);
-  const todayYmd = today.toISOString().slice(0, 10); // YYYY-MM-DD
-  const next7Ymd = next7.toISOString().slice(0, 10); // YYYY-MM-DD
+  const todayYmd = today.toISOString().slice(0, 10);
+  const next7Ymd = next7.toISOString().slice(0, 10);
   ymToInvalidate.add(todayYmd.slice(0, 7));
   ymToInvalidate.add(next7Ymd.slice(0, 7));
 
-  // -------------------------------
-  // 1️⃣ 약 정보 업데이트 (dirty만)
-  // -------------------------------
-
-  const medPatch: any = {
+  // 1) 약 정보 업데이트 (dirty만)
+  const medPatch: Record<string, any> = {
     updated_at: new Date().toISOString(),
   };
   if (body.name !== undefined) medPatch.name = body.name;
-  if (body.description !== undefined)
+  if (body.description !== undefined) {
     medPatch.description =
       body.description?.map((d: { value: string }) => d.value) ?? [];
+  }
   if (body.imageUrl !== undefined) medPatch.image_url = body.imageUrl ?? null;
 
   if (Object.keys(medPatch).length > 1) {
     const { error: medError } = await supabase
       .from("medicines")
       .update(medPatch)
-      .eq("id", Number(id))
+      .eq("id", idNum)
       .eq("user_id", user.id)
       .is("deleted_at", null);
 
-    if (medError)
-      return NextResponse.json({ error: medError.message }, { status: 500 });
+    if (medError) {
+      return NextResponse.json(
+        { error: medError.message },
+        { status: 500, headers: res.headers }
+      );
+    }
 
-    // 이름이 바뀌면 배지 이니셜이 바뀌므로 최소 현재/다음 월은 무효화
+    // 이름 변경 시 현재/다음 월 무효화
     if (body.name !== undefined) {
       ymToInvalidate.add(todayYmd.slice(0, 7));
       ymToInvalidate.add(next7Ymd.slice(0, 7));
     }
   }
 
-  // -------------------------------
-  // 2️⃣ 스케줄 diff 부분 적용
-  // -------------------------------
-
+  // 2) 스케줄 diff 적용
   const { schedules_changed, schedules_patch, repeated_pattern } = body ?? {};
   if (schedules_changed && schedules_patch) {
-    // 기본 RP (프론트에서 넘어온 값, 없으면 DAILY)
     const baseRP = {
       tz: repeated_pattern?.tz ?? "Asia/Seoul",
       type: repeated_pattern?.type ?? "DAILY",
@@ -137,25 +163,23 @@ export async function PUT(
       days_of_month: repeated_pattern?.days_of_month ?? [],
     };
 
-    // 공통: 7일 윈도우
     const now = new Date();
-    const fromStr = now.toISOString().slice(0, 10); // YYYY-MM-DD
+    const fromStr = now.toISOString().slice(0, 10);
     const to = new Date(now);
     to.setDate(now.getDate() + 7);
     const toStr = to.toISOString().slice(0, 10);
 
-    // 이 윈도우가 걸치는 월 수집
     ymToInvalidate.add(fromStr.slice(0, 7));
     ymToInvalidate.add(toStr.slice(0, 7));
 
-    // --- INSERT ---
+    // INSERT
     if (
       Array.isArray(schedules_patch.insert) &&
       schedules_patch.insert.length
     ) {
       const insertRows = schedules_patch.insert.map((s: any) => ({
         user_id: user.id,
-        medicine_id: Number(id),
+        medicine_id: idNum,
         time: toHHMMSS(s.time),
         repeated_pattern: s.repeated_pattern ?? baseRP,
         is_notify: true,
@@ -165,12 +189,15 @@ export async function PUT(
         .from("medicine_schedules")
         .insert(insertRows)
         .select("id");
-      if (error)
-        return NextResponse.json({ error: error.message }, { status: 500 });
 
-      // 새 스케줄만 로그 생성
+      if (error) {
+        return NextResponse.json(
+          { error: error.message },
+          { status: 500, headers: res.headers }
+        );
+      }
+
       for (const row of inserted ?? []) {
-        // 미래 로그 리셋(예방적) 후 생성
         await supabase.rpc("reset_future_logs_for_schedule", {
           p_schedule_id: row.id,
         });
@@ -187,13 +214,13 @@ export async function PUT(
       }
     }
 
-    // --- UPDATE ---
+    // UPDATE
     if (
       Array.isArray(schedules_patch.update) &&
       schedules_patch.update.length
     ) {
       for (const u of schedules_patch.update) {
-        const patch: any = {};
+        const patch: Record<string, any> = {};
         if (u.time !== undefined) patch.time = toHHMMSS(u.time);
         if (u.repeated_pattern !== undefined)
           patch.repeated_pattern = u.repeated_pattern;
@@ -203,14 +230,18 @@ export async function PUT(
             .from("medicine_schedules")
             .update({ ...patch, updated_at: new Date().toISOString() })
             .eq("id", u.id)
-            .eq("medicine_id", Number(id))
+            .eq("medicine_id", idNum)
             .eq("user_id", user.id)
             .is("deleted_at", null);
-          if (error)
-            return NextResponse.json({ error: error.message }, { status: 500 });
+
+          if (error) {
+            return NextResponse.json(
+              { error: error.message },
+              { status: 500, headers: res.headers }
+            );
+          }
         }
 
-        // 해당 스케줄의 미래 로그만 리셋 후 재생성
         await supabase.rpc("reset_future_logs_for_schedule", {
           p_schedule_id: u.id,
         });
@@ -227,108 +258,105 @@ export async function PUT(
       }
     }
 
-    // --- DELETE ---
+    // DELETE
     if (
       Array.isArray(schedules_patch.delete) &&
       schedules_patch.delete.length
     ) {
       const delIds: number[] = schedules_patch.delete;
 
-      const today = new Date().toISOString().slice(0, 10);
-      // // 미래 로그만 삭제 (과거는 보존)
-      // const { error: delLogsErr } = await supabase
-      //   .from("intake_logs")
-      //   .delete()
-      //   .in("schedule_id", delIds)
-      //   .gte("date", today);
-      // if (delLogsErr)
-      //   return NextResponse.json(
-      //     { error: delLogsErr.message },
-      //     { status: 500 }
-      //   );
-
-      //    내일 이후 전부 삭제 + 오늘은 'scheduled'만 삭제(체크 기록 보존)
       for (const sid of delIds) {
         const { error: resetErr } = await supabase.rpc(
           "reset_future_logs_for_schedule",
-          { p_schedule_id: sid }
+          {
+            p_schedule_id: sid,
+          }
         );
         if (resetErr) {
           return NextResponse.json(
             { error: resetErr.message },
-            { status: 500 }
+            { status: 500, headers: res.headers }
           );
         }
       }
 
-      // 스케줄 soft-delete
       const { error: softErr } = await supabase
         .from("medicine_schedules")
         .update({ deleted_at: new Date().toISOString(), is_notify: false })
         .in("id", delIds)
-        .eq("medicine_id", Number(id))
+        .eq("medicine_id", idNum)
         .eq("user_id", user.id)
         .is("deleted_at", null);
-      if (softErr)
-        return NextResponse.json({ error: softErr.message }, { status: 500 });
 
-      // 삭제의 영향도 현재/다음 월에 걸칠 수 있으니 기본 윈도우 월을 다시 보장
-      ymToInvalidate.add(today.slice(0, 7));
-      const plus7 = new Date();
-      plus7.setDate(plus7.getDate() + 7);
+      if (softErr) {
+        return NextResponse.json(
+          { error: softErr.message },
+          { status: 500, headers: res.headers }
+        );
+      }
+
+      const base = new Date();
+      ymToInvalidate.add(base.toISOString().slice(0, 7));
+      const plus7 = new Date(base);
+      plus7.setDate(base.getDate() + 7);
       ymToInvalidate.add(plus7.toISOString().slice(0, 7));
     }
   }
 
-  // -------------------------------
-  // 3️⃣ 완료 응답 + 월 캐시 무효화
-  // -------------------------------
-  // 수집한 월(YYYY-MM)들에 대해 revalidate
+  // 3) 월 캐시 무효화
   for (const ym of ymToInvalidate) {
     await revalidateMonthIndicator(user.id, `${ym}-01`);
   }
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ success: true }, { headers: res.headers });
 }
 
 /* -----------
  * DELETE
  * ----------- */
-
 export async function DELETE(
-  req: Request,
-  context: { params: Promise<{ id: string }> }
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await context.params;
-  const supabase = await createServerSupabaseClient();
+  const { id } = await params;
+  const { supabase, res } = await createRouteSupabaseClient(req);
+
   const {
     data: { user },
     error: authError,
   } = await supabase.auth.getUser();
+
   if (authError || !user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json(
+      { error: "Unauthorized" },
+      { status: 401, headers: res.headers }
+    );
   }
 
-  if (!user)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const idNum = Number(id);
+  if (!Number.isFinite(idNum)) {
+    return NextResponse.json(
+      { error: "Invalid id" },
+      { status: 400, headers: res.headers }
+    );
+  }
 
-  // -------------------------------
-  // 1️⃣ 해당 약의 스케줄 ID 목록 조회
-  // -------------------------------
+  // 1) 스케줄 ID 목록
   const { data: schedules, error: scheduleError } = await supabase
     .from("medicine_schedules")
     .select("id")
-    .eq("medicine_id", Number(id))
+    .eq("medicine_id", idNum)
     .eq("user_id", user.id);
 
-  if (scheduleError)
-    return NextResponse.json({ error: scheduleError.message }, { status: 500 });
-
+  if (scheduleError) {
+    return NextResponse.json(
+      { error: scheduleError.message },
+      { status: 500, headers: res.headers }
+    );
+  }
   const scheduleIds = schedules?.map((s) => s.id) ?? [];
 
-  // -------------------------------
-  // 2️⃣ 미래 로그만 삭제 (과거 로그는 유지)
-  // -------------------------------
+  // 2) 미래 로그 삭제
   if (scheduleIds.length > 0) {
     const today = toYYYYMMDD(new Date(), "Asia/Seoul");
     const { error: logDeleteError } = await supabase
@@ -340,53 +368,40 @@ export async function DELETE(
     if (logDeleteError) {
       return NextResponse.json(
         { error: logDeleteError.message },
-        { status: 500 }
+        { status: 500, headers: res.headers }
       );
     }
   }
 
-  // -------------------------------
-  // 3️⃣ 스케줄 soft delete
-  // -------------------------------
+  // 3) 스케줄 soft delete
   const { error: scheduleSoftDelError } = await supabase
     .from("medicine_schedules")
-    .update({
-      deleted_at: new Date().toISOString(),
-      is_notify: false,
-    })
-    .eq("medicine_id", Number(id))
+    .update({ deleted_at: new Date().toISOString(), is_notify: false })
+    .eq("medicine_id", idNum)
     .eq("user_id", user.id);
 
   if (scheduleSoftDelError) {
     return NextResponse.json(
       { error: scheduleSoftDelError.message },
-      { status: 500 }
+      { status: 500, headers: res.headers }
     );
   }
 
-  // -------------------------------
-  // 4️⃣ 약 soft delete
-  // -------------------------------
+  // 4) 약 soft delete
   const { error: medicineSoftDelError } = await supabase
     .from("medicines")
-    .update({
-      deleted_at: new Date().toISOString(),
-      is_active: false,
-    })
-    .eq("id", Number(id))
+    .update({ deleted_at: new Date().toISOString(), is_active: false })
+    .eq("id", idNum)
     .eq("user_id", user.id);
 
   if (medicineSoftDelError) {
     return NextResponse.json(
       { error: medicineSoftDelError.message },
-      { status: 500 }
+      { status: 500, headers: res.headers }
     );
   }
 
-  // -------------------------------
-  // 5️⃣ 완료 + 월 캐시 무효화
-  // -------------------------------
-  // 삭제의 영향은 보통 오늘/다음주에 집중 → 두 달만 무효화
+  // 5) 월 캐시 무효화 (오늘/다음주)
   const base = new Date();
   const ym1 = base.toISOString().slice(0, 7);
   const base2 = new Date(base);
@@ -396,5 +411,5 @@ export async function DELETE(
   await revalidateMonthIndicator(user.id, `${ym1}-01`);
   await revalidateMonthIndicator(user.id, `${ym2}-01`);
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ success: true }, { headers: res.headers });
 }

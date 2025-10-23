@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
-import { createServerClient } from "@supabase/ssr";
+// middleware.ts
+import { NextResponse, type NextRequest } from "next/server";
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
 
 const PUBLIC_PATHS = [
   "/login",
@@ -8,9 +8,14 @@ const PUBLIC_PATHS = [
   "/favicon.ico",
   "/robots.txt",
   "/sitemap.xml",
+  "/sw.js",
+  "/manifest.json",
+  "/icon", // /icon-192.png 등
+  "/apple-touch-icon", // iOS 아이콘
 ];
 
 export async function middleware(req: NextRequest) {
+  // 이 응답 객체에 Supabase가 Set-Cookie를 기록하게 함
   const res = NextResponse.next();
 
   const supabase = createServerClient(
@@ -18,16 +23,15 @@ export async function middleware(req: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() {
-          return req.cookies.getAll().map((c) => ({
-            name: c.name,
-            value: c.value,
-          }));
+        // ✅ Next 15: req/res 기반 동기 접근 사용
+        get(name: string) {
+          return req.cookies.get(name)?.value ?? null;
         },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            res.cookies.set({ name, value, ...options });
-          });
+        set(name: string, value: string, options: CookieOptions) {
+          res.cookies.set(name, value, options);
+        },
+        remove(name: string, options: CookieOptions) {
+          res.cookies.set(name, "", { ...options, maxAge: 0 });
         },
       },
     }
@@ -35,34 +39,44 @@ export async function middleware(req: NextRequest) {
 
   const { pathname, search } = req.nextUrl;
 
-  // 퍼블릭 경로는 통과
-  const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p));
-  if (isPublic) return res;
+  // 퍼블릭 경로는 세션 검사 없이 통과
+  if (
+    PUBLIC_PATHS.some((p) => pathname.startsWith(p)) ||
+    pathname.startsWith("/_next") || // 정적 리소스
+    pathname.startsWith("/images") // 정적 이미지 경로가 있다면
+  ) {
+    return res;
+  }
 
-  // 세션 검사
+  // 👇 이 호출이 중요: 만료/리프레시 시 Set-Cookie가 res에 기록됨
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // 1) 비로그인 & 보호 경로 접근 → /login 으로 (원래 목적지 next 파라미터 유지)
+  // 비로그인 상태에서 보호 경로 접근 → /login?next=...
   if (!user) {
     const redirectUrl = new URL("/login", req.url);
     const next = pathname + (search || "");
     redirectUrl.searchParams.set("next", next);
-    return NextResponse.redirect(redirectUrl);
+    return NextResponse.redirect(redirectUrl, { headers: res.headers }); // ✅ 쿠키 전달
   }
 
-  // 2) 로그인 상태에서 /login 접근 시 → 루트로 돌려보내기
-  if (user && pathname.startsWith("/login")) {
+  // 로그인 상태에서 /login 접근 → 원래 목적지(or /)로
+  if (pathname.startsWith("/login")) {
     const to = req.nextUrl.searchParams.get("next") || "/";
-    return NextResponse.redirect(new URL(to, req.url));
+    return NextResponse.redirect(new URL(to, req.url), {
+      headers: res.headers,
+    }); // ✅ 쿠키 전달
   }
 
+  // 통과
   return res;
 }
 
+// 정적 파일/이미지 등은 미들웨어 제외 (매처에서 1차 필터)
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)",
+    // _next, favicon 등 제외
+    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|sw.js|manifest.json|icon|apple-touch-icon).*)",
   ],
 };

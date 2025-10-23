@@ -1,6 +1,6 @@
 // app/api/medicines/route.ts
-import { NextResponse } from "next/server";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { NextResponse, type NextRequest } from "next/server";
+import { createRouteSupabaseClient } from "@/lib/supabase/route";
 import { revalidateMonthIndicator } from "@/lib/calendar/indicator";
 import { sevenDayWindow } from "@/lib/date";
 
@@ -9,23 +9,12 @@ import type { TablesInsert } from "@/types_db";
 
 export const runtime = "nodejs";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient();
-    const body: unknown = await req.json();
+    // ✅ Route Handler 전용: req에서 읽고 res에 Set-Cookie 기록
+    const { supabase, res } = await createRouteSupabaseClient(req);
 
-    // ✅ Zod 검증
-    const parsed = MedicineSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: parsed.error.flatten() },
-        { status: 400 }
-      );
-    }
-    const { name, description, imageUrl, schedules, repeated_pattern } =
-      parsed.data;
-
-    // 1️⃣ 로그인 유저 확인
+    // 1) 로그인 유저 확인 (우선 인증 확인)
     const {
       data: { user },
       error: userError,
@@ -34,16 +23,29 @@ export async function POST(req: Request) {
     if (userError || !user) {
       return NextResponse.json(
         { error: "로그인이 필요합니다." },
-        { status: 401 }
+        { status: 401, headers: res.headers } // ✅ 쿠키 전파
       );
     }
 
-    // 2️⃣ medicines insert (Supabase 타입 사용)
+    // 2) 본문 파싱 + Zod 검증
+    const body: unknown = await req.json();
+    const parsed = MedicineSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.flatten() },
+        { status: 400, headers: res.headers } // ✅ 쿠키 전파
+      );
+    }
+
+    const { name, description, imageUrl, schedules, repeated_pattern } =
+      parsed.data;
+
+    // 3) medicines insert
     const newMedicine: TablesInsert<"medicines"> = {
       user_id: user.id,
       name,
       description: description?.map((d) => String(d.value)) ?? [],
-      image_url: imageUrl && typeof imageUrl === "string" ? imageUrl : "",
+      image_url: typeof imageUrl === "string" ? imageUrl : "",
       is_active: true,
     };
 
@@ -56,11 +58,11 @@ export async function POST(req: Request) {
     if (medicineError || !medicine) {
       return NextResponse.json(
         { error: medicineError?.message ?? "medicine 생성 실패" },
-        { status: 500 }
+        { status: 500, headers: res.headers } // ✅ 쿠키 전파
       );
     }
 
-    // 3️⃣ schedules insert
+    // 4) schedules insert (시간 중복 제거 + 정렬)
     const sortedSchedules = Array.from(
       new Map(
         [...schedules]
@@ -91,14 +93,11 @@ export async function POST(req: Request) {
     if (scheduleError || !scheduleRows) {
       return NextResponse.json(
         { error: scheduleError?.message ?? "스케줄 생성 실패" },
-        { status: 500 }
+        { status: 500, headers: res.headers } // ✅ 쿠키 전파
       );
     }
 
-    // 4️⃣ 7일치 로그 생성 (Supabase RPC)
-    //    → 각 스케줄에 대해 reset + generate 실행
-    //    → 끝난 뒤, 생성 범위가 걸치는 "월"만 캐시 무효화
-    // [NEW] 무효화할 월(YYYY-MM)을 모으는 Set
+    // 5) 7일치 로그 생성 + 월별 캐시 무효화 수집
     const ymToInvalidate = new Set<string>();
 
     for (const s of scheduleRows) {
@@ -125,23 +124,26 @@ export async function POST(req: Request) {
         console.log(`✅ ${insertedCount} logs generated for schedule ${s.id}`);
       }
 
-      // 7일 범위가 걸치는 월만 dedupe 수집
       ymToInvalidate.add(fromStr.slice(0, 7)); // "YYYY-MM"
       ymToInvalidate.add(toStr.slice(0, 7));
     }
 
-    // 무효화: 수집된 월만 한 번씩 revalidate
+    // 6) 해당 월만 캐시 무효화
     for (const ym of ymToInvalidate) {
       await revalidateMonthIndicator(user.id, `${ym}-01`);
     }
 
-    const res = NextResponse.json(medicine, { status: 201 });
-    res.headers.set("Location", `/medicines/${medicine.id}`);
-    return res;
+    // 7) 성공 응답 (Location 헤더 포함) + Set-Cookie 전파
+    const json = NextResponse.json(medicine, {
+      status: 201,
+      headers: res.headers, // ✅ 쿠키 전파
+    });
+    json.headers.set("Location", `/medicines/${medicine.id}`);
+    return json;
   } catch (err: any) {
     return NextResponse.json(
       { error: err?.message ?? "알 수 없는 오류" },
-      { status: 500 }
+      { status: 500 } // 여긴 인증 쿠키 관여 X이므로 headers 생략 가능
     );
   }
 }

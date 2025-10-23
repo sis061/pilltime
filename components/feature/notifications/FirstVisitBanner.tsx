@@ -16,8 +16,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { usePush } from "@/hooks/usePush"; // ✅ 경로 업데이트 반영
 import { BellRing } from "lucide-react";
+import { useUserStore } from "@/store/useUserStore";
 
 export default function FirstVisitBanner() {
+  const user = useUserStore((s) => s.user);
   const vapid = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!;
   const { permission, subscribe, loading } = usePush(vapid);
 
@@ -41,7 +43,7 @@ export default function FirstVisitBanner() {
     // 이미 허용이면 X, 한 번 본 적 있으면 X
     const prompted =
       typeof window !== "undefined" && localStorage.getItem("pt:notiPrompted");
-    if (permission !== "granted" && !prompted) {
+    if (user?.id && permission !== "granted" && !prompted) {
       setOpen(true);
     } else {
       setOpen(false);

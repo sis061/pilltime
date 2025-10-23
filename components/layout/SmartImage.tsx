@@ -89,7 +89,7 @@ export default function SmartImage({
     priority,
     loading,
     unoptimized,
-    onLoadingComplete: () => {
+    onLoad: () => {
       setLoaded(true);
       onLoad?.();
     },

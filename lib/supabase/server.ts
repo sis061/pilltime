@@ -1,10 +1,10 @@
-// utils/supabase/server.ts
+// lib/supabase/server.ts
 import { cookies } from "next/headers";
-import { createServerClient } from "@supabase/ssr";
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import type { Database } from "../../types_db";
-import { NextResponse } from "next/server";
 
-export async function createServerSupabaseClient(res?: NextResponse) {
+export async function createServerSupabaseClient() {
+  // ✅ Next.js 15: 반드시 await
   const cookieStore = await cookies();
 
   return createServerClient<Database>(
@@ -12,19 +12,12 @@ export async function createServerSupabaseClient(res?: NextResponse) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() {
-          return cookieStore.getAll().map(({ name, value }) => ({
-            name,
-            value,
-          }));
+        get(name: string) {
+          return cookieStore.get(name)?.value ?? null;
         },
-        setAll(cookiesToSet) {
-          if (res) {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              res.cookies.set(name, value, options);
-            });
-          }
-        },
+        // Server Component에선 쿠키 쓰기가 금지될 수 있으므로 no-op로 둡니다.
+        set(_name: string, _value: string, _options: CookieOptions) {},
+        remove(_name: string, _options: CookieOptions) {},
       },
     }
   );
