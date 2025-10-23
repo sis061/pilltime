@@ -223,7 +223,7 @@ export function MedicineSchedulesField() {
 
           {fields.map((f, index) => (
             <div key={f.__key} className="flex flex-col gap-2 items-center">
-              <div className="flex gap-2 items-center w-full">
+              <div className="flex gap-2 items-center justify-between w-full">
                 {/* ✅ 도메인 PK(id) 숨김 input → diff용으로 서버에 항상 전달 */}
                 <input
                   type="hidden"
@@ -283,7 +283,7 @@ export function MedicineSchedulesField() {
                                 );
                             }}
                             onBlur={field.onBlur}
-                            className="!px-2 !py-2 shadow-sm w-[98%] !ml-1 rounded-md border border-transparent bg-white"
+                            className="!px-2 !py-2 shadow-sm w-[95%] !ml-1 rounded-md border border-transparent bg-white"
                             aria-label="복용 시간"
                           />
                         ) : (
