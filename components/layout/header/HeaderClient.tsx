@@ -237,6 +237,43 @@ export default function HeaderClient({
     });
   }
 
+  // async function reconnectPush() {
+  //   if (permission === "denied") {
+  //     toast.error(
+  //       "브라우저에서 알림이 차단되어 있어요. 사이트 설정에서 허용으로 바꿔주세요."
+  //     );
+  //     return;
+  //   }
+  //   try {
+  //     const reg = await navigator.serviceWorker.ready;
+  //     const old = await reg.pushManager.getSubscription();
+  //     if (old) {
+  //       await fetch("/api/push/unsubscribe", {
+  //         method: "POST",
+  //         headers: { "content-type": "application/json" },
+  //         body: JSON.stringify({ endpoint: old.endpoint }),
+  //       }).catch(() => {});
+  //       await old.unsubscribe().catch(() => {});
+  //     }
+  //     const ok = await subscribe(); // ← 새 endpoint 발급 + /api/push/subscribe upsert
+  //     if (!ok) throw new Error("resubscribe failed");
+
+  //     // (선택) 서버 전역 알림 ON
+  //     await fetch("/api/push/global", {
+  //       method: "PATCH",
+  //       headers: { "content-type": "application/json" },
+  //       body: JSON.stringify({ enabled: true }),
+  //     }).catch(() => {});
+
+  //     await refresh();
+  //     toast.success("푸시 재연결 완료!");
+  //   } catch (e) {
+  //     console.error("[reconnectPush] fail", e);
+  //     await refresh();
+  //     toast.error("푸시 재연결에 실패했어요. 잠시 후 다시 시도해 주세요.");
+  //   }
+  // }
+
   useEffect(() => {
     // 클라 마운트 후 서버 스냅샷과 동기화
     if (enabled === undefined) mutateGlobal(initialGlobalEnabled);

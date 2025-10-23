@@ -158,9 +158,9 @@ export async function POST(req: Request) {
         const payload = {
           title,
           body,
-          tag: `intake-${log.id}-${kind}`,
-          renotify: false,
-          requireInteraction: false,
+          tag: `intake-${log.id}-${kind}-${Date.now()}`, // 항상 새 태그
+          renotify: true, // 배너 보장
+          requireInteraction: true,
           data: { log_id: log.id, url: `/` },
         };
 
