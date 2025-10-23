@@ -125,7 +125,7 @@ export async function POST(req: Request) {
     if (userIds.length) {
       const { data: subs, error: subErr } = await sb
         .from("push_subscriptions")
-        .select("user_id, endpoint, p256dh, auth")
+        .select("id, user_id, endpoint, p256dh, auth")
         .in("user_id", userIds);
       if (subErr)
         return NextResponse.json(
@@ -164,27 +164,69 @@ export async function POST(req: Request) {
           data: { log_id: log.id, url: `/` },
         };
 
-        await Promise.all(
-          subs.map(async (s) => {
-            try {
-              await webpush.sendNotification(
-                {
-                  endpoint: s.endpoint,
-                  keys: { auth: s.auth, p256dh: s.p256dh },
-                } as any,
-                JSON.stringify(payload)
-              );
-            } catch (err: any) {
-              const msg = String(err?.message || err);
-              if (msg.includes("410") || msg.includes("404")) {
-                await sb
-                  .from("push_subscriptions")
-                  .delete()
-                  .eq("endpoint", s.endpoint);
-              }
+        // await Promise.all(
+        //   subs.map(async (s) => {
+        //     try {
+        //       await webpush.sendNotification(
+        //         {
+        //           endpoint: s.endpoint,
+        //           keys: { auth: s.auth, p256dh: s.p256dh },
+        //         } as any,
+        //         JSON.stringify(payload)
+        //       );
+        //     } catch (err: any) {
+        //       const msg = String(err?.message || err);
+        //       if (msg.includes("410") || msg.includes("404")) {
+        //         await sb
+        //           .from("push_subscriptions")
+        //           .delete()
+        //           .eq("endpoint", s.endpoint);
+        //       }
+        //     }
+        //   })
+        // );
+
+        for (const s of subs) {
+          try {
+            const res = await webpush.sendNotification(
+              {
+                endpoint: s.endpoint,
+                keys: { auth: s.auth, p256dh: s.p256dh },
+              } as any,
+              JSON.stringify(payload),
+              { TTL: 300 } // 드랍 방지: 5분
+            );
+            // (선택) 성공 마크
+            await sb
+              .from("push_subscriptions")
+              .update({ updated_at: new Date().toISOString() })
+              .eq("id", s.id);
+          } catch (e: any) {
+            const code = e?.statusCode ?? null;
+
+            // 실패 로그 남기기 (선택)
+            await sb.from("push_delivery_logs").insert({
+              user_id: log.user_id,
+              subscription_id: s.id,
+              log_id: log.id,
+              status_code: code,
+              error: String(e?.body || e?.message),
+            });
+
+            // ❗문자열 포함검사 대신 statusCode로 분기
+            if (code === 404 || code === 410) {
+              // 죽은 구독은 즉시 제거(고아 구독 누적 방지)
+              await sb.from("push_subscriptions").delete().eq("id", s.id);
+              continue;
             }
-          })
-        );
+            if (code === 401 || code === 403) {
+              // VAPID 불일치: 클라 재구독 유도(로그만)
+              console.warn("VAPID auth error for sub", s.id, code);
+            }
+            // 그외는 일단 스킵(다음 구독으로 진행)
+            console.warn("push error", s.id, code, e?.body || e?.message);
+          }
+        }
 
         try {
           await sb

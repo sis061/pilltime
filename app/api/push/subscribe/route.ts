@@ -40,6 +40,23 @@ export async function POST(req: NextRequest) {
   const { p256dh, auth } = keys;
 
   // endpoint unique upsert (DB에 unique index가 있어야 함)
+  // const { error } = await supabase.from("push_subscriptions").upsert(
+  //   {
+  //     user_id: user.id,
+  //     endpoint,
+  //     p256dh,
+  //     auth,
+  //     updated_at: new Date().toISOString(),
+  //   },
+  //   { onConflict: "endpoint" } // UNIQUE (endpoint) 인덱스와 매칭
+  // );
+
+  const ua = req.headers.get("user-agent") ?? null;
+  const platform = endpoint.includes("fcm.googleapis.com")
+    ? "chrome_like"
+    : endpoint.includes("web.push.apple.com")
+    ? "apple_push"
+    : "unknown";
   const { error } = await supabase.from("push_subscriptions").upsert(
     {
       user_id: user.id,
@@ -47,8 +64,11 @@ export async function POST(req: NextRequest) {
       p256dh,
       auth,
       updated_at: new Date().toISOString(),
+      // ↓ 테이블에 칼럼이 있으면 기록(없어도 무방)
+      ua,
+      platform,
     },
-    { onConflict: "endpoint" } // UNIQUE (endpoint) 인덱스와 매칭
+    { onConflict: "endpoint" }
   );
 
   if (error) {
