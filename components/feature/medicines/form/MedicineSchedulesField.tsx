@@ -135,7 +135,7 @@ export function MedicineSchedulesField() {
                     shouldTouch: true,
                   });
                 }}
-                className={`!px-4 !py-2 shadow-xs cursor-pointer  ${
+                className={`!px-4 !py-2 shadow-xs transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-95 ${
                   repeatedPattern.type === opt.value &&
                   "!bg-pilltime-blue !text-white "
                 }`}
@@ -171,7 +171,7 @@ export function MedicineSchedulesField() {
                     }
                   );
                 }}
-                className={`!p-2 w-[calc((100%/7)-0.43rem)] shadow-xs cursor-pointer ${
+                className={`!p-2 w-[calc((100%/7)-0.43rem)] shadow-xs transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-95 ${
                   selected && "!bg-pilltime-blue !text-white "
                 }`}
               >
@@ -206,7 +206,7 @@ export function MedicineSchedulesField() {
                     }
                   );
                 }}
-                className={`!p-2 w-[calc((100%/4)-0.43rem)] shadow-xs cursor-pointer ${
+                className={`!p-2 w-[calc((100%/4)-0.43rem)] shadow-xs transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-95 ${
                   selected && "!bg-pilltime-blue !text-white "
                 }`}
               >
@@ -284,7 +284,7 @@ export function MedicineSchedulesField() {
                                 );
                             }}
                             onBlur={field.onBlur}
-                            className="!px-2 !border-pilltime-grayLight !shadow-sm max-w-[90%] !ml-1 "
+                            className="!px-2 !border-pilltime-grayLight !shadow-md max-w-[90%] !ml-1 transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-95"
                             aria-label="복용 시간"
                           />
                         ) : (
@@ -339,7 +339,7 @@ export function MedicineSchedulesField() {
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="!text-red-500 cursor-pointer"
+                  className="!text-red-500 transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-95"
                   onClick={() => remove(index)}
                 >
                   삭제
@@ -353,7 +353,7 @@ export function MedicineSchedulesField() {
             type="button"
             variant="ghost"
             size="sm"
-            className="max-w-20 w-full self-center cursor-pointer"
+            className="max-w-20 w-full self-center transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-95"
             onClick={() => append({ id: null as any, time: "" } as any)}
           >
             추가

@@ -96,14 +96,14 @@ export function MedicineNotifyToggle({
           size={24}
           strokeWidth={2.5}
           color="#1F293775"
-          className="transition-transform duration-200 ease-in-out scale-100 hover:scale-110"
+          className="transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110"
         />
       ) : (
         <AlarmClock
           size={24}
           strokeWidth={2.5}
           color="#3B82F6"
-          className="transition-transform duration-200 ease-in-out scale-100 hover:scale-110"
+          className="transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110"
         />
       )}
 

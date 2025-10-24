@@ -39,7 +39,7 @@ export default function NavbarDrawer({
           <Button
             onClick={() => onOpenChange(false)}
             variant="ghost"
-            className="!font-bold !text-pilltime-violet"
+            className="!font-bold !text-pilltime-violet transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110"
           >
             닫기
           </Button>
@@ -65,7 +65,7 @@ export default function NavbarDrawer({
                   if (key === "logout") logout();
                   onOpenChange(false);
                 }}
-                className="font-bold cursor-pointer !text-pilltime-blue text-xs !p-2 h-8 flex"
+                className="font-bold !text-pilltime-blue text-xs !p-2 h-8 flex transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110"
               >
                 {Icon ? (
                   <Icon className="!mr-1 h-5 w-5" color="#3B82F6" />

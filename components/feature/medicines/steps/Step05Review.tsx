@@ -61,7 +61,7 @@ export function Step05Review() {
           type="button"
           size="sm"
           variant="ghost"
-          className="!text-pilltime-violet cursor-pointer"
+          className="!text-pilltime-violet transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110"
           onClick={() => {
             setReturnTo(activeStep);
             goToStep(0);
@@ -91,7 +91,7 @@ export function Step05Review() {
           type="button"
           size="sm"
           variant="ghost"
-          className="!text-pilltime-violet cursor-pointer"
+          className="!text-pilltime-violet transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110"
           onClick={() => {
             setReturnTo(activeStep);
             goToStep(1);
@@ -117,7 +117,7 @@ export function Step05Review() {
           type="button"
           size="sm"
           variant="ghost"
-          className="!text-pilltime-violet cursor-pointer"
+          className="!text-pilltime-violet transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110"
           onClick={() => {
             setReturnTo(activeStep);
             goToStep(2);
@@ -141,7 +141,7 @@ export function Step05Review() {
           type="button"
           size="sm"
           variant="ghost"
-          className="!text-pilltime-violet cursor-pointer"
+          className="!text-pilltime-violet transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110"
           onClick={() => {
             setReturnTo(activeStep);
             goToStep(2);
@@ -163,7 +163,7 @@ export function Step05Review() {
           type="button"
           size="sm"
           variant="ghost"
-          className="!text-pilltime-violet cursor-pointer"
+          className="!text-pilltime-violet transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110"
           onClick={() => {
             setReturnTo(activeStep);
             goToStep(3);

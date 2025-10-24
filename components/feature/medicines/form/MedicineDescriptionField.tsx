@@ -30,7 +30,7 @@ export function MedicineDescriptionField() {
             type="button"
             variant="ghost"
             size="sm"
-            className="!text-red-500 cursor-pointer"
+            className="!text-red-500 transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-95"
             onClick={() => remove(index)}
           >
             삭제
@@ -41,7 +41,7 @@ export function MedicineDescriptionField() {
         type="button"
         variant="ghost"
         size="sm"
-        className="max-w-12 w-full self-center cursor-pointer"
+        className="max-w-12 w-full self-center transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-95"
         onClick={() => append({ value: "" })}
       >
         추가

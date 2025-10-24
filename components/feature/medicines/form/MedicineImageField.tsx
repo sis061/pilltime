@@ -137,7 +137,7 @@ export function MedicineImageField() {
         <label className="text-sm font-bold">이미지</label>
         <div className="flex flex-col items-center justify-center gap-2">
           <div
-            className="w-40 h-40 border !border-pilltime-violet/50 rounded-md overflow-hidden relative"
+            className="w-40 h-40 border !border-pilltime-violet/50 rounded-md overflow-hidden relative transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-95"
             onClick={() => {
               if (!uploading) handleSelectFile();
             }}
@@ -148,7 +148,7 @@ export function MedicineImageField() {
             type="button"
             variant="ghost"
             size="sm"
-            className="max-w-12 w-full self-center cursor-pointer"
+            className="max-w-12 w-full self-center transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-95"
             onClick={handleSelectFile}
             disabled={uploading || isGLoading}
           >
@@ -168,7 +168,7 @@ export function MedicineImageField() {
             <Button
               variant="ghost"
               disabled={isGLoading}
-              className="font-bold cursor-pointer !text-pilltime-violet justify-self-start"
+              className="font-bold !text-pilltime-violet justify-self-start transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110"
               onClick={() => {
                 setRawFile(null);
                 setCropOpen(false);

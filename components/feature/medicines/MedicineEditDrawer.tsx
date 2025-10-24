@@ -1,7 +1,5 @@
 "use client";
 
-//TODO 캐싱
-
 import { useEffect, useRef, useState, useTransition } from "react";
 // ---- NEXT
 import { useParams, useRouter } from "next/navigation";
@@ -274,16 +272,16 @@ export default function MedicineEditDrawer({
             onClick={() => onOpenChange(false)}
             variant="ghost"
             disabled={busy}
-            className="!pr-2 font-bold !text-pilltime-violet"
+            className="!pr-2 font-bold !text-pilltime-violet transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110"
           >
             취소
           </Button>
-          <DrawerTitle className="text-md">정보 편집</DrawerTitle>
+          <DrawerTitle className="text-md">약 정보 편집</DrawerTitle>
           <Button
             type="submit"
             variant="ghost"
             disabled={busy}
-            className={`!pl-1 font-bold !text-pilltime-violet ${
+            className={`!pl-1 font-bold !text-pilltime-violet  transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110 ${
               busy && "opacity-50"
             }`}
             onClick={() => submitBtnRef.current?.click()}
@@ -312,9 +310,9 @@ export default function MedicineEditDrawer({
                 type="button"
                 variant="destructive"
                 disabled={busy}
-                className="!text-red-700 w-full bg-pilltime-grayDark/25"
+                className="!text-red-700 w-full bg-pilltime-grayDark/25 cursor-pointer"
               >
-                정보 삭제
+                약 삭제
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent className="bg-pilltime-grayLight !p-4 !rounded-lg">
@@ -327,11 +325,14 @@ export default function MedicineEditDrawer({
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter className="flex gap-2 !px-12 sm:!px-0">
-                <AlertDialogCancel className="!py-2 !px-4" disabled={busy}>
+                <AlertDialogCancel
+                  className="!py-2 !px-4 transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110"
+                  disabled={busy}
+                >
                   취소
                 </AlertDialogCancel>
                 <AlertDialogAction
-                  className="!py-2 !px-4 bg-red-500 !text-white"
+                  className="!py-2 !px-4 bg-red-500 !text-white transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110"
                   onClick={async () => {
                     try {
                       await deleteMedicine(String(id));

@@ -53,14 +53,14 @@ export function WizardHeader({
 
   return (
     <div className="flex w-full flex-col shadow-xs">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4 [&_button]:!text-pilltime-violet [&_button]:font-bold ">
         {/* 왼쪽 버튼 */}
         {isFirstStep ? (
           <Button
             type="button"
             onClick={onClose}
             variant="ghost"
-            className="!text-pilltime-violet font-bold cursor-pointer"
+            className="transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110"
           >
             취소
           </Button>
@@ -69,7 +69,7 @@ export function WizardHeader({
             type="button"
             onClick={previousStep}
             variant="ghost"
-            className="!text-pilltime-violet font-bold cursor-pointer"
+            className="transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110"
           >
             이전
           </Button>
@@ -87,7 +87,7 @@ export function WizardHeader({
             onClick={() =>
               submitBtnRef?.current && submitBtnRef.current?.click()
             }
-            className="!text-pilltime-violet font-bold cursor-pointer"
+            className="transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110"
           >
             저장
           </Button>
@@ -99,7 +99,7 @@ export function WizardHeader({
               goToStep(back ?? stepCount - 1);
             }}
             variant="ghost"
-            className="!text-pilltime-violet font-bold cursor-pointer"
+            className="transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110"
           >
             수정
           </Button>
@@ -108,7 +108,7 @@ export function WizardHeader({
             type="button"
             onClick={handleNext}
             variant="ghost"
-            className="!text-pilltime-violet font-bold cursor-pointer"
+            className="transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110"
           >
             다음
           </Button>

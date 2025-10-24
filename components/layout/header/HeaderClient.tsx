@@ -81,10 +81,12 @@ export default function HeaderClient({
 
   /** 공통 버튼 config (props로 내려줄 것) */
   const baseWhiteBtn =
-    "group font-bold cursor-pointer [&_*]:!text-white flex-col !text-xs !p-2 flex items-center justify-center h-full [&_svg:not([class*='size-'])]:size-7 [&_svg]:transition-transform [&_svg]:duration-200 [&_svg]:ease-in-out [&_svg]:scale-100 [&_svg]:group-hover:scale-110";
+    "group font-bold cursor-pointer [&_*]:!text-white flex-col !text-xs !p-2 flex items-center justify-center h-full [&_svg:not([class*='size-'])]:size-7 [&_svg]:transition-transform [&_svg]:duration-200 [&_svg]:ease-in-out [&_svg]:scale-100 [&_svg]:group-hover:scale-110 touch-manipulation [&_svg]:group-active:scale-95";
   const baseBlueBtn = (mobile = false) =>
     `font-bold cursor-pointer !text-pilltime-blue [&_*]:!text-pilltime-blue ${
-      mobile ? "!text-sm" : "!text-xs"
+      mobile
+        ? "!text-sm transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110"
+        : "!text-xs"
     } !p-2 flex items-center [&_svg:not([class*='size-'])]:size-5`;
 
   const desktopBtns = [
@@ -306,7 +308,7 @@ export default function HeaderClient({
           variant="ghost"
           size="icon-lg"
           onClick={() => setMenuOpen(true)}
-          className="!text-white !p-2 flex-col text-xs [&_svg:not([class*='size-'])]:size-7"
+          className="!text-white !p-2 flex-col text-xs [&_svg:not([class*='size-'])]:size-7 transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110"
         >
           <Menu color="#fff" />
         </Button>
@@ -334,7 +336,7 @@ export default function HeaderClient({
           <DropdownMenuTrigger asChild>
             <button
               // variant="ghost"
-              className={`${baseWhiteBtn} rounded-2xl [&_svg:not([class*='size-'])]:size-6 group [&_div]:transition-transform [&_div]:duration-200 [&_div]:ease-in-out [&_div]:scale-100 [&_div]:group-hover:scale-110`}
+              className={`${baseWhiteBtn} rounded-2xl [&_svg:not([class*='size-'])]:size-6 group [&_div]:transition-transform [&_div]:duration-200 [&_div]:ease-in-out [&_div]:scale-100 [&_div]:group-hover:scale-110 [&_div]:group-active:scale-95 cursor-pointer touch-manipulation`}
               aria-haspopup="dialog"
             >
               {/* <UserCog className="h-6 w-6" color="#fff" /> */}
@@ -352,7 +354,7 @@ export default function HeaderClient({
                 <DropdownMenuItem
                   key={key}
                   onSelect={(e) => {
-                    e.preventDefault();
+                    // e.preventDefault();
                     onClick?.();
                   }}
                   className={`hover:!bg-pilltime-violet/15 !text-sm font-bold !my-1 w-28 ${className}`}

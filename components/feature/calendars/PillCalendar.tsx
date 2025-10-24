@@ -75,7 +75,7 @@ export default function PillCalendar({
           day={day}
           modifiers={modifiers}
           {...props}
-          className="flex flex-col items-center justify-start gap-1 cursor-pointer"
+          className="flex flex-col items-center justify-start gap-1 transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-95"
         >
           {children}
           {!modifiers.outside && hasLogs && (
@@ -146,6 +146,10 @@ export default function PillCalendar({
         ].join(" ")}
         classNames={{
           day: "w-full outline-none focus:outline-none focus-visible:outline-none ring-0 focus:ring-0 focus-visible:ring-0 transition-none !p-1",
+          button_previous:
+            "transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110",
+          button_next:
+            "transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110",
         }}
         modifiersClassNames={{
           today: "bg-pilltime-blue/15 text-foreground rounded-md",

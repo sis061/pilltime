@@ -104,7 +104,7 @@ export default function CalendarShell(props: {
     ) {
       setViewMonth(nextFirst);
     }
-  }, [selectedYmd, viewMonth]);
+  }, [selectedYmd]);
 
   // 월별 캐시: { "YYYY-MM": MonthIndicatorMap }
   const seedYm = React.useMemo(() => selectedYmd.slice(0, 7), [selectedYmd]);
@@ -185,7 +185,7 @@ export default function CalendarShell(props: {
       className={
         props.layout === "page"
           ? "grid gap-4"
-          : "grid gap-4 grid-rows-[auto_auto_1fr] h-full"
+          : "grid gap-4 grid-rows-[auto_auto_1fr] h-full overflow-hidden"
       }
     >
       <PillCalendar

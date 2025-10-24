@@ -110,13 +110,16 @@ export default function FirstVisitBanner() {
         </AlertDialogHeader>
 
         <AlertDialogFooter className="flex gap-2 !px-12 sm:!px-0">
-          <AlertDialogCancel className="!py-2 !px-4" onClick={handleLater}>
+          <AlertDialogCancel
+            className="!py-2 !px-4 transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110"
+            onClick={handleLater}
+          >
             나중에
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={handleEnable}
             disabled={loading || permission === "denied"}
-            className="!py-2 !px-4 !bg-pilltime-blue !text-white"
+            className="!py-2 !px-4 !bg-pilltime-blue !text-white transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110"
           >
             {permission === "default"
               ? "알림 켜기"

@@ -2,9 +2,11 @@
 
 import { PacmanLoader } from "react-spinners";
 import { useGlobalLoading } from "@/store/useGlobalLoading";
+import { Button } from "@/components/ui/button";
 
 export default function GlobalLoading() {
-  const { isGLoading, loadingMessage } = useGlobalLoading();
+  const { isGLoading, loadingMessage, timedOut, forceStop } =
+    useGlobalLoading();
 
   if (!isGLoading) return null;
   return (
@@ -15,6 +17,22 @@ export default function GlobalLoading() {
           <div className="rounded-xl !px-4 !py-2 text-sm !text-white font-bold">
             {loadingMessage ?? "정보를 불러오고 있어요.."}
           </div>
+          {timedOut && (
+            <div className="flex items-center gap-2 mt-2">
+              <Button
+                onClick={() => window.location.reload()}
+                className="!px-4 !py-2 rounded-lg border-1 !border-pilltime-blue !text-white font-bold active:scale-95 transition-transform cursor-pointer"
+              >
+                새로고침
+              </Button>
+              <Button
+                onClick={forceStop}
+                className="!px-4 !py-2 rounded-lg  !text-white font-bold border-1 border-red-500 active:scale-95 transition-transform cursor-pointer"
+              >
+                닫기
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </div>
