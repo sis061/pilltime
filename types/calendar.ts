@@ -25,3 +25,13 @@ export type DayIntakeResponse = {
   date: string; // YYYY-MM-DD
   items: DayIntakeItem[];
 };
+
+export interface PillCalendarProps {
+  month: Date; // 보이는 달(1일 권장)
+  onMonthChange: (m: Date) => void; // 월 전환
+  selectedYmd: string; // "YYYY-MM-DD"
+  onSelectYmd: (ymd: string) => void; // 날짜 선택 콜백
+  todayYmd: string; // "YYYY-MM-DD"
+  dotsOfDate: (ymd: string) => DayDot[];
+  futureWindowDays?: number; // 기본 7
+}

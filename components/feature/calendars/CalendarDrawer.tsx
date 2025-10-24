@@ -1,11 +1,11 @@
-// components/feature/calendars/CalendarDrawer.tsx
 "use client";
 
+import * as React from "react";
 import { useRouter } from "next/navigation";
 import CalendarShell from "./CalendarShell";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
-import type { MonthIndicatorMap } from "@/types/calendar";
 import { useSSRMediaquery } from "@/hooks/useSSRMediaquery";
+import type { MonthIndicatorMap } from "@/types/calendar";
 
 export default function CalendarDrawer({
   open,
@@ -23,6 +23,34 @@ export default function CalendarDrawer({
   const router = useRouter();
   const minTablet = useSSRMediaquery(768);
 
+  // 클릭 시 즉시 반응하는 로컬 상태
+  const [selectedYmd, setSelectedYmd] = React.useState<string | null>(
+    dateParam ?? null
+  );
+  const syncTimer = React.useRef<number | null>(null);
+  React.useEffect(() => {
+    // 외부(Nav)로 URL이 바뀌면 대기중 replace 취소 + 로컬 동기화
+    if (syncTimer.current) {
+      window.clearTimeout(syncTimer.current);
+      syncTimer.current = null;
+    }
+    setSelectedYmd(dateParam ?? null);
+  }, [dateParam]);
+
+  const requestUrlSync = React.useCallback(
+    (ymd: string) => {
+      if (syncTimer.current) window.clearTimeout(syncTimer.current);
+      syncTimer.current = window.setTimeout(() => {
+        const current = new URLSearchParams(window.location.search).get("d");
+        if (current === ymd) return; // 동일값 guard
+        React.startTransition(() => {
+          router.replace(`/calendar?d=${ymd}`, { scroll: false });
+        });
+      }, 250);
+    },
+    [router]
+  );
+
   return (
     <Drawer
       open={open}
@@ -39,8 +67,11 @@ export default function CalendarDrawer({
         </DrawerTitle>
 
         <CalendarShell
-          dateParam={dateParam}
-          onChangeDate={(next) => router.replace(`/calendar?d=${next}`)}
+          dateParam={selectedYmd}
+          onChangeDate={(next) => {
+            setSelectedYmd(next);
+            requestUrlSync(next);
+          }}
           layout="drawer"
           monthMap={monthMap}
           todayYmdOverride={todayYmd}

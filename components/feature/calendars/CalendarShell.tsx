@@ -7,9 +7,16 @@ import * as React from "react";
 import PillCalendar from "./PillCalendar";
 import DayIntakeList from "./DayIntakeList";
 // ---- UTIL
-import { toYYYYMMDD } from "@/lib/date";
-// ---- TYPE
+import {
+  addDays,
+  dateFromYmdKST,
+  startOfMonthKST,
+  todayYmdKST,
+  ymdKST,
+} from "@/lib/date";
+// ---- STORE
 import { useGlobalLoading } from "@/store/useGlobalLoading";
+// ---- TYPE
 import type {
   MonthIndicatorMap,
   DayDot,
@@ -43,6 +50,14 @@ const STATUS = [
 /* ------
  function
 ------ */
+
+function normalizeYmd(ymd: string | null, maxFutureDays: number) {
+  const today = todayYmdKST();
+  if (!ymd || !/^\d{4}-\d{2}-\d{2}$/.test(ymd)) return today;
+  const max = ymdKST(addDays(dateFromYmdKST(today), maxFutureDays));
+  return ymd > max ? max : ymd;
+}
+
 const ymOf = (date: Date) =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
 
@@ -59,48 +74,45 @@ export function statusBadgeClass(s: DayIntakeItem["status"]) {
   }
 }
 
-function normalizeYmdKST(d: string | null) {
-  const today = toYYYYMMDD(new Date(), "Asia/Seoul");
-  if (!d) return today;
-  return /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : today;
-}
-
-export default function CalendarShell({
-  dateParam,
-  onChangeDate,
-  layout,
-  monthMap, // ✅ 서버 seed
-  todayYmdOverride,
-}: {
+export default function CalendarShell(props: {
   dateParam: string | null;
-  onChangeDate: (nextYmd: string) => void;
+  onChangeDate: (d: string) => void;
   layout: "drawer" | "page";
-  monthMap?: MonthIndicatorMap; // ✅ seed
+  monthMap?: MonthIndicatorMap;
   todayYmdOverride?: string;
 }) {
+  const setGLoading = useGlobalLoading((s) => s.setGLoading);
+
+  const futureWindowDays = 7;
   const todayYmd = React.useMemo(
-    () => todayYmdOverride ?? toYYYYMMDD(new Date(), "Asia/Seoul"),
-    [todayYmdOverride]
+    () => props.todayYmdOverride ?? todayYmdKST(),
+    [props.todayYmdOverride]
   );
-  const selectedYmd = normalizeYmdKST(dateParam);
+  const selectedYmd = normalizeYmd(props.dateParam, futureWindowDays);
 
-  // 초기 viewMonth는 선택 월 1일
-  const [viewMonth, setViewMonth] = React.useState<Date>(() => {
-    const d = new Date(`${selectedYmd}T00:00:00+09:00`);
-    return new Date(d.getFullYear(), d.getMonth(), 1);
-  });
+  // 초기 viewMonth = 선택월 1일(KST)
+  const [viewMonth, setViewMonth] = React.useState<Date>(() =>
+    startOfMonthKST(dateFromYmdKST(selectedYmd))
+  );
+
+  // 같은 달이면 setViewMonth 회피
   React.useEffect(() => {
-    const d = new Date(`${selectedYmd}T00:00:00+09:00`);
-    setViewMonth(new Date(d.getFullYear(), d.getMonth(), 1));
-  }, [selectedYmd]);
+    const nextFirst = startOfMonthKST(dateFromYmdKST(selectedYmd));
+    if (
+      viewMonth.getFullYear() !== nextFirst.getFullYear() ||
+      viewMonth.getMonth() !== nextFirst.getMonth()
+    ) {
+      setViewMonth(nextFirst);
+    }
+  }, [selectedYmd, viewMonth]);
 
-  // ✅ 월별 캐시: { "YYYY-MM": MonthIndicatorMap }
+  // 월별 캐시: { "YYYY-MM": MonthIndicatorMap }
   const seedYm = React.useMemo(() => selectedYmd.slice(0, 7), [selectedYmd]);
   const [monthCache, setMonthCache] = React.useState<
     Record<string, MonthIndicatorMap>
-  >(() => (monthMap ? { [seedYm]: monthMap } : {}));
+  >(() => (props?.monthMap ? { [seedYm]: props?.monthMap } : {}));
 
-  // ✅ 보이는 달이 바뀌면 해당 월 요약을 on-demand 로드(중복 방지)
+  // 보이는 달이 바뀌면 해당 월 요약을 on-demand 로드(중복 방지)
   React.useEffect(() => {
     const ym = ymOf(viewMonth);
     if (monthCache[ym]) return; // 이미 있음
@@ -124,7 +136,7 @@ export default function CalendarShell({
     return () => ac.abort();
   }, [viewMonth, monthCache]);
 
-  // ✅ dotsOfDate: 현재 보이는 달의 monthMap에서 읽기(없으면 빈 배열)
+  // dotsOfDate: 현재 보이는 달의 monthMap에서 읽기(없으면 빈 배열)
   const dotsOfDate = React.useCallback(
     (ymd: string): DayDot[] => {
       const ym = ymd.slice(0, 7);
@@ -134,39 +146,44 @@ export default function CalendarShell({
     [monthCache]
   );
 
-  // ✅ 하루 상세 (변경 없음)
+  // 하루 상세 — 최신 요청만 반영
   const [dayItems, setDayItems] = React.useState<DayIntakeItem[]>([]);
   const [loading, setLoading] = React.useState(false);
+  const reqIdRef = React.useRef(0);
+  const abortRef = React.useRef<AbortController | null>(null);
+
   async function fetchDay(dateYmd: string) {
+    abortRef.current?.abort();
+    const ac = new AbortController();
+    abortRef.current = ac;
+    const myId = ++reqIdRef.current;
     setLoading(true);
     try {
       const res = await fetch(`/api/calendar/day?date=${dateYmd}`, {
         cache: "no-store",
+        signal: ac.signal,
       });
-      if (res.ok) {
-        const json = (await res.json()) as DayIntakeResponse;
-        setDayItems(json.items ?? []);
-      } else {
-        setDayItems([]);
-      }
+      const json = res.ok
+        ? ((await res.json()) as DayIntakeResponse)
+        : { items: [] };
+      if (reqIdRef.current === myId) setDayItems(json.items ?? []);
+    } catch {
+      if (reqIdRef.current === myId) setDayItems([]);
     } finally {
-      setLoading(false);
+      if (reqIdRef.current === myId) setLoading(false);
     }
   }
+
   React.useEffect(() => {
     fetchDay(selectedYmd);
-  }, [selectedYmd]);
-
-  const setGLoading = useGlobalLoading((s) => s.setGLoading);
-
-  React.useEffect(() => {
     setGLoading(false);
-  }, [setGLoading]);
+    return () => abortRef.current?.abort();
+  }, [selectedYmd]);
 
   return (
     <div
       className={
-        layout === "page"
+        props.layout === "page"
           ? "grid gap-4"
           : "grid gap-4 grid-rows-[auto_auto_1fr] h-full"
       }
@@ -175,9 +192,9 @@ export default function CalendarShell({
         month={viewMonth}
         onMonthChange={setViewMonth}
         selectedYmd={selectedYmd}
-        onSelectYmd={(ymd) => onChangeDate(ymd)}
         todayYmd={todayYmd}
-        futureWindowDays={7}
+        onSelectYmd={(ymd) => props.onChangeDate(ymd)}
+        futureWindowDays={futureWindowDays}
         dotsOfDate={dotsOfDate}
       />
       <ul className="flex items-center justify-center gap-4 w-full !px-2 !-mb-1">
