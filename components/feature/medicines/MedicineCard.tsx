@@ -106,16 +106,18 @@ export default function MedicineCard(medicine: MedicineDetail) {
                   align="end"
                   sideOffset={4}
                   alignOffset={8}
-                  className="!min-w-24 border-2 bg-white rounded-md !py-3 !px-2 *:text-[16px] !border-[#F9731690] shadow-lg transition-opacity duration-150 "
+                  className="max-w-48 w-full border-2 bg-white rounded-md !py-3 !px-2 *:text-[16px] !border-[#F9731690] shadow-lg transition-opacity duration-150 "
                 >
                   {description.length > 0 ? (
-                    <ul className="flex flex-col gap-1 list-disc [&_>li]:!ml-4 w-full">
+                    <ul className="flex flex-col gap-1 w-full !px-2">
                       {description.map((text, i) => (
-                        <li key={i}>{text}</li>
+                        <li key={i} className="w-full flex h-full">
+                          <p className="break-all w-full">- {text}</p>
+                        </li>
                       ))}
                     </ul>
                   ) : (
-                    <p className="!text-pilltime-grayDark/50 text-center">
+                    <p className="!text-pilltime-grayDark/50 text-center w-full !px-2">
                       상세 정보가 없습니다!
                     </p>
                   )}

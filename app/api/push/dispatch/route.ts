@@ -147,13 +147,15 @@ export async function POST(req: Request) {
         if (subs.length === 0) continue;
 
         const title =
-          kind === "on_time"
-            ? `💊 약 먹을 시간! - ${log.medicine_name ?? ""}`
-            : `⚠️ 아 맞다 약!! - ${log.medicine_name ?? ""}`;
+          kind === "on_time" ? `💊 약 먹을 시간!` : `⚠️ 아 맞다 약!!`;
         const body =
           kind === "on_time"
-            ? "약을 먹은 후 꼭 기록해 주세요."
-            : "기록이 없어 리마인드 드려요. 꼭 챙겨드세요.";
+            ? `${
+                log.medicine_name ? `[ ${log.medicine_name} ]` : "약"
+              } 드실 시간이에요! \n지금 먹고 체크도 바로 해주세요.`
+            : `${
+                log.medicine_name ? `[ ${log.medicine_name} ]` : "약"
+              } 먹는 거 잊지 않으셨죠? \n꼭 챙겨먹고 체크도 마저 해주세요.`;
 
         const payload = {
           title,
@@ -163,28 +165,6 @@ export async function POST(req: Request) {
           requireInteraction: true,
           data: { log_id: log.id, url: `/` },
         };
-
-        // await Promise.all(
-        //   subs.map(async (s) => {
-        //     try {
-        //       await webpush.sendNotification(
-        //         {
-        //           endpoint: s.endpoint,
-        //           keys: { auth: s.auth, p256dh: s.p256dh },
-        //         } as any,
-        //         JSON.stringify(payload)
-        //       );
-        //     } catch (err: any) {
-        //       const msg = String(err?.message || err);
-        //       if (msg.includes("410") || msg.includes("404")) {
-        //         await sb
-        //           .from("push_subscriptions")
-        //           .delete()
-        //           .eq("endpoint", s.endpoint);
-        //       }
-        //     }
-        //   })
-        // );
 
         for (const s of subs) {
           try {

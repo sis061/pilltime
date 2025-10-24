@@ -306,7 +306,7 @@ export default function HeaderClient({
           variant="ghost"
           size="icon-lg"
           onClick={() => setMenuOpen(true)}
-          className="!text-white !p-2 flex-col text-xs [&_svg:not([class*='size-'])]:size-6"
+          className="!text-white !p-2 flex-col text-xs [&_svg:not([class*='size-'])]:size-7"
         >
           <Menu color="#fff" />
         </Button>

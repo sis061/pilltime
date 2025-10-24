@@ -56,7 +56,10 @@ export function MedicineImageField() {
     input.accept = "image/*,.heic,.heif";
     input.onchange = async (e: any) => {
       const file: File | undefined = e.target.files?.[0];
-      if (!file) return;
+      if (!file) {
+        toast.error("이미지를 열 수 없어요. 다시 시도해주세요.");
+        return;
+      }
 
       try {
         startLoading("prepare-image", "이미지를 불러오는 중이에요..");
@@ -67,9 +70,8 @@ export function MedicineImageField() {
       } catch (err: any) {
         console.error(err);
         toast.error(
-          err?.message ?? "이미지를 열 수 없어요. 다른 사진으로 시도해 보세요."
+          err?.message ?? "이미지를 열 수 없어요. 다른 사진으로 시도해주세요."
         );
-      } finally {
         forceStop();
       }
     };
