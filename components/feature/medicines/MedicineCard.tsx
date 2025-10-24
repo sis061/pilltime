@@ -31,7 +31,7 @@ export default function MedicineCard(medicine: MedicineDetail) {
   const [pending, setPending] = useState<Record<number, IntakeLog["status"]>>(
     {}
   );
-  const setGLoading = useGlobalLoading((s) => s.setGLoading);
+  const { startLoading } = useGlobalLoading();
 
   const onOptimisticSet = (logId: number, status: IntakeLog["status"]) =>
     setPending((p) => ({ ...p, [logId]: status })); // ✅ 성공 시에는 더 이상 즉시 지우지 않음
@@ -124,7 +124,12 @@ export default function MedicineCard(medicine: MedicineDetail) {
 
               <Link
                 href={`/medicines/${id}/edit`}
-                onClick={() => setGLoading(true, "정보를 불러오는 중이에요..")}
+                onClick={() =>
+                  startLoading(
+                    "open-medicine-edit",
+                    "정보를 불러오는 중이에요.."
+                  )
+                }
               >
                 <Settings
                   size={24}

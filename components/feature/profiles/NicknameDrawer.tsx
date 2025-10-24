@@ -38,8 +38,8 @@ export default function NicknameDrawer({
   // ---- STORE
   const user = useUserStore((s) => s.user);
   const setUser = useUserStore((s) => s.setUser);
-  const isLoading = useGlobalLoading((s) => s.isGLoading);
-  const setGLoading = useGlobalLoading((s) => s.setGLoading);
+  const { isGLoading, startLoading, stopLoading, forceStop } =
+    useGlobalLoading();
   // ---- REACT
   const [submitting, setSubmitting] = useState(false);
   const [nickname, setNickname] = useState(user?.nickname || "");
@@ -74,7 +74,7 @@ export default function NicknameDrawer({
       toast.error("로그인 정보가 없어요. 다시 시도해주세요.");
       return;
     }
-    if (submitting || isLoading) return;
+    if (submitting || isGLoading) return;
 
     const prevNickname = user.nickname ?? "";
     const nextNickname = nickname.trim();
@@ -115,11 +115,11 @@ export default function NicknameDrawer({
     }
 
     // 2) 실제 저장 시작 — 이제 스피너 ON + 낙관적 업데이트
-    setGLoading(
-      true,
+    startLoading(
+      "fetch-profile",
       openedMode === "create"
-        ? "프로필을 생성 중이에요..."
-        : "정보를 수정 중이에요..."
+        ? "프로필을 만드는 중이에요..."
+        : "프로필을 수정 중이에요..."
     );
 
     // 낙관적 업데이트
@@ -140,9 +140,10 @@ export default function NicknameDrawer({
       onOpenChange(false);
 
       if (openedMode === "create") {
-        setGLoading(true, "새로운 약을 등록하러 가는중....");
+        startLoading("open-medicine-new", "새로운 약을 등록하러 가는중..");
         router.push("/medicines/new");
       }
+      stopLoading("fetch-profile");
     } catch (err: any) {
       // 실패 시 롤백
       console.error("별명 업데이트 실패:", err?.message || err);
@@ -152,13 +153,13 @@ export default function NicknameDrawer({
           : "별명을 수정하는 중 문제가 발생했어요"
       );
       setUser({ ...user, nickname: prevNickname });
+      forceStop();
     } finally {
-      setGLoading(false);
       setSubmitting(false);
     }
   }
 
-  const busy = isLoading;
+  const busy = isGLoading;
 
   return (
     <Drawer

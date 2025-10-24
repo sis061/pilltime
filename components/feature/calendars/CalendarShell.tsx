@@ -81,7 +81,7 @@ export default function CalendarShell(props: {
   monthMap?: MonthIndicatorMap;
   todayYmdOverride?: string;
 }) {
-  const setGLoading = useGlobalLoading((s) => s.setGLoading);
+  const { stopLoading } = useGlobalLoading();
 
   const futureWindowDays = 7;
   const todayYmd = React.useMemo(
@@ -176,7 +176,7 @@ export default function CalendarShell(props: {
 
   React.useEffect(() => {
     fetchDay(selectedYmd);
-    setGLoading(false);
+    stopLoading("open-calendar");
     return () => abortRef.current?.abort();
   }, [selectedYmd]);
 

@@ -12,7 +12,7 @@ export default function SocialLogin() {
   const [loadingProvider, setLoadingProvider] = useState<
     "google" | "apple" | null
   >(null);
-  const setGLoading = useGlobalLoading((s) => s.setGLoading);
+  const { startLoading, stopLoading } = useGlobalLoading();
 
   async function getSupabase() {
     const { createClient } = await import("@/lib/supabase/client"); // ✅ 지연 로드
@@ -40,7 +40,7 @@ export default function SocialLogin() {
   async function handleLogin(provider: "google" | "apple") {
     try {
       setLoadingProvider(provider);
-      setGLoading(true, "로그인 중이에요...");
+      startLoading("login", "로그인 중이에요...");
       const supabase = await getSupabase();
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
@@ -52,7 +52,7 @@ export default function SocialLogin() {
     } catch (_) {
       toast.error("로그인 중 문제가 발생했어요");
       setLoadingProvider(null);
-      setGLoading(false);
+      stopLoading("login");
     }
   }
 

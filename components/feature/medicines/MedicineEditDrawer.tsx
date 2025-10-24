@@ -106,7 +106,8 @@ export default function MedicineEditDrawer({
   // ---- CUSTOM HOOKS
   const minTablet = useSSRMediaquery(768);
   // ---- STORE
-  const { isGLoading, setGLoading } = useGlobalLoading();
+  const { isGLoading, startLoading, stopLoading, forceStop } =
+    useGlobalLoading();
 
   const busy = isGLoading || isPendingNav;
 
@@ -165,11 +166,11 @@ export default function MedicineEditDrawer({
         );
 
         setOriginalImageUrl(data.image_url ?? null);
+        stopLoading("open-medicine-edit");
       } catch (e) {
+        forceStop();
         toast.error("정보를 불러오는 중 문제가 발생했어요");
         console.log("e:", e);
-      } finally {
-        setGLoading(false);
       }
     })();
 
@@ -237,7 +238,7 @@ export default function MedicineEditDrawer({
       schedules_patch,
     };
     try {
-      setGLoading(true, "수정 중이에요..");
+      startLoading("fetch-medicine-edit", "수정 중이에요..");
       await updateMedicine(String(id), payload);
       if (originalImageUrl && v.imageUrl !== originalImageUrl) {
         const oldPath = originalImageUrl.split("/medicine-images/")[1];
@@ -247,10 +248,10 @@ export default function MedicineEditDrawer({
       toast.success(`${v.name}의 정보를 수정했어요`);
       startTransition(() => router.refresh());
       onOpenChange(false);
+      stopLoading("fetch-medicine-edit");
     } catch (err: any) {
+      forceStop();
       toast.error(err?.message ?? "정보를 수정하는 중 문제가 발생했어요");
-    } finally {
-      setGLoading(false);
     }
   };
 

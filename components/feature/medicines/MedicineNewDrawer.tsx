@@ -60,8 +60,8 @@ export default function MedicineNewDrawer({
   // ---- CUSTOM HOOKS
   const minTablet = useSSRMediaquery(768);
   // ---- STORE
-  const isLoading = useGlobalLoading((s) => s.isGLoading);
-  const setGLoading = useGlobalLoading((s) => s.setGLoading);
+  const { isGLoading, startLoading, stopLoading, forceStop } =
+    useGlobalLoading();
 
   const methods = useForm<MedicineFormValues>({
     resolver: zodResolver(MedicineSchema),
@@ -80,11 +80,11 @@ export default function MedicineNewDrawer({
     formState: { isSubmitting },
   } = methods;
 
-  const busy = isSubmitting || isLoading || isPendingNav;
+  const busy = isSubmitting || isGLoading || isPendingNav;
 
   useEffect(() => {
-    setGLoading(false);
-  }, [setGLoading]);
+    stopLoading("open-medicine-new");
+  }, [isGLoading, stopLoading]);
 
   // supabase storage 에 orphan 파일 삭제용
   async function handleCancel() {
@@ -118,7 +118,7 @@ export default function MedicineNewDrawer({
     };
 
     try {
-      setGLoading(true, "새로운 약을 등록 중이에요...");
+      startLoading("fetch-medicine-new", "새로운 약을 등록 중이에요...");
       await createMedicine(_data);
 
       toast.success(`${_data.name}의 정보를 등록했어요`);
@@ -128,11 +128,11 @@ export default function MedicineNewDrawer({
         router.refresh();
         onOpenChange(false);
       });
+      stopLoading("fetch-medicine-new");
     } catch (error) {
+      forceStop();
       console.log(error);
       toast.error("정보를 등록하는 중 문제가 발생했어요");
-    } finally {
-      setGLoading(false);
     }
   };
 
@@ -140,7 +140,7 @@ export default function MedicineNewDrawer({
     <Drawer
       open={open}
       onOpenChange={async (nextOpen) => {
-        if (nextOpen) setGLoading(false);
+        if (nextOpen) stopLoading("open-medicine-new");
         if (!nextOpen) {
           // Drawer가 닫힐 때 → 취소 로직 실행
           await handleCancel();

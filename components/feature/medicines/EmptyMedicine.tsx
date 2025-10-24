@@ -6,7 +6,7 @@ import { useGlobalLoading } from "@/store/useGlobalLoading";
 
 export default function EmptyMedicine() {
   const router = useRouter();
-  const setGLoading = useGlobalLoading((s) => s.setGLoading);
+  const { startLoading } = useGlobalLoading();
 
   return (
     <div className="!mt-6 text-center w-full">
@@ -27,7 +27,7 @@ export default function EmptyMedicine() {
           onClick={() => {
             // document.getElementById("create_new_medicine")?.click();
             router.push("/medicines/new");
-            setGLoading(true, "정보를 불러오는 중이에요..");
+            startLoading("open-medicine-new", "템플릿을 불러오는 중이에요..");
           }}
         />
       </div>

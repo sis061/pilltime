@@ -64,7 +64,7 @@ export default function HeaderClient({
   // ---- STORE
   const setUser = useUserStore((s) => s.setUser);
   const clearUser = useUserStore((s) => s.clearUser);
-  const setGLoading = useGlobalLoading((s) => s.setGLoading);
+  const { startLoading } = useGlobalLoading();
 
   // 오늘 날짜 계산
   // const today = new Date();
@@ -106,7 +106,7 @@ export default function HeaderClient({
       onClick: () => {
         setMenuOpen(false);
         router.push(`/calendar?d=${todayYmd}`);
-        setGLoading(true, "정보를 불러오는 중이에요..");
+        startLoading("open-calendar", "정보를 불러오는 중이에요..");
       },
     },
     {
@@ -168,7 +168,7 @@ export default function HeaderClient({
   function goNewMedicine() {
     setMenuOpen(false);
     router.push("/medicines/new");
-    setGLoading(true, "정보를 불러오는 중이에요..");
+    startLoading("open-medicine-new", "템플릿을 불러오는 중이에요..");
   }
 
   function toggleGlobal() {
@@ -297,83 +297,9 @@ export default function HeaderClient({
    * render
    * ------ */
 
-  // if (minMobile)
-  //   return (
-  //     <div className="flex items-center gap-2 h-full">
-  //       {/* 드롭다운 */}
-  //       <DropdownMenu>
-  //         <DropdownMenuTrigger asChild>
-  //           <button
-  //             // variant="ghost"
-  //             className={`${baseWhiteBtn} rounded-2xl [&_svg:not([class*='size-'])]:size-6 group [&_div]:transition-transform [&_div]:duration-200 [&_div]:ease-in-out [&_div]:scale-100 [&_div]:group-hover:scale-110`}
-  //             aria-haspopup="dialog"
-  //           >
-  //             {/* <UserCog className="h-6 w-6" color="#fff" /> */}
-  //             <ProfileBadge initialUser={user} />
-  //             <span className="!pt-2">프로필 관리</span>
-  //           </button>
-  //         </DropdownMenuTrigger>
-  //         <DropdownMenuContent
-  //           side="bottom"
-  //           align="end"
-  //           className="border-1 bg-white !border-pilltime-violet shadow-lg !w-28 !pl-2"
-  //         >
-  //           {menuBtns.map(
-  //             ({ key, label, iconLeft: Icon, onClick, className }) => (
-  //               <DropdownMenuItem
-  //                 key={key}
-  //                 onSelect={(e) => {
-  //                   e.preventDefault();
-  //                   onClick?.();
-  //                 }}
-  //                 className={`hover:!bg-pilltime-violet/15 !text-sm font-bold !my-1 w-28 ${className}`}
-  //               >
-  //                 {Icon ? <Icon className="h-5 w-5" color="#3B82F6" /> : null}
-  //                 {label}
-  //               </DropdownMenuItem>
-  //             )
-  //           )}
-  //         </DropdownMenuContent>
-  //       </DropdownMenu>
-  //       {/* 상단 버튼 그룹 */}
-  //       <SmartButtonGroup items={desktopBtns} />
-  //       <NicknameDrawer
-  //         open={openNickname}
-  //         onOpenChange={setOpenNickname}
-  //         mode="edit"
-  //       />
-  //     </div>
-  //   );
-
-  // return (
-  //   <div className="flex items-center gap-2">
-  //     <ProfileBadge initialUser={user} />
-  //     <Button
-  //       variant="ghost"
-  //       size="icon-lg"
-  //       onClick={() => setMenuOpen(true)}
-  //       className="!text-white !p-2 flex-col text-xs [&_svg:not([class*='size-'])]:size-6"
-  //     >
-  //       <Menu color="#fff" />
-  //     </Button>
-  //     <NavbarDrawer
-  //       open={menuOpen}
-  //       onOpenChange={setMenuOpen}
-  //       logout={logout}
-  //       openNickname={() => setOpenNickname(true)}
-  //       buttons={drawerBtns}
-  //       menuButtons={menuBtns}
-  //     />
-  //     <NicknameDrawer
-  //       open={openNickname}
-  //       onOpenChange={setOpenNickname}
-  //       mode="edit"
-  //     />
-  //   </div>
-  // );
-
   return (
     <div>
+      {/* 모바일 헤더 */}
       <div className="sm:hidden flex items-center gap-2">
         <ProfileBadge initialUser={user} />
         <Button
@@ -398,8 +324,12 @@ export default function HeaderClient({
           mode="edit"
         />
       </div>
+
+      {/* 태블릿, pc 헤더 */}
       <div className="sm:flex hidden items-center gap-2 h-full">
-        {/* 드롭다운 */}
+        {/* 상단 버튼 그룹 */}
+        <SmartButtonGroup items={desktopBtns} />
+        {/* 프로필 -- 드롭다운 */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
@@ -434,8 +364,6 @@ export default function HeaderClient({
             )}
           </DropdownMenuContent>
         </DropdownMenu>
-        {/* 상단 버튼 그룹 */}
-        <SmartButtonGroup items={desktopBtns} />
         <NicknameDrawer
           open={openNickname}
           onOpenChange={setOpenNickname}
