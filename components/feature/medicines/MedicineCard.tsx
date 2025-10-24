@@ -67,6 +67,7 @@ export default function MedicineCard(medicine: MedicineDetail) {
     <>
       <div className="border-2 bg-white border-pilltime-blue/50 rounded-md !px-4 !pb-8 !pt-12 flex flex-col gap-4 shadow-md">
         <div className="flex items-center gap-4 w-full relative">
+          {/*--------------- 이미지 ---------------*/}
           <ZoomableImage
             zoomable={imageUrl.trim().length > 0}
             className="rounded-md overflow-hidden border border-pilltime-violet/50 shadow-sm transition-transform duration-200 ease-in-out scale-100 touch-manipulation active:scale-95 hover:scale-95"
@@ -75,11 +76,13 @@ export default function MedicineCard(medicine: MedicineDetail) {
             width={120}
             height={120}
           />
+          {/*--------------- 이름 ---------------*/}
           <div className="grow self-start !z-10">
             <span className="font-bold !text-pilltime-grayDark text-2xl text-ellipsis text-shadow-sm backdrop-blur-2xl">
               {name}
             </span>
           </div>
+          {/*--------------- 우측 상단 아이콘 ---------------*/}
           <TodayProgress
             schedules={schedules}
             pending={pending}
@@ -143,6 +146,7 @@ export default function MedicineCard(medicine: MedicineDetail) {
             </div>
           </div>
         </div>
+        {/*--------------- 스케줄 + 복용 로그 목록 ---------------*/}
         <div className="!py-4 !px-2 relative">
           {!isMedicineTakenToday && (
             <div className="absolute top-0 left-0 bg-black/50 w-full h-full rounded-sm z-10 flex items-center justify-center backdrop-blur-xs">
