@@ -139,7 +139,7 @@ export default function MedicineCard(medicine: MedicineDetail) {
         <div className="!py-4 !px-2 relative">
           {!isMedicineTakenToday && (
             <div className="absolute top-0 left-0 bg-black/50 w-full h-full rounded-sm z-10 flex items-center justify-center backdrop-blur-xs">
-              <span className="!text-pilltime-grayLight font-bold text-lg">
+              <span className="!text-pilltime-grayLight font-bold text-[16px]">
                 오늘은 먹을 약이 없네요!
               </span>
             </div>

@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Check, PinOff, Redo2 } from "lucide-react";
 // ---- UTIL
-import { formatTime } from "@/lib/date";
+import { formatTime, todayYmdKST, toHHMMSS } from "@/lib/date";
 import { getTodayIntakeLog } from "@/lib/medicine";
 // ---- TYPE
 import { IntakeLog, MedicineSchedule } from "@/types/medicines";
@@ -59,6 +59,28 @@ export default function ScheduleItem(schedule: ScheduleItemProps) {
   useEffect(() => {
     setStatus(todayLog?.status ?? "scheduled");
   }, [todayLog?.status]);
+
+  /**
+   * 되돌리기 클릭 핸들러
+   * - 오늘(KST) + schedule.time 기준으로 30분 지났으면 missed, 아니면 scheduled
+   */
+
+  /** 분 단위 더하기 */
+  //  TODO: 나중에 사용자가 리마인더 알림 개별로 설정할 시 이부분 수정. 서버로 핸들링하게 바꿔야함
+  function addMinutesKst(date: Date, minutes: number): Date {
+    return new Date(date.getTime() + minutes * 60_000);
+  }
+  function onResetClick() {
+    const today = todayYmdKST(); // ex) "2025-10-24"
+    const hhmmss = toHHMMSS(schedule.time || "00:00:00");
+    const schedAt = new Date(`${today}T${hhmmss}+09:00`);
+    const cutoff = addMinutesKst(schedAt, 30);
+
+    const now = new Date();
+    const target: IntakeLog["status"] = now > cutoff ? "missed" : "scheduled";
+
+    onButtonClick(target);
+  }
 
   function onButtonClick(value: IntakeLog["status"]) {
     if (!todayLog) return;
@@ -128,7 +150,7 @@ export default function ScheduleItem(schedule: ScheduleItemProps) {
           disabled={_isPending || !todayLog}
           variant="secondary"
           className={`[&_>svg]:stroke-pilltime-teal/50 hover:!bg-pilltime-teal/50 hover:[&_svg]:stroke-white cursor-pointer`}
-          onClick={() => onButtonClick("scheduled")}
+          onClick={onResetClick}
         >
           <Redo2 strokeWidth={2.5} />
         </Button>

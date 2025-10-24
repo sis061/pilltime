@@ -137,17 +137,7 @@ export function MedicineImageField() {
               if (!uploading) handleSelectFile();
             }}
           >
-            {imageUrl ? (
-              <Image
-                src={imageUrl}
-                alt="medicine-preview"
-                className="object-cover w-full h-full"
-                width={160}
-                height={160}
-              />
-            ) : (
-              <SmartImage src={imageUrl} className="rounded-md" />
-            )}
+            <SmartImage src={imageUrl} className="rounded-md" />
           </div>
           <Button
             type="button"
