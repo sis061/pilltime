@@ -48,7 +48,7 @@ export async function middleware(req: NextRequest) {
     return res;
   }
 
-  // 👇 이 호출이 중요: 만료/리프레시 시 Set-Cookie가 res에 기록됨
+  // 👇 만료/리프레시 시 Set-Cookie가 res에 기록됨
   const {
     data: { user },
   } = await supabase.auth.getUser();

@@ -1,3 +1,5 @@
+// @/(main)/@modal/(.)calendar/page.tsx
+
 // ---- COMPONENT
 import CalendarDrawerClient from "@/components/feature/calendars/CalendarDrawerClient";
 // ---- UTIL

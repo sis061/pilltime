@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-label="PillTime mark (duotone)">
+  <!-- PillTime duotone mark -->
+  <defs>
+    <style>
+      .left { fill: #3B82F6; }   /* blue */
+      .right { fill: #EAB308; }  /* yellow */
+      .shine { fill: #FFFFFF; opacity: .9; }
+    </style>
+  </defs>
+  <!-- Capsule halves -->
+  <path class="left" d="M16,64c0,17.673 14.327,32 32,32h16V32H48c-17.673,0-32,14.327-32,32Z"/>
+  <path class="right" d="M64,32v64h16c17.673,0 32-14.327 32-32s-14.327-32-32-32H64Z"/>
+  <!-- Shine highlight -->
+  <path class="shine" d="M30,70c0-14 10-26 24-28v8c-9,3-16,10-18,20h-6Z"/>
+</svg>
