@@ -24,7 +24,7 @@ export default function HomeToday() {
           router.push(`/calendar?d=${todayYmd}`);
           startLoading("open-calendar", "정보를 불러오는 중이에요..");
         }}
-        className="flex gap-2 items-center justify-center shadow-xs !py-2 !px-4 rounded-md [&_h3]:!text-lg [&_span]:!text-[16px] [&_span]:opacity-75 hover:opacity-90 cursor-pointer"
+        className="flex gap-2 items-center justify-center shadow-xs !py-2 !px-4 rounded-md [&_h3]:!text-lg [&_span]:!text-[16px] [&_span]:opacity-75 hover:opacity-90 transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-105"
         aria-label={`${todayYmd} 눌러서 달력 열기`}
       >
         <CalendarSearch size={16} />

@@ -171,14 +171,14 @@ export default function NicknameDrawer({
       direction={minTablet ? "right" : "bottom"}
       repositionInputs={false}
     >
-      <DrawerContent className="!p-4 bg-slate-100 h-[96dvh] max-h-[100dvh] min-h-[95dvh] md:max-h-[100dvh] md:w-[480px] md:!ml-auto md:top-0 md:rounded-tr-none md:rounded-bl-[10px]">
+      <DrawerContent className="!p-4 bg-slate-100 min-h-[70dvh] max-h-[96dvh] md:max-h-[100dvh] md:w-[480px] md:!ml-auto md:top-0 md:rounded-tr-none md:rounded-bl-[10px]">
         {/* Header */}
         <DrawerHeader className="!pb-4 flex w-full items-center justify-between">
           <Button
             disabled={busy}
             onClick={() => onOpenChange(false)}
             variant={"ghost"}
-            className={`!pr-2 font-bold cursor-pointer  ${
+            className={`!pr-2 font-bold transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110  ${
               mode === "create" ? `!text-transparent` : `!text-pilltime-violet`
             } `}
           >
@@ -191,7 +191,7 @@ export default function NicknameDrawer({
             type="submit"
             disabled={busy}
             variant={"ghost"}
-            className="!pl-1 font-bold !text-pilltime-violet cursor-pointer"
+            className="!pl-1 font-bold !text-pilltime-violet transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110"
             onClick={() =>
               submitBtnRef?.current && submitBtnRef.current.click()
             }

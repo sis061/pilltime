@@ -149,19 +149,19 @@ export default function ScheduleItem(schedule: ScheduleItemProps) {
           size="icon"
           disabled={_isPending || !todayLog}
           variant="secondary"
-          className={`[&_>svg]:stroke-pilltime-teal/50 hover:!bg-pilltime-teal/50 hover:[&_svg]:stroke-white cursor-pointer`}
+          className={`touch-manipulation transition-colors duration-150 [&_>svg]:stroke-pilltime-teal/50 hover:!bg-pilltime-teal/50  active:!bg-pilltime-teal/50 hover:[&_svg]:stroke-white active:[&_svg]:stroke-white cursor-pointer`}
           onClick={onResetClick}
         >
           <Redo2 strokeWidth={2.5} />
         </Button>
       )}
-      <ButtonGroup className="[&_button]:!px-4 [&_button]:!py-2 [&_>button]:shadow-xs [&_>button]:cursor-pointer [&_>button]:transition-colors [&_>button]:duration-150 [&_>button]:focus-visible:outline-none [&_>button]:focus-visible:ring-2 [&_>button]:focus-visible:ring-offset-2 [&_>button]:focus-visible:ring-slate-300">
+      <ButtonGroup className="[&_button]:!px-4 [&_button]:!py-2 [&_>button]:shadow-xs [&_>button]:cursor-pointer [&_button]:touch-manipulation [&_>button]:transition-colors [&_>button]:duration-150 [&_>button]:focus-visible:outline-none [&_>button]:focus-visible:ring-2 [&_>button]:focus-visible:ring-offset-2 [&_>button]:focus-visible:ring-slate-300">
         <Button
           type="button"
           size="icon"
           disabled={_isPending || !todayLog}
           variant="secondary"
-          className={` hover:!bg-pilltime-blue/50 hover:[&_svg]:stroke-white
+          className={` hover:!bg-pilltime-blue/50 hover:[&_svg]:stroke-white active:!bg-pilltime-blue/50 active:[&_svg]:stroke-white
               ${isTaken && "bg-pilltime-blue [&_>svg]:stroke-white"}
               ${isSkipped && "[&_>svg]:!stroke-pilltime-teal/50"}
               ${
@@ -178,7 +178,7 @@ export default function ScheduleItem(schedule: ScheduleItemProps) {
           size="icon"
           disabled={_isPending || !todayLog}
           variant="secondary"
-          className={`hover:!bg-pilltime-yellow/50 hover:[&_svg]:stroke-white
+          className={`hover:!bg-pilltime-yellow/50 hover:[&_svg]:stroke-white active:!bg-pilltime-yellow/50 active:[&_svg]:stroke-white
             ${isSkipped && "!bg-pilltime-yellow [&_svg]:stroke-white"}
             ${isTaken && "[&_>svg]:!stroke-pilltime-teal/50"}
           ${

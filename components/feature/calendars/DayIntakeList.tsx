@@ -75,7 +75,7 @@ export default function DayIntakeList({
   );
 
   return (
-    <ul className="flex flex-wrap [@media(min-width:480px)]:grid grid-rows-2 grid-cols-2 gap-2 w-full">
+    <ul className="flex flex-wrap [@media(min-width:480px)]:grid grid-rows-2 grid-cols-2 gap-2 w-full !pb-8">
       {groupedArr.map((group) => (
         <li
           key={group.medicine_id}
