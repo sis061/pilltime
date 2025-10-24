@@ -113,7 +113,7 @@ export default function SmartImage({
     >
       {/* 스켈레톤: 이미지가 준비되기 전까지 화면을 채움 */}
       {showSkeleton && !loaded && (
-        <Skeleton className="absolute inset-0 h-full w-full bg-pilltime-grayDark/50" />
+        <Skeleton className="absolute inset-0 h-full w-full bg-[#2D383E]" />
       )}
 
       {/* 실제 이미지 */}

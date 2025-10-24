@@ -12,9 +12,9 @@ export default function HeaderLogo() {
         alt="PillTime 마크"
         width={60}
         height={60}
-        className="-rotate-35 cursor-pointer transition-transform duration-200 ease-in-out scale-100 hover:scale-110"
+        className="-rotate-45 cursor-pointer transition-transform duration-200 ease-in-out scale-100 hover:scale-110"
         priority
-        onClick={() => router.refresh()}
+        onClick={() => window && window?.location.reload()}
       />
     </>
   );
