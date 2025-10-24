@@ -66,15 +66,15 @@ export async function middleware(req: NextRequest) {
   }
 
   // 비로그인 상태에서 보호 경로 접근 → /login?next=...
-  if (!user) {
-    const redirectUrl = new URL("/login", req.url);
-    const next = pathname + (search || "");
-    redirectUrl.searchParams.set("next", next);
-    const redirect = NextResponse.redirect(redirectUrl, 303);
-    redirect.headers.set("Cache-Control", "no-store");
-    for (const [k, v] of res.headers) redirect.headers.set(k, v);
-    return redirect;
-  }
+  // if (!user) {
+  //   const redirectUrl = new URL("/login", req.url);
+  //   const next = pathname + (search || "");
+  //   redirectUrl.searchParams.set("next", next);
+  //   const redirect = NextResponse.redirect(redirectUrl, 303);
+  //   redirect.headers.set("Cache-Control", "no-store");
+  //   for (const [k, v] of res.headers) redirect.headers.set(k, v);
+  //   return redirect;
+  // }
 
   // 통과
   return res;
