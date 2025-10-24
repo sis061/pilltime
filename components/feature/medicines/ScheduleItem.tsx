@@ -1,7 +1,5 @@
 "use client";
 
-// TODO 알람 기능 구현
-
 import { useEffect, useMemo, useState, useTransition } from "react";
 // ---- UI
 import { toast } from "sonner";
