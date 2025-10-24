@@ -10,7 +10,6 @@ const IS_DEV =
 
 const CACHE_NAME = "pilltime-cache-v3";
 const APP_SHELL = [
-  // "/",
   "/offline.html",
   "/pilltime_mark_duotone.svg",
   "/pilltime_logo.png",
@@ -53,7 +52,9 @@ self.addEventListener("fetch", (event) => {
 
   const req = event.request;
   const url = new URL(req.url);
+
   if (url.pathname.startsWith("/callback")) return;
+  if (url.pathname.startsWith("/login")) return;
   if (req.mode === "navigate" && url.searchParams.has("code")) {
     return;
   }
@@ -66,10 +67,7 @@ self.addEventListener("fetch", (event) => {
           return await fetch(req);
         } catch {
           const cache = await caches.open(CACHE_NAME);
-          return (
-            // (await cache.match("/")) ||
-            (await cache.match("/offline.html")) || Response.error()
-          );
+          return (await cache.match("/offline.html")) || Response.error();
         }
       })()
     );

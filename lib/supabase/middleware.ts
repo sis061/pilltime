@@ -3,7 +3,6 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 
 const PUBLIC_PATHS = [
-  "/login",
   "/callback",
   "/favicon.ico",
   "/robots.txt",
@@ -53,20 +52,28 @@ export async function middleware(req: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // 로그인 상태에서 /login 접근 → 원래 목적지(or /)로
+  if (pathname.startsWith("/login")) {
+    if (user) {
+      const to = req.nextUrl.searchParams.get("next") || "/";
+      const redirect = NextResponse.redirect(new URL(to, req.url), 303);
+      redirect.headers.set("Cache-Control", "no-store");
+      for (const [k, v] of res.headers) redirect.headers.set(k, v);
+      return redirect;
+    }
+    // 비로그인: 로그인 페이지 그냥 통과
+    return res;
+  }
+
   // 비로그인 상태에서 보호 경로 접근 → /login?next=...
   if (!user) {
     const redirectUrl = new URL("/login", req.url);
     const next = pathname + (search || "");
     redirectUrl.searchParams.set("next", next);
-    return NextResponse.redirect(redirectUrl, { headers: res.headers }); // ✅ 쿠키 전달
-  }
-
-  // 로그인 상태에서 /login 접근 → 원래 목적지(or /)로
-  if (pathname.startsWith("/login")) {
-    const to = req.nextUrl.searchParams.get("next") || "/";
-    return NextResponse.redirect(new URL(to, req.url), {
-      headers: res.headers,
-    }); // ✅ 쿠키 전달
+    const redirect = NextResponse.redirect(redirectUrl, 303);
+    redirect.headers.set("Cache-Control", "no-store");
+    for (const [k, v] of res.headers) redirect.headers.set(k, v);
+    return redirect;
   }
 
   // 통과
