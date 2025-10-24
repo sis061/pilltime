@@ -8,7 +8,7 @@ import { useGlobalLoading } from "@/store/useGlobalLoading";
 
 export default function HomeToday() {
   const router = useRouter();
-  const setGLoading = useGlobalLoading((s) => s.setGLoading);
+  const { startLoading } = useGlobalLoading();
 
   const today = new Date();
   const kstNow = new Date(
@@ -22,7 +22,7 @@ export default function HomeToday() {
         variant="ghost"
         onClick={() => {
           router.push(`/calendar?d=${todayYmd}`);
-          setGLoading(true, "정보를 불러오는 중이에요..");
+          startLoading("open-calendar", "정보를 불러오는 중이에요..");
         }}
         className="flex gap-2 items-center justify-center shadow-xs !py-2 !px-4 rounded-md [&_h3]:!text-lg [&_span]:!text-[16px] [&_span]:opacity-75 hover:opacity-90 cursor-pointer"
         aria-label={`${todayYmd} 눌러서 달력 열기`}

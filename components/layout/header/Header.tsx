@@ -34,11 +34,11 @@ export default async function Header({ user }: { user: User }) {
       <div className="inner flex justify-between items-center !mx-auto h-full">
         <div>
           <Image
-            src="/pilltime_logo.svg"
-            alt="PillTime 로고"
+            src="/pilltime_mark_duotone.svg"
+            alt="PillTime 마크"
             width={60}
             height={60}
-            className="-rotate-12 "
+            className="-rotate-35 "
             priority
           />
         </div>

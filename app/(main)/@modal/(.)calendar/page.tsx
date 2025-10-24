@@ -11,14 +11,15 @@ export default async function CalendarInterceptPage({
   searchParams: Promise<{ d?: string }>;
 }) {
   const { d } = await searchParams;
-  const supabase = await createServerSupabaseClient(); // ✅ 여기는 캐시 밖 (페이지)
+
+  const supabase = await createServerSupabaseClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return null;
 
   const today = toYYYYMMDD(new Date(), "Asia/Seoul");
-  const monthMap = await getMonthIndicatorMap(user.id, today); // ✅ 캐시 안에선 쿠키 접근 없음
+  const monthMap = await getMonthIndicatorMap(user.id, today);
 
   return (
     <CalendarDrawerClient

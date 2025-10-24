@@ -12,7 +12,8 @@ const CACHE_NAME = "pilltime-cache-v3";
 const APP_SHELL = [
   // "/",
   "/offline.html",
-  "/pilltime_logo.svg",
+  "/pilltime_mark_duotone.svg",
+  "/pilltime_logo.png",
   "/icon-192.png",
   "/icon-512.png",
 ];

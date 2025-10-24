@@ -28,7 +28,7 @@ async function getImageCompression() {
 }
 
 export default function ImageUploader({ file, onCropped }: Props) {
-  const { isGLoading, setGLoading } = useGlobalLoading();
+  const { isGLoading, startLoading, forceStop } = useGlobalLoading();
   const [src, setSrc] = useState<string | null>(null);
   const [crop, setCrop] = useState<PercentCrop>({
     unit: "%",
@@ -109,7 +109,7 @@ export default function ImageUploader({ file, onCropped }: Props) {
   }
 
   async function handleCropAndUpload() {
-    setGLoading(true, "이미지를 처리 중이에요...");
+    startLoading("upload-image", "이미지를 처리 중이에요..");
     try {
       const blob = await getCroppedBlob();
       if (!blob) return;
@@ -159,7 +159,7 @@ export default function ImageUploader({ file, onCropped }: Props) {
       // 임시로 기존 타입 유지해야 한다면 any 캐스팅:
       onCropped(maybeFile as File, previewUrl);
     } catch (error: any) {
-      setGLoading(false);
+      forceStop();
       console.error("error 발생 - CropAndUpload", error);
       toast.error("이미지 처리 중 문제가 발생했어요 " + error?.message);
     }

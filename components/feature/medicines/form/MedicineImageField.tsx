@@ -36,7 +36,8 @@ export function MedicineImageField() {
   const isPathnameNew = pathname.includes("new");
 
   const minTablet = useSSRMediaquery(768);
-  const { isGLoading, setGLoading } = useGlobalLoading();
+  const { isGLoading, startLoading, stopLoading, forceStop } =
+    useGlobalLoading();
 
   const { watch, setValue } = useFormContext();
   const imageUrl = watch("imageUrl");
@@ -58,17 +59,18 @@ export function MedicineImageField() {
       if (!file) return;
 
       try {
-        setGLoading(true, "이미지를 불러오는 중이에요...");
+        startLoading("prepare-image", "이미지를 불러오는 중이에요..");
         const preparedBlob = await preparePickedFile(file); // ← 핵심 전처리
         setRawFile(preparedBlob);
         setCropOpen(true); // 전처리 끝난 후 Drawer 오픈
+        stopLoading("prepare-image");
       } catch (err: any) {
         console.error(err);
         toast.error(
           err?.message ?? "이미지를 열 수 없어요. 다른 사진으로 시도해 보세요."
         );
       } finally {
-        setGLoading(false);
+        forceStop();
       }
     };
     input.click();
@@ -89,7 +91,7 @@ export function MedicineImageField() {
       }
 
       try {
-        setGLoading(true, "이미지를 업로드 중이에요...");
+        startLoading("upload-image", "이미지를 업로드 중이에요..");
         setUploading(true);
 
         // 2) 업로드
@@ -111,19 +113,20 @@ export function MedicineImageField() {
           img.onerror = () => reject(new Error("원격 이미지 로딩 실패"));
           img.src = publicUrl;
         });
+        stopLoading("upload-image");
       } catch (err: any) {
         revokeObjectURL(lastBlobUrlRef.current);
         lastBlobUrlRef.current = null;
         toast.error(
           "이미지 업로드 중 문제가 발생했어요 " + (err?.message ?? "")
         );
+        forceStop();
       } finally {
         setUploading(false);
         setCropOpen(false);
-        setGLoading(false);
       }
     },
-    [user, setValue, setGLoading]
+    [user, setValue, startLoading, stopLoading, forceStop]
   );
 
   return (
@@ -137,17 +140,7 @@ export function MedicineImageField() {
               if (!uploading) handleSelectFile();
             }}
           >
-            {imageUrl ? (
-              <Image
-                src={imageUrl}
-                alt="medicine-preview"
-                className="object-cover w-full h-full"
-                width={160}
-                height={160}
-              />
-            ) : (
-              <SmartImage src={imageUrl} className="rounded-md" />
-            )}
+            <SmartImage src={imageUrl} className="rounded-md" />
           </div>
           <Button
             type="button"
