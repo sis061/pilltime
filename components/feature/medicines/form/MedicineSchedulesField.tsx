@@ -7,9 +7,10 @@ dayjs.locale("ko");
 import * as React from "react";
 // ---- UI
 import { toast } from "sonner";
-// ---- COMPONENT
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+// ---- COMPONENT
 import TimePicker from "antd/es/time-picker";
 import koKR from "antd/locale/ko_KR";
 // ---- UTIL
@@ -17,7 +18,6 @@ import { MedicineFormValues } from "@/lib/schemas/medicine";
 // ---- LIB
 import { useFormContext, useFieldArray, Controller } from "react-hook-form";
 import { useHasTouch } from "@/hooks/useHasTouch";
-import { Input } from "@/components/ui/input";
 
 /* ------
  CONST

@@ -79,14 +79,8 @@ export default function FirstVisitBanner() {
           <div className="!space-y-3 !py-4 sm:!pl-4 !bg-pilltime-grayLight">
             <div className="[&_p]:!text-pilltime-grayDark/50 !space-y-1">
               <p>
-                <strong className="font-bold ">아맞다약!</strong> 은{" "}
-                <strong className="!text-pilltime-blue">정시 알림</strong>을
-                먼저 보내드린 후
-              </p>
-              <p>
-                <strong className="!text-red-600">30분</strong>이 지나도 먹지
-                않으면 <strong className="!text-red-600">다시 알림</strong>을
-                보내드려요!
+                <strong>아 맞 다 약!</strong> 은 정시 알림을 먼저 보내드린 후
+                30분이 지나도 먹지 않으면 알림을 다시 보내드려요!
               </p>
               <p className="!pt-2">
                 <strong className="!text-pilltime-violet">알림 켜기</strong>{" "}
@@ -106,9 +100,10 @@ export default function FirstVisitBanner() {
               <p className="!text-pilltime-grayDark/75">
                 * iOS Safari에서는{" "}
                 <strong className="!text-pilltime-violet">
-                  홈 화면에 추가(PWA 설치)
+                  홈 화면에 추가
                 </strong>{" "}
-                후에만 알림이 동작합니다. 설치 후 다시 시도해 주세요.
+                후에만 알림이 동작합니다. <strong>메뉴 &gt; 가이드</strong>를
+                따라 다시 시도해 주세요.
               </p>
             ) : null}
           </div>

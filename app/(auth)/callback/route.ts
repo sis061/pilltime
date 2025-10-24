@@ -47,6 +47,7 @@ export async function GET(req: NextRequest) {
       new URL("/login?error=oauth", req.url),
       303
     );
+    to.headers.set("Cache-Control", "no-store");
     return withSetCookie(res, to);
   }
 
@@ -75,5 +76,6 @@ export async function GET(req: NextRequest) {
 
   // 4) 쿠키를 가진 채로 깔끔한 URL로 리다이렉트
   const to = NextResponse.redirect(clean, 303);
+  to.headers.set("Cache-Control", "no-store");
   return withSetCookie(res, to);
 }

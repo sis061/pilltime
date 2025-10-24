@@ -18,7 +18,7 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ["lucide-react", "date-fns", "antd"],
   },
-  allowedDevOrigins: ["http://localhost:3000", "http://192.168.35.73:3000"],
+  allowedDevOrigins: ["http://localhost:3000", "http://192.168.35.41:3000"],
 
   // ✅ 정적 폴백 이미지에 강한 캐시 헤더 부여
   async headers() {
