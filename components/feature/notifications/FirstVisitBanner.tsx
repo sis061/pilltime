@@ -15,13 +15,13 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { usePush } from "@/hooks/usePush"; // ✅ 경로 업데이트 반영
-import { BellRing } from "lucide-react";
+import { BellRing, Menu } from "lucide-react";
 import { useUserStore } from "@/store/useUserStore";
 
 export default function FirstVisitBanner() {
   const user = useUserStore((s) => s.user);
   const vapid = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!;
-  const { permission, subscribe, loading } = usePush(vapid);
+  const { permission, subscribe, loading, refresh } = usePush(vapid);
 
   const [open, setOpen] = useState(false);
 
@@ -38,6 +38,15 @@ export default function FirstVisitBanner() {
       /^((?!chrome|android).)*safari/i.test(navigator.userAgent),
     []
   );
+  const isStandalone = useMemo(() => {
+    if (typeof window === "undefined") return false;
+    // iOS PWA: navigator.standalone, 표준: display-mode: standalone
+    return (
+      (window.matchMedia &&
+        window.matchMedia("(display-mode: standalone)").matches) ||
+      (navigator as any).standalone === true
+    );
+  }, []);
 
   useEffect(() => {
     // 이미 허용이면 X, 한 번 본 적 있으면 X
@@ -53,6 +62,11 @@ export default function FirstVisitBanner() {
   const handleEnable = async () => {
     try {
       await subscribe(); // 권한 요청 → SW ready → 구독 저장
+      await refresh(); // ✅ 즉시 강제 동기화 (모든 환경에서 확정적으로 반영)
+      // 가끔 iOS에서 한 틱 늦을 때 보정
+      if (document.visibilityState === "visible") {
+        queueMicrotask(() => refresh());
+      }
     } finally {
       localStorage.setItem("pt:notiPrompted", "1");
       setOpen(false);
@@ -70,13 +84,13 @@ export default function FirstVisitBanner() {
 
       <AlertDialogContent className="sm:max-w-[480px] !bg-pilltime-grayLight !p-4 !rounded-lg">
         <AlertDialogHeader>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 w-full justify-center">
             <BellRing size={20} color="#3B82F6" />
             <AlertDialogTitle className="!text-pilltime-grayDark/90">
               알림을 허용해주세요!
             </AlertDialogTitle>
           </div>
-          <div className="!space-y-3 !py-4 sm:!pl-4 !bg-pilltime-grayLight">
+          <div className="!space-y-3 !py-4 !bg-pilltime-grayLight sm:!pl-2">
             <div className="[&_p]:!text-pilltime-grayDark/50 !space-y-1">
               <p>
                 <strong>아 맞 다 약!</strong> 은 정시 알림을 먼저 보내드린 후
@@ -89,21 +103,26 @@ export default function FirstVisitBanner() {
             </div>
 
             {permission === "denied" ? (
-              <p className="!text-red-600">
+              <p className="!text-red-600 !pt-2">
                 * 현재 알림이 차단되어 있어요. 브라우저 주소창의 사이트 설정에서
                 <strong className="!text-pilltime-violet"> 알림 허용</strong>
                 으로 변경한 뒤 다시 시도해 주세요.
               </p>
             ) : null}
 
-            {isIOS && isSafari ? (
-              <p className="!text-pilltime-grayDark/75">
+            {isIOS && isSafari && !isStandalone ? (
+              <p className="!text-pilltime-grayDark/75 !pt-2">
                 * iOS Safari에서는{" "}
                 <strong className="!text-pilltime-violet">
                   홈 화면에 추가
                 </strong>{" "}
-                후에만 알림이 동작합니다. <strong>메뉴 &gt; 가이드</strong>를
-                따라 다시 시도해 주세요.
+                후에만 알림이 동작합니다.{" "}
+                <Menu
+                  size={18}
+                  strokeWidth={2.5}
+                  className="inline-block !mb-0.5"
+                />{" "}
+                <strong>(메뉴) &gt; 가이드</strong>를 따라 다시 시도해 주세요.
               </p>
             ) : null}
           </div>

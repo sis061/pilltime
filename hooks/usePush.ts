@@ -100,6 +100,26 @@ export function usePush(vapidPublicKey: string, userId?: string) {
     }
   }, []);
 
+  // ✅ 권한 변경 자동 반영(가능 브라우저)
+  useEffect(() => {
+    if (typeof navigator === "undefined" || !("permissions" in navigator))
+      return;
+    // iOS Safari 등 일부 환경에선 동작 안 할 수 있음 → 무시
+    (navigator as any).permissions
+      .query({ name: "notifications" as PermissionName })
+      .then((status: PermissionStatus) => {
+        const onChange = () => {
+          const now =
+            typeof Notification !== "undefined"
+              ? Notification.permission
+              : "default";
+          setPermission(now);
+        };
+        status.onchange = onChange;
+      })
+      .catch(() => {});
+  }, []);
+
   /** 현재 구독 상태 동기화 */
   const refresh = useCallback(async () => {
     if (!isBrowserOK()) {
@@ -109,6 +129,7 @@ export function usePush(vapidPublicKey: string, userId?: string) {
     const reg = await navigator.serviceWorker.getRegistration();
     if (!reg) {
       setIsSubscribed(false);
+      setPermission(Notification.permission);
       return;
     }
     const sub = await reg.pushManager.getSubscription();
@@ -291,6 +312,9 @@ export function usePush(vapidPublicKey: string, userId?: string) {
       navigator.serviceWorker.removeEventListener("controllerchange", onCtrl);
   }, [autoHeal]);
 
+  // ✅ 파생 값: 권한 + 구독이 모두 true
+  const notifyReady = permission === "granted" && isSubscribed === true;
+
   return {
     permission,
     isSubscribed,
@@ -299,5 +323,6 @@ export function usePush(vapidPublicKey: string, userId?: string) {
     resubscribe,
     loading,
     refresh,
+    notifyReady,
   };
 }

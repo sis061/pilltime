@@ -59,7 +59,7 @@ export default function HeaderClient({
   const { enabled, setEnabledOptimistic, mutateGlobal, revalidate } =
     useGlobalNotify();
   const vapid = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!;
-  const { permission, isSubscribed, subscribe, loading, refresh } =
+  const { permission, isSubscribed, subscribe, refresh, notifyReady } =
     usePush(vapid);
   // ---- STORE
   const setUser = useUserStore((s) => s.setUser);
@@ -77,7 +77,7 @@ export default function HeaderClient({
    * ------ */
 
   const enabledForRender = enabled ?? initialGlobalEnabled;
-  const notifyOn = isSubscribed === true && enabledForRender === true;
+  const notifyOn = notifyReady && enabledForRender === true;
 
   /** 공통 버튼 config (props로 내려줄 것) */
   const baseWhiteBtn =
@@ -114,12 +114,11 @@ export default function HeaderClient({
     {
       key: "global",
       // label: notifyOn ? "모든 알림 켜짐" : "모든 알림 꺼짐",
-      label:
-        isSubscribed === false
-          ? "알림 비활성화됨"
-          : enabled === true
-          ? "모든 알림 켜짐"
-          : "모든 알림 꺼짐",
+      label: !notifyReady
+        ? "알림 비활성화됨"
+        : enabledForRender
+        ? "모든 알림 켜짐"
+        : "모든 알림 꺼짐",
       iconColor: notifyOn ? "#fff" : "#ffffff75",
       iconLeft: notifyOn ? Bell : BellOff,
       className: baseWhiteBtn,
@@ -184,9 +183,9 @@ export default function HeaderClient({
         }
 
         // (A) 아직 구독이 없다면: 구독을 먼저 생성
-        if (!isSubscribed) {
+        if (!notifyReady) {
           const ok = await subscribe();
-          if (!ok) {
+          if (!ok || Notification.permission !== "granted") {
             toast.error("알림 구독에 실패했어요. 잠시 후 다시 시도해 주세요.");
             await refresh();
             return;
