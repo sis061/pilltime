@@ -223,7 +223,7 @@ export function MedicineSchedulesField() {
           <label className="text-sm font-bold">복용 시간</label>
 
           {fields.map((f, index) => (
-            <div key={f.__key} className="flex flex-col gap-2 items-center">
+            <div key={f.__key} className="flex flex-col gap-2 items-center ">
               <div className="flex gap-2 items-center justify-between w-full">
                 {/* ✅ 도메인 PK(id) 숨김 input → diff용으로 서버에 항상 전달 */}
                 <input
@@ -264,29 +264,61 @@ export function MedicineSchedulesField() {
                     };
 
                     return (
-                      <div className="w-full border-pilltime-grayLight">
+                      <div className="!border-pilltime-grayLight grow !ml-1">
                         {hasTouch ? (
                           // ✅ 모바일: 네이티브 time 입력
-                          <Input
-                            type="time"
-                            step={300} // 5분 간격
-                            min="00:00"
-                            max="23:59"
-                            value={field.value || ""}
-                            onChange={(e) => {
-                              const raw = e.target.value; // ex) "12:03"
-                              const snapped = snapToStep(raw); // ex) "12:05"
-                              handleChange(snapped);
-                              // 사용자가 고른 값과 다르면 토스트/문구:
-                              if (raw !== snapped)
-                                toast.info(
-                                  `5분 간격으로 자동 입력돼요 - ${snapped}`
-                                );
-                            }}
-                            onBlur={field.onBlur}
-                            className="!px-2 !border-pilltime-grayLight !shadow-md max-w-[90%] !ml-1 transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-95"
-                            aria-label="복용 시간"
-                          />
+                          <div
+                            className={[
+                              // --- shadcn Input 기본 클래스 ---
+                              "relative flex items-center h-9.5 w-full rounded-md border border-input bg-transparent",
+                              "!px-2 !py-1 text-base shadow-sm transition-colors md:text-sm",
+                              "focus-within:outline-none focus-within:ring-1 focus-within:ring-ring",
+                              "disabled:cursor-not-allowed disabled:opacity-50",
+                              // --- 인풋에 준 추가 클래스 ---
+                              "!border-pilltime-grayLight w-full ",
+                            ].join(" ")}
+                          >
+                            {/* 화면에 보이는 값(placeholder 역할 포함) */}
+                            <span
+                              className={[
+                                "pointer-events-none select-none w-full ",
+                                field.value
+                                  ? "!text-black"
+                                  : "!text-pilltime-grayDark/50",
+                              ].join(" ")}
+                            >
+                              {field.value
+                                ? dayjs(
+                                    field.value,
+                                    ["HH:mm", "HH:mm:ss"],
+                                    true
+                                  )
+                                    .locale("ko")
+                                    .format("A hh:mm")
+                                : "약 먹을 시간을 입력하세요."}
+                            </span>
+                            <input
+                              type="time"
+                              step={300}
+                              min="00:00"
+                              max="23:59"
+                              value={field.value || ""}
+                              onChange={(e) => {
+                                const raw = e.target.value; // ex) "12:03"
+                                const snapped = snapToStep(raw); // ex) "12:05"
+                                handleChange(snapped);
+                                if (raw !== snapped) {
+                                  toast.info(
+                                    `5분 간격으로 자동 입력돼요 - ${snapped}`
+                                  );
+                                }
+                              }}
+                              onBlur={field.onBlur}
+                              aria-label="복용 시간"
+                              className="peer absolute inset-0 h-full w-full opacity-0 cursor-pointer touch-manipulation focus-visible:outline-none"
+                              disabled={false}
+                            />
+                          </div>
                         ) : (
                           // ✅ 태블릿/데스크톱: antd TimePicker
                           <TimePicker
@@ -339,7 +371,7 @@ export function MedicineSchedulesField() {
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="!text-red-500 transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-95"
+                  className="!text-red-500 !ml-0.5 transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-95"
                   onClick={() => remove(index)}
                 >
                   삭제

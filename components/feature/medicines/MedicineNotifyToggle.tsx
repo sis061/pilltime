@@ -31,13 +31,13 @@ export function MedicineNotifyToggle({
   const [pending, startTransition] = React.useTransition();
   const { enabled: globalOn, loading: globalLoading } = useGlobalNotify();
   const vapid = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!;
-  const { isSubscribed, refresh } = usePush(vapid);
+  const { notifyReady, refresh } = usePush(vapid);
   const minMobile = useSSRMediaquery(640);
 
   const handleToggle = () => {
     if (pending) return;
 
-    if (!isSubscribed || globalOn === false) {
+    if (!notifyReady || globalOn === false) {
       toast.info(
         `전체 알림이 꺼져 있어요. ${
           minMobile ? "상단" : "메뉴"
@@ -71,7 +71,7 @@ export function MedicineNotifyToggle({
   };
 
   const isDisabled = pending || globalLoading;
-  const visuallyOff = !isSubscribed || globalOn === false || !enabled;
+  const visuallyOff = !notifyReady || globalOn === false || !enabled;
 
   return (
     <button

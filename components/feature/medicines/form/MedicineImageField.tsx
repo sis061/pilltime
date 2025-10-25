@@ -31,6 +31,7 @@ import { useGlobalLoading } from "@/store/useGlobalLoading";
 export function MedicineImageField() {
   const user = useUserStore((s) => s.user);
   const lastBlobUrlRef = useRef<string | null>(null); // revoke용
+  const pickLockRef = useRef(false); // 더블 트리거 방지
 
   const pathname = usePathname();
   const isPathnameNew = pathname.includes("new");
@@ -50,22 +51,53 @@ export function MedicineImageField() {
 
   // ✅ 파일 선택 핸들러 (변경 버튼 눌렀을 때)
   const handleSelectFile = () => {
-    if (uploading) return;
+    if (uploading || pickLockRef.current) return;
     const input = document.createElement("input");
     input.type = "file";
     input.accept = "image/*,.heic,.heif";
+    input.multiple = false;
+
+    // iOS 안정성 ↑: DOM에 붙였다가 사용 후 제거 (일부 환경에서 비DOM 인풋이 간헐 실패)
+    input.style.position = "fixed";
+    input.style.top = "-9999px";
+    document.body.appendChild(input);
+
     input.onchange = async (e: any) => {
       const file: File | undefined = e.target.files?.[0];
       if (!file) {
         toast.error("이미지를 열 수 없어요. 다시 시도해주세요.");
+        document.body.removeChild(input);
         return;
       }
 
+      // 더블 트리거 잠금
+      if (pickLockRef.current) {
+        document.body.removeChild(input);
+        return;
+      }
+      pickLockRef.current = true;
+
       try {
         startLoading("prepare-image", "이미지를 불러오는 중이에요..");
+
+        // ✅ iCloud 0바이트 대기 루프 (최대 2.5초)
+        let tries = 0;
+        while (file.size === 0 && tries < 25) {
+          await new Promise((r) => setTimeout(r, 100));
+          tries++;
+        }
+        if (file.size === 0) {
+          throw new Error(
+            "사진 원본이 기기에 아직 내려오지 않았어요. 사진 앱에서 원본을 내려받은 뒤 다시 선택해주세요."
+          );
+        }
+
+        // 포커스 경합 방지 위한 순서 변경 => 먼저 드로어를 열고, 다음 틱에 변환 시작
+        setCropOpen(true);
+        await new Promise(requestAnimationFrame);
+
         const preparedBlob = await preparePickedFile(file); // ← 핵심 전처리
         setRawFile(preparedBlob);
-        setCropOpen(true); // 전처리 끝난 후 Drawer 오픈
         stopLoading("prepare-image");
       } catch (err: any) {
         console.error(err);
@@ -73,6 +105,12 @@ export function MedicineImageField() {
           err?.message ?? "이미지를 열 수 없어요. 다른 사진으로 시도해주세요."
         );
         forceStop();
+        setCropOpen(false);
+      } finally {
+        // 정리
+        pickLockRef.current = false;
+        // iOS 안정성 ↑: 사용 후 반드시 제거
+        document.body.removeChild(input);
       }
     };
     input.click();
