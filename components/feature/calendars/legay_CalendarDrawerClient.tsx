@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import CalendarDrawer from "@/components/feature/calendars/CalendarDrawer";
+import CalendarDrawer from "@/components/feature/calendars/legacy_CalendarDrawer";
 import type { MonthIndicatorMap } from "@/types/calendar";
 
 export default function CalendarDrawerClient({

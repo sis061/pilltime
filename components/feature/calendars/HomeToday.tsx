@@ -15,7 +15,6 @@ export default function HomeToday() {
     today.toLocaleString("en-US", { timeZone: "Asia/Seoul" })
   );
   const todayYmd = toYYYYMMDD(new Date(), "Asia/Seoul");
-
   return (
     <div className="flex items-center justify-center w-full [&_*]:!text-pilltime-grayDark/50">
       <Button

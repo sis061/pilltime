@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 // ---- NEXT
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 // ---- CUSTOM HOOKS
 import { useGlobalNotify } from "@/hooks/useGlobalNotify";
 // ---- COMPONENT
@@ -23,17 +23,16 @@ import {
   Bell,
   BellOff,
   CalendarSearch,
+  ListRestart,
   LogOut,
   Menu,
   Plus,
   UserPen,
 } from "lucide-react";
-// ---- UTIL
-import { toYYYYMMDD } from "@/lib/date";
 // ---- STORE
 import { useUserStore } from "@/store/useUserStore";
 import { useGlobalLoading } from "@/store/useGlobalLoading";
-import { useSSRMediaquery } from "@/hooks/useSSRMediaquery";
+// import { useSSRMediaquery } from "@/hooks/useSSRMediaquery";
 import { usePush } from "@/hooks/usePush";
 // ---- TYPE
 import type { User } from "@/types/profile";
@@ -54,8 +53,9 @@ export default function HeaderClient({
   const [pendingGlobal, startTransition] = useTransition();
   // ---- NEXT
   const router = useRouter();
+  const pathname = usePathname();
   // ---- CUSTOM HOOKS
-  const minMobile = useSSRMediaquery(640);
+  // const minMobile = useSSRMediaquery(640);
   const { enabled, setEnabledOptimistic, mutateGlobal, revalidate } =
     useGlobalNotify();
   const vapid = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!;
@@ -64,7 +64,7 @@ export default function HeaderClient({
   // ---- STORE
   const setUser = useUserStore((s) => s.setUser);
   const clearUser = useUserStore((s) => s.clearUser);
-  const { startLoading } = useGlobalLoading();
+  const { startLoading, stopLoading } = useGlobalLoading();
 
   // 오늘 날짜 계산
   // const today = new Date();
@@ -78,6 +78,7 @@ export default function HeaderClient({
 
   const enabledForRender = enabled ?? initialGlobalEnabled;
   const notifyOn = notifyReady && enabledForRender === true;
+  const isPathCalendar = pathname.startsWith("/calendar");
 
   /** 공통 버튼 config (props로 내려줄 것) */
   const baseWhiteBtn =
@@ -101,15 +102,11 @@ export default function HeaderClient({
     },
     {
       key: "calendar",
-      label: "지난 기록 보기",
+      label: isPathCalendar ? "홈으로 돌아가기" : "지난 기록 보기",
       iconColor: "#fff",
-      iconLeft: CalendarSearch,
+      iconLeft: isPathCalendar ? ListRestart : CalendarSearch,
       className: baseWhiteBtn,
-      onClick: () => {
-        setMenuOpen(false);
-        router.push(`/calendar?d=${todayYmd}`);
-        startLoading("open-calendar", "정보를 불러오는 중이에요..");
-      },
+      onClick: goToCalendar,
     },
     {
       key: "global",
@@ -170,6 +167,18 @@ export default function HeaderClient({
     setMenuOpen(false);
     router.push("/medicines/new");
     startLoading("open-medicine-new", "템플릿을 불러오는 중이에요..");
+  }
+
+  function goToCalendar() {
+    if (isPathCalendar) {
+      stopLoading("open-calendar");
+      router.push("/", { scroll: false });
+      setMenuOpen(false);
+    } else {
+      setMenuOpen(false);
+      startLoading("open-calendar", "정보를 불러오는 중이에요..");
+      router.push(`/calendar?d=${todayYmd}`);
+    }
   }
 
   function toggleGlobal() {
