@@ -11,7 +11,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { d } = await searchParams;
   return {
-    title: `지난 기록 보기 ${d}`,
+    title: `지난 기록 보기 | ${d}`,
     description: `${d}의 지난 기록 보기`,
     openGraph: {
       title: `아맞다약!`,
@@ -38,7 +38,7 @@ export default async function CalendarPage({
   const monthMap = await getMonthIndicatorMap(user.id, today);
 
   return (
-    <section className="inner min-h-[calc(100dvh-11.5rem)] max-h-screen !mx-auto !w-full h-full !mt-2 sm:!mt-4 !mb-2 !p-2">
+    <section className="inner min-h-[calc(100dvh-10.75rem)] max-h-screen !mx-auto !w-full h-full !mt-2 sm:!mt-4 !mb-4.5 sm:!mb-4 !p-2">
       <CalendarClient
         variant="page"
         dateParam={d ?? null}

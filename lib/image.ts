@@ -158,3 +158,12 @@ export async function preparePickedFile(file: File): Promise<Blob> {
 
   return prepared;
 }
+
+// Supabase Storage 공개 버킷 베이스 경로 (실제 프로젝트 URL로 교체)
+const GUIDE_CDN_BASE =
+  "https://cxkefmygfdtcwidshaoa.supabase.co/storage/v1/object/public/guide";
+
+export const guidePath = (folder: string, file: string, q?: string) =>
+  q
+    ? `${GUIDE_CDN_BASE}/${folder}/${file}?${q}`
+    : `${GUIDE_CDN_BASE}/${folder}/${file}`;

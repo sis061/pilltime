@@ -1,8 +1,21 @@
 "use client";
 
 import Image from "next/image";
+import { useRouter, usePathname } from "next/navigation";
 
 export default function HeaderLogo() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const isHome = pathname === "/";
+
+  const handleClick = () => {
+    if (isHome) {
+      window && window?.location.reload();
+    } else {
+      router.push("/");
+    }
+  };
+
   return (
     <>
       <Image
@@ -12,7 +25,7 @@ export default function HeaderLogo() {
         height={60}
         className="-rotate-45 transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-90 hover:scale-110"
         priority
-        onClick={() => window && window?.location.reload()}
+        onClick={handleClick}
       />
     </>
   );

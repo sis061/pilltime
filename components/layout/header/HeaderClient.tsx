@@ -28,6 +28,7 @@ import {
   Menu,
   Plus,
   UserPen,
+  BookOpen,
 } from "lucide-react";
 // ---- STORE
 import { useUserStore } from "@/store/useUserStore";
@@ -79,6 +80,7 @@ export default function HeaderClient({
   const enabledForRender = enabled ?? initialGlobalEnabled;
   const notifyOn = notifyReady && enabledForRender === true;
   const isPathCalendar = pathname.startsWith("/calendar");
+  const isPathGuide = pathname.startsWith("/guide");
 
   /** 공통 버튼 config (props로 내려줄 것) */
   const baseWhiteBtn =
@@ -108,18 +110,26 @@ export default function HeaderClient({
       className: baseWhiteBtn,
       onClick: goToCalendar,
     },
+    // {
+    //   key: "global",
+    //   // label: notifyOn ? "모든 알림 켜짐" : "모든 알림 꺼짐",
+    //   label: !notifyReady
+    //     ? "알림 비활성화됨"
+    //     : enabledForRender
+    //     ? "모든 알림 켜짐"
+    //     : "모든 알림 꺼짐",
+    //   iconColor: notifyOn ? "#fff" : "#ffffff75",
+    //   iconLeft: notifyOn ? Bell : BellOff,
+    //   className: baseWhiteBtn,
+    //   onClick: () => !pendingGlobal && toggleGlobal(),
+    // },
     {
-      key: "global",
-      // label: notifyOn ? "모든 알림 켜짐" : "모든 알림 꺼짐",
-      label: !notifyReady
-        ? "알림 비활성화됨"
-        : enabledForRender
-        ? "모든 알림 켜짐"
-        : "모든 알림 꺼짐",
-      iconColor: notifyOn ? "#fff" : "#ffffff75",
-      iconLeft: notifyOn ? Bell : BellOff,
+      key: "guide",
+      label: isPathGuide ? "홈으로 돌아가기" : "사용 가이드",
+      iconColor: "#fff",
+      iconLeft: isPathGuide ? ListRestart : BookOpen,
       className: baseWhiteBtn,
-      onClick: () => !pendingGlobal && toggleGlobal(),
+      onClick: goToGuide,
     },
   ];
 
@@ -128,13 +138,28 @@ export default function HeaderClient({
       key: "edit",
       label: "프로필 편집",
       iconLeft: UserPen,
+      iconColor: "#3B82F6",
       className: baseBlueBtn,
       onClick: () => setOpenNickname(true),
+    },
+    {
+      key: "global",
+      // label: notifyOn ? "모든 알림 켜짐" : "모든 알림 꺼짐",
+      label: !notifyReady
+        ? "알림 비활성화됨"
+        : enabledForRender
+        ? "모든 알림 켜짐"
+        : "모든 알림 꺼짐",
+      iconLeft: notifyOn ? Bell : BellOff,
+      iconColor: notifyOn ? "#3B82F6" : "#1F293775",
+      className: baseBlueBtn,
+      onClick: () => !pendingGlobal && toggleGlobal(),
     },
     {
       key: "logout",
       label: "로그아웃",
       iconLeft: LogOut,
+      iconColor: "#3B82F6",
       className: baseBlueBtn,
       onClick: logout,
     },
@@ -178,6 +203,18 @@ export default function HeaderClient({
       setMenuOpen(false);
       startLoading("open-calendar", "정보를 불러오는 중이에요..");
       router.push(`/calendar?d=${todayYmd}`);
+    }
+  }
+
+  function goToGuide() {
+    if (isPathGuide) {
+      // stopLoading("open-calendar");
+      router.push("/", { scroll: false });
+      setMenuOpen(false);
+    } else {
+      setMenuOpen(false);
+      // startLoading("open-calendar", "정보를 불러오는 중이에요..");
+      router.push(`/guide`);
     }
   }
 
@@ -324,6 +361,8 @@ export default function HeaderClient({
           open={menuOpen}
           onOpenChange={setMenuOpen}
           logout={logout}
+          pendingGlobal={pendingGlobal}
+          toggleGlobal={toggleGlobal}
           openNickname={() => setOpenNickname(true)}
           buttons={drawerBtns}
           menuButtons={menuBtns}
@@ -349,25 +388,32 @@ export default function HeaderClient({
             >
               {/* <UserCog className="h-6 w-6" color="#fff" /> */}
               <ProfileBadge initialUser={user} />
-              <span className="!pt-2">프로필 관리</span>
+              <span className="!pt-2">사용자 설정</span>
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent
             side="bottom"
             align="end"
-            className="border-1 bg-white !border-pilltime-violet shadow-lg !w-28 !pl-2"
+            className="border-1 bg-white !border-pilltime-violet shadow-lg !px-1 w-full"
           >
             {menuBtns.map(
-              ({ key, label, iconLeft: Icon, onClick, className }) => (
+              ({
+                key,
+                label,
+                iconLeft: Icon,
+                onClick,
+                className,
+                iconColor,
+              }) => (
                 <DropdownMenuItem
                   key={key}
                   onSelect={(e) => {
                     // e.preventDefault();
                     onClick?.();
                   }}
-                  className={`hover:!bg-pilltime-violet/15 !text-sm font-bold !my-1 w-28 ${className}`}
+                  className={`hover:!bg-pilltime-violet/15 !text-sm font-bold !my-1 w-full ${className}`}
                 >
-                  {Icon ? <Icon className="h-5 w-5" color="#3B82F6" /> : null}
+                  {Icon ? <Icon className="h-5 w-5" color={iconColor} /> : null}
                   {label}
                 </DropdownMenuItem>
               )

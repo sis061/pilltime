@@ -277,7 +277,7 @@ export default function MedicineEditDrawer({
           >
             취소
           </Button>
-          <DrawerTitle className="text-md">약 정보 편집</DrawerTitle>
+          <DrawerTitle className="text-base">약 정보 편집</DrawerTitle>
           <Button
             type="submit"
             variant="ghost"

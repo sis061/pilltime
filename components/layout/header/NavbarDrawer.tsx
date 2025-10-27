@@ -15,6 +15,8 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   logout: () => Promise<void> | void;
   openNickname: () => void;
+  pendingGlobal: boolean;
+  toggleGlobal: () => void;
   buttons: any[];
   menuButtons: any[];
 }
@@ -24,6 +26,8 @@ export default function NavbarDrawer({
   onOpenChange,
   logout,
   openNickname,
+  pendingGlobal,
+  toggleGlobal,
   buttons,
   menuButtons,
 }: Props) {
@@ -52,23 +56,24 @@ export default function NavbarDrawer({
         <div className="!pt-4">
           <div className="font-bold !text-pilltime-blue text-sm !p-2 flex gap-2 [&_svg:not([class*='size-'])]:size-5">
             <UserCog className="!mr-2" color="#3B82F6" />
-            프로필 관리
+            사용자 설정
           </div>
 
           <div className="flex flex-col w-full items-start !pl-2">
-            {menuButtons.map(({ key, label, iconLeft: Icon }) => (
+            {menuButtons.map(({ key, label, iconLeft: Icon, iconColor }) => (
               <Button
                 key={key}
                 variant="ghost"
                 onClick={() => {
                   if (key === "edit") openNickname();
                   if (key === "logout") logout();
+                  if (key === "global") !pendingGlobal && toggleGlobal();
                   onOpenChange(false);
                 }}
                 className="font-bold !text-pilltime-blue text-xs !p-2 h-8 flex transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110"
               >
                 {Icon ? (
-                  <Icon className="!mr-1 h-5 w-5" color="#3B82F6" />
+                  <Icon className="!mr-1 h-5 w-5" color={iconColor} />
                 ) : null}
                 {label}
               </Button>

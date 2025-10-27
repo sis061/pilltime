@@ -59,9 +59,9 @@ export default async function Home() {
   const medicines = !medicinesResult.error ? medicinesResult.data ?? [] : null;
 
   return (
-    <section className="inner min-h-[calc(100dvh-11.5rem)] !text-pilltime-blue text-3xl !mx-auto !w-full h-full !mb-8 !p-2">
+    <section className="inner min-h-[calc(100dvh-10.75rem)] !text-pilltime-blue text-3xl !mx-auto !w-full h-full !mb-8 !p-2">
       <FirstVisitBanner />
-      <div className="flex flex-col items-center gap-4 justify-center !-mb-2">
+      <div className="flex flex-col items-center !pb-4 !pt-6 justify-center">
         <HomeToday />
       </div>
 

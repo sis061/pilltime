@@ -11,7 +11,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { d } = await searchParams;
   return {
-    title: `지난 기록 보기 ${d}`,
+    title: `지난 기록 보기 | ${d}`,
     description: `${d}의 지난 기록 보기`,
     openGraph: {
       title: `아맞다약!`,
