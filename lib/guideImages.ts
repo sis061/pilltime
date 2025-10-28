@@ -20,7 +20,7 @@ export const FIRST_IMAGE: Record<StepId, string> = {
   card: "01.webp",
   intake: "01.webp",
   edit: "01.webp",
-  calendar: "02.webp", // 현재 콘텐츠 기준 첫 노출이 02.webp
+  calendar: "02.webp",
   settings: "01.webp",
 };
 

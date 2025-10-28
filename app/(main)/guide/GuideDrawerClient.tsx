@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+// ---- UI
 import {
   Drawer,
   DrawerContent,
@@ -11,25 +12,28 @@ import {
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, List } from "lucide-react";
-import { STEP_CONTENT } from "./guideContent";
+// ---- UTIL
 import { FIRST_IMAGE, SEQUENCE, STEPS, type StepId } from "@/lib/guideImages";
-// import { guidePath } from "@/lib/image";
-import { guideUrl, warmImage } from "@/lib/imageWarm";
-import { useSSRMediaquery } from "@/hooks/useSSRMediaquery";
+import { warmOptimizer, guidePath } from "@/lib/imageWarm";
+import { STEP_CONTENT } from "./guideContent";
+// ---- STORE
 import { useGlobalLoading } from "@/store/useGlobalLoading";
+import { useSSRMediaquery } from "@/hooks/useSSRMediaquery";
 
-const GUIDE_CDN_BASE =
-  "https://cxkefmygfdtcwidshaoa.supabase.co/storage/v1/object/public/guide";
+type StepMeta = (typeof STEPS)[number];
 
 export default function GuideDrawerClient() {
-  const minTablet = useSSRMediaquery(768);
-  const { startLoading } = useGlobalLoading();
   const router = useRouter();
   const pathname = usePathname();
   const q = useSearchParams();
+
   const step = q.get("step") as StepId | null;
   const open = !!step;
 
+  const minTablet = useSSRMediaquery(768);
+  const { startLoading } = useGlobalLoading();
+
+  // 현재 스텝 인덱스 계산
   const idx = useMemo(
     () => (step ? STEPS.findIndex((s) => s.id === step) : -1),
     [step]
@@ -38,88 +42,87 @@ export default function GuideDrawerClient() {
   const next = idx >= 0 && idx < STEPS.length - 1 ? STEPS[idx + 1] : null;
   const Content = step ? STEP_CONTENT[step] : null;
 
-  // 드로어 내부 스크롤 컨테이너
+  // 드로어 내부 스크롤 컨테이너/제목 ref
   const bodyRef = useRef<HTMLDivElement | null>(null);
   const titleRef = useRef<HTMLHeadingElement | null>(null);
 
-  // prev/next 대표 1장 즉시 워밍업
-  useEffect(() => {
-    if (!step) return;
-    const idx = STEPS.findIndex((s) => s.id === step);
-    const targets = [STEPS[idx - 1], STEPS[idx + 1]].filter(Boolean);
-    for (const t of targets as unknown as typeof STEPS) {
-      const folder = t.id; // 폴더명이 step id와 동일
-      const file = FIRST_IMAGE[t.id as StepId];
-      warmImage(guideUrl(GUIDE_CDN_BASE, folder, file));
-    }
-  }, [step]);
+  /* ---------------------------
+   * IMG PREFETCH
+   * --------------------------- */
 
-  // 아이들 타임에 "다다음" 대표 1장 워밍업
+  // 직전/다음 스텝의 대표 이미지 1장을 즉시 프리페치
   useEffect(() => {
     if (!step) return;
     const i = STEPS.findIndex((s) => s.id === step);
-    const next2 = STEPS[i + 2];
+    const targets = [STEPS[i - 1], STEPS[i + 1]].filter(
+      (t): t is StepMeta => !!t
+    );
+    targets.forEach((t) => {
+      const u = guidePath(t.id as StepId, FIRST_IMAGE[t.id as StepId]);
+      // 고 DPI 대응: 작은·중간·큰 width를 미리
+      warmOptimizer(u, [384, 640, 828, 1200]);
+    });
+  }, [step]);
+
+  // "다다음" 스텝 대표 이미지 1장을 idle 타임에 프리페치
+  useEffect(() => {
+    if (!step) return;
+    const i = STEPS.findIndex((s) => s.id === step);
+    const next2: StepMeta | undefined = STEPS[i + 2];
     if (!next2) return;
+
     const id = (window as any).requestIdleCallback?.(
       () => {
-        warmImage(
-          guideUrl(
-            GUIDE_CDN_BASE,
-            next2.id as StepId,
-            FIRST_IMAGE[next2.id as StepId]
-          )
+        const u = guidePath(
+          next2.id as StepId,
+          FIRST_IMAGE[next2.id as StepId]
         );
+        warmOptimizer(u, [384, 640, 828, 1200]);
       },
       { timeout: 1200 }
     );
     return () => id && (window as any).cancelIdleCallback?.(id);
   }, [step]);
 
-  // 같은 스텝 내 후속 이미지: 본문 컨테이너 근처 가시성 기준 점진 워밍업
+  // 같은 스텝 내 후속 이미지들을 스크롤 근접 시 점진적으로 프리페치
   const onBodyScrollWarm = useCallback(() => {
-    if (!step || !bodyRef.current) return;
-    const files = SEQUENCE[step] || [];
-    const top = bodyRef.current.scrollTop;
-    const vh = bodyRef.current.clientHeight;
-    // 스크롤 상단에서 1.5~2.0뷰포트 이내의 이미지만 워밍업 (과욕 금지)
-    const threshold = top + vh * 2;
-
-    // 파일명은 콘텐츠에서 실제 쓰는 순서대로 구성해두는 게 가장 정확
-    for (const f of files) {
-      const url = guideUrl(GUIDE_CDN_BASE, step, f);
-      warmImage(url);
-    }
+    if (!step) return;
+    (SEQUENCE[step] || []).forEach((f) => {
+      const u = guidePath(step, f);
+      warmOptimizer(u, [384, 640, 828, 1200]);
+    });
   }, [step]);
 
   useEffect(() => {
     const el = bodyRef.current;
     if (!el) return;
-    // 최초 한 번
-    onBodyScrollWarm();
-    // 스크롤로 근접 시 추가 예열
+    onBodyScrollWarm(); // 최초 1회
     el.addEventListener("scroll", onBodyScrollWarm, { passive: true });
     return () => el.removeEventListener("scroll", onBodyScrollWarm);
   }, [onBodyScrollWarm]);
 
-  // [다음]/[이전] 버튼 hover/focus 시 워밍업
+  // [이전]/[다음] 버튼 hover/focus 시 해당 스텝 대표 이미지 프리페치
   const warmStep = useCallback((id?: StepId | null) => {
     if (!id) return;
-    warmImage(guideUrl(GUIDE_CDN_BASE, id, FIRST_IMAGE[id]));
+    const u = guidePath(id, FIRST_IMAGE[id]);
+    warmOptimizer(u, [384, 640, 828, 1200]);
   }, []);
 
   // 스텝 변경 시 드로어 내부 스크롤/포커스 초기화
   useEffect(() => {
     if (!open) return;
-    // 콘텐츠 상단으로
-    if (bodyRef.current)
-      bodyRef.current.scrollTo({
-        top: 0,
-        behavior: "instant" as ScrollBehavior,
-      });
-    // 제목 포커스
+    bodyRef.current?.scrollTo({
+      top: 0,
+      behavior: "instant" as ScrollBehavior,
+    });
     titleRef.current?.focus();
   }, [open, step]);
 
+  /* ---------------------------
+   * FUNC
+   * --------------------------- */
+
+  // 쿼리스트링 step 교체
   const goto = (target?: StepId) => {
     const params = new URLSearchParams(q);
     if (!target) return;
@@ -127,21 +130,26 @@ export default function GuideDrawerClient() {
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
+  // 드로어 닫기 (step 제거)
   const close = () => {
     const params = new URLSearchParams(q);
     params.delete("step");
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
+  // "시작하기" 버튼 동작: 홈으로 살짝 이동 후 new 페이지로
   const openNewDrawer = async () => {
     startLoading("open-medicine-new", "새로운 약을 등록하러 가는중..");
-
     if (pathname !== "/") {
       router.replace("/", { scroll: false });
       await new Promise((r) => requestAnimationFrame(r));
     }
     router.push("/medicines/new?returnTo=/", { scroll: false });
   };
+
+  /* ---------------------------
+   * RENDER
+   * --------------------------- */
 
   return (
     <Drawer

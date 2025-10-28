@@ -1,7 +1,8 @@
-import type { JSX } from "react";
+import { useState, type JSX } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { guidePath } from "@/lib/image";
+import fallbackImg from "@/public/fallback-medicine.webp";
+import { guidePath } from "@/lib/imageWarm";
 import {
   AlarmClock,
   Check,
@@ -14,6 +15,7 @@ import {
   Share,
   SquarePlus,
 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { StepId } from "@/lib/guideImages";
 
 const BLUR_1x1 = "data:image/gif;base64,R0lGODlhAQABAAAAACwAAAAAAQABAAA=";
@@ -22,15 +24,11 @@ type GuideImgProps = {
   folder: string;
   file: string;
   alt: string;
-  /** 원본 이미지의 가로/세로(px) */
   w: number;
   h: number;
   caption?: string;
-  /** 첫 장이면 true (선택) */
   eager?: boolean;
-  /** 서버 변환 폭/품질 (디폴트 900/80) */
-  maxW?: number;
-  quality?: number;
+  maxW?: number; // 레이아웃 기준 폭
 };
 
 export function GuideImg({
@@ -42,28 +40,42 @@ export function GuideImg({
   caption,
   eager = false,
   maxW = 900,
-  quality = 80,
 }: GuideImgProps) {
-  // 표시용 크기(가로 기준으로 축소)
+  const [loaded, setLoaded] = useState(false);
+  const [useFallback, setUseFallback] = useState(false);
+
   const displayW = Math.min(maxW, w);
   const displayH = Math.round((displayW * h) / w);
 
-  const src = guidePath(folder, file, `width=${maxW}&quality=${quality}`);
+  const src = useFallback ? (fallbackImg as any) : guidePath(folder, file);
 
   return (
-    <figure className="rounded-xl border overflow-hidden !shadow-md bg-white">
-      <Image
-        src={src}
-        alt={alt}
-        width={displayW}
-        height={displayH}
-        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 900px"
-        priority={eager}
-        fetchPriority={eager ? "high" : "auto"}
-        placeholder="blur"
-        blurDataURL={BLUR_1x1}
-        style={{ width: "100%", height: "auto" }}
-      />
+    <figure className="rounded-xl border overflow-hidden shadow-md bg-white">
+      <div className="relative" style={{ width: "100%", height: "auto" }}>
+        <Image
+          src={src}
+          alt={alt}
+          width={displayW}
+          height={displayH}
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 900px"
+          priority={eager}
+          fetchPriority={eager ? "high" : "auto"}
+          className={
+            loaded ? "opacity-100 transition-opacity duration-300" : "opacity-0"
+          }
+          style={{ width: "100%", height: "auto", display: "block" }}
+          onLoad={() => setLoaded(true)}
+          onError={() => {
+            if (!useFallback) {
+              setUseFallback(true);
+              setLoaded(false);
+            }
+          }}
+        />
+        {!loaded && (
+          <Skeleton className="absolute inset-0 h-full w-full bg-[#2D383E]" />
+        )}
+      </div>
       {caption && (
         <figcaption className="px-3 py-2 text-xs text-gray-600">
           {caption}
