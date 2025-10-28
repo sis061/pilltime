@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import GuideDrawerClient from "./GuideDrawerClient";
 import { ChevronRight } from "lucide-react";
 import { type Metadata } from "next";
@@ -20,12 +21,12 @@ export const metadata: Metadata = {
 export default function GuidePage() {
   return (
     <section className="inner min-h-[calc(100dvh-9.75rem)] max-h-screen !mx-auto !w-full h-full !mt-2 sm:!mt-4 !mb-2 !p-2">
-      <div className="flex items-center justify-center mx-auto w-full !pt-3">
+      <div className="flex items-center justify-center mx-auto w-full !py-4">
         <h1 className="text-lg font-bold !text-pilltime-grayDark/50">
           사용 가이드
         </h1>
       </div>
-      <div className="w-full flex items-center justify-center !pt-12">
+      <div className="w-full flex items-center justify-center !py-4">
         <nav aria-label="가이드 단계 목록" className="!space-y-4 w-full h-full">
           {STEPS.map((s) => (
             <Link
@@ -46,6 +47,20 @@ export default function GuidePage() {
             </Link>
           ))}
         </nav>
+      </div>
+      <div className="flex items-center justify-center mx-auto w-full !py-4">
+        <h3 className="flex items-center text-xs md:text-sm font-bold !text-pilltime-grayDark/50">
+          목록으로 돌아가려면, 왼쪽 위에서
+          <Image
+            src="/pilltime_mark_duotone.svg"
+            alt="PillTime 마크"
+            width={32}
+            height={32}
+            className="-rotate-45"
+            priority
+          />{" "}
+          를 눌러보세요!
+        </h3>
       </div>
       <GuideDrawerClient />
     </section>

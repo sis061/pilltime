@@ -1,5 +1,11 @@
-import SocialLogin from "./SocialLogin";
 import Image from "next/image";
+import dynamic from "next/dynamic";
+
+const SocialLogin = dynamic(() => import("./SocialLogin"), {
+  loading: () => (
+    <div className="w-full h-10 rounded-md bg-muted animate-pulse" />
+  ),
+});
 
 export default function LoginPage() {
   return (

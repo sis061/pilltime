@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { statusBadgeClass } from "./CalendarShell";
-import { PacmanLoader } from "react-spinners";
+import PacmanLoader from "react-spinners/PacmanLoader";
 import { formatTime } from "@/lib/date";
 import type { DayIntakeItem } from "@/types/calendar";
 
