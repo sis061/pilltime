@@ -14,6 +14,7 @@ import {
 import { TriangleAlert } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useGlobalLoading } from "@/store/useGlobalLoading";
 
 async function deleteMedicine(id: string) {
   const res = await fetch(`/api/medicines/${id}`, { method: "DELETE" });
@@ -41,6 +42,8 @@ export default function DeleteMedicineDialog({
 }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const { isGLoading, startLoading, stopLoading, forceStop } =
+    useGlobalLoading();
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -59,9 +62,10 @@ export default function DeleteMedicineDialog({
         <AlertDialogFooter className="flex gap-2 !px-12 sm:!px-0">
           <AlertDialogAction
             className="!py-2 !px-4 bg-red-500 !text-white transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110"
-            disabled={disabled || pending}
+            disabled={disabled || pending || isGLoading}
             onClick={async () => {
               try {
+                startLoading("delete-medicine", "삭제 중이에요..");
                 await deleteMedicine(String(id));
                 toast.success("정보를 삭제했어요");
 
@@ -72,7 +76,9 @@ export default function DeleteMedicineDialog({
                   router.push("/");
                   router.refresh();
                 });
+                stopLoading("delete-medicine");
               } catch {
+                forceStop();
                 toast.error("정보를 삭제하는 중 문제가 발생했어요");
               }
             }}
@@ -81,7 +87,7 @@ export default function DeleteMedicineDialog({
           </AlertDialogAction>
           <AlertDialogCancel
             className="!py-2 !px-4 transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110"
-            disabled={disabled || pending}
+            disabled={disabled || pending || isGLoading}
           >
             취소
           </AlertDialogCancel>
