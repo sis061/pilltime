@@ -77,8 +77,8 @@ function useSelectedYmdSync(initial: string | null, variant: Variant) {
   return { selectedYmd, onChangeDate };
 }
 
-export default function CalendarClient({
-  variant,
+export default function CalendarClientDrawer({
+  variant = "drawer",
   dateParam,
   monthMap,
   todayYmd,
@@ -127,15 +127,4 @@ export default function CalendarClient({
       </Drawer>
     );
   }
-
-  // full page
-  return (
-    <CalendarShell
-      dateParam={selectedYmd}
-      onChangeDate={onChangeDate}
-      layout="page"
-      monthMap={monthMap}
-      todayYmdOverride={todayYmd}
-    />
-  );
 }

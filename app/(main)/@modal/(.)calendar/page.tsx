@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import CalendarClient from "@/components/feature/calendars/CalendarClient";
+import CalendarClientDrawer from "@/components/feature/calendars/CalendarClientDrawer";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getMonthIndicatorMap } from "@/lib/calendar/indicator";
 import { toYYYYMMDD } from "@/lib/date";
@@ -38,7 +38,7 @@ export default async function CalendarInterceptPage({
   const monthMap = await getMonthIndicatorMap(user.id, today);
 
   return (
-    <CalendarClient
+    <CalendarClientDrawer
       variant="drawer"
       dateParam={d ?? null}
       monthMap={monthMap}

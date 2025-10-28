@@ -2,8 +2,18 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import NicknameDrawer from "@/components/feature/profiles/NicknameDrawer";
-import FirstVisitBanner from "./FirstVisitBanner";
-import { GuideBanner } from "./GuideBanner";
+import dynamic from "next/dynamic";
+
+const FirstVisitBanner = dynamic(() => import("./FirstVisitBanner"), {
+  ssr: false,
+  loading: () => null,
+});
+
+const GuideBanner = dynamic(
+  () => import("./GuideBanner").then((m) => m.GuideBanner),
+  { ssr: false, loading: () => null }
+);
+
 import { useUserStore } from "@/store/useUserStore";
 
 /** 온보딩 전체 순서:

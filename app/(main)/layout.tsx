@@ -3,6 +3,13 @@ import Footer from "@/components/layout/Footer";
 
 import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import NextDynamic from "next/dynamic";
+
+const OnboardingManager = NextDynamic(() =>
+  import("@/components/feature/notifications/OnboardingManager").then(
+    (m) => m.OnboardingManager
+  )
+);
 
 export const dynamic = "force-dynamic"; // 개인화 화면: SSR 강제
 export const fetchCache = "default-no-store"; // 응답 캐시 비활성화
@@ -31,6 +38,7 @@ export default async function MainLayout({
       <Header user={{ id: user.id, email: user.email ?? null }} />
       <main className="wrapper">{children}</main>
       {modal}
+      <OnboardingManager />
       <Footer />
     </div>
   );

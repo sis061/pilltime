@@ -143,12 +143,13 @@ export default function NicknameDrawer({
       toast.success(
         openedMode === "create" ? "별명을 등록했어요" : "별명을 수정했어요"
       );
-      onOpenChange(false);
 
       // if (openedMode === "create") {
       //   startLoading("open-medicine-new", "새로운 약을 등록하러 가는중..");
       //   router.push("/medicines/new");
       // }
+      setSubmitting(false);
+      onOpenChange(false);
       stopLoading("fetch-profile");
       onCompleted?.(openedMode);
     } catch (err: any) {

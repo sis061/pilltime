@@ -114,7 +114,7 @@ export default function HeaderClient({
     },
     {
       key: "calendar",
-      label: isPathCalendar ? "홈으로 돌아가기" : "지난 기록 보기",
+      label: isPathCalendar ? "목록 돌아가기" : "지난 기록 보기",
       iconColor: "#fff",
       iconLeft: isPathCalendar ? ListRestart : CalendarSearch,
       className: baseWhiteBtn,
@@ -135,7 +135,7 @@ export default function HeaderClient({
     // },
     {
       key: "guide",
-      label: isPathGuide ? "홈으로 돌아가기" : "사용 가이드",
+      label: isPathGuide ? "목록 돌아가기" : "사용 가이드",
       iconColor: "#fff",
       iconLeft: isPathGuide ? ListRestart : BookOpen,
       className: baseWhiteBtn,

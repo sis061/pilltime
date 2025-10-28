@@ -38,6 +38,15 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useGlobalLoading } from "@/store/useGlobalLoading";
 import { useSSRMediaquery } from "@/hooks/useSSRMediaquery";
 
+const INITIAL_VALUES: MedicineFormValues = {
+  name: "",
+  description: [{ value: "" }],
+  schedules: [{ time: "" }],
+  repeated_pattern: { type: "DAILY" },
+  imageUrl: "",
+  imageFilePath: null,
+};
+
 async function createMedicine(values: MedicineFormValues) {
   const res = await fetch("/api/medicines", {
     method: "POST",
@@ -77,19 +86,13 @@ export default function MedicineNewDrawer({
 
   const methods = useForm<MedicineFormValues>({
     resolver: zodResolver(MedicineSchema),
-    defaultValues: {
-      name: "",
-      description: [{ value: "" }],
-      schedules: [{ time: "" }],
-      repeated_pattern: { type: "DAILY" },
-      imageUrl: "",
-      imageFilePath: null,
-    },
+    defaultValues: INITIAL_VALUES,
   });
 
   const {
     handleSubmit,
     formState: { isSubmitting },
+    reset,
   } = methods;
 
   const busy = isSubmitting || isGLoading || isPendingNav;
@@ -97,6 +100,12 @@ export default function MedicineNewDrawer({
   useEffect(() => {
     stopLoading("open-medicine-new");
   }, [isGLoading, stopLoading]);
+
+  useEffect(() => {
+    if (open) {
+      reset(INITIAL_VALUES, { keepDefaultValues: false });
+    }
+  }, [open, methods]);
 
   // supabase storage 에 orphan 파일 삭제용
   async function handleCancel() {

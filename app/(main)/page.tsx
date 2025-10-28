@@ -2,6 +2,7 @@
 
 // ---- NEXT
 import { redirect } from "next/navigation";
+import Image from "next/image";
 
 // ---- COMPONENT
 // import HomeProfile from "@/components/feature/profiles/HomeProfile";
@@ -69,6 +70,20 @@ export default async function Home() {
       ) : (
         <MedicineListFallback />
       )}
+      <div className="flex items-center justify-center mx-auto w-full !py-4">
+        <h3 className="flex items-center text-xs md:text-sm font-bold !text-pilltime-grayDark/50">
+          뭔가 잘 안풀린다면, 왼쪽 위에서
+          <Image
+            src="/pilltime_mark_duotone.svg"
+            alt="PillTime 마크"
+            width={32}
+            height={32}
+            className="-rotate-45"
+            priority
+          />{" "}
+          를 눌러보세요!
+        </h3>
+      </div>
     </section>
   );
 }

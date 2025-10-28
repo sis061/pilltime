@@ -35,6 +35,14 @@ const MedicineImageField = dynamic(
     ),
   { loading: () => <Skeleton className="h-10 w-full" /> }
 );
+const DeleteMedicineDialog = dynamic(
+  () => import("@/components/feature/medicines/DeleteMedicineDialog"),
+  {
+    ssr: false,
+    // 필요하다면 아주 가벼운 미니 스켈레톤
+    loading: () => null,
+  }
+);
 
 // ---- UI
 import {
@@ -44,17 +52,6 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -79,7 +76,6 @@ import {
   UISchedule,
 } from "@/types/medicines";
 import { useSSRMediaquery } from "@/hooks/useSSRMediaquery";
-import { TriangleAlert } from "lucide-react";
 
 /* ---------------------------
  * API
@@ -127,6 +123,7 @@ export default function MedicineEditDrawer({
 }) {
   // ---- REACT
   const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const submitBtnRef = useRef<HTMLButtonElement>(null);
   const initSchedulesRef = useRef<UISchedule[]>([]); // 서버 상태 스냅샷
   const [isPendingNav, startTransition] = useTransition();
@@ -339,60 +336,28 @@ export default function MedicineEditDrawer({
         </FormProvider>
 
         <DrawerFooter className="flex justify-center !py-8">
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button
-                type="button"
-                variant="destructive"
-                disabled={busy}
-                className="!text-red-700 w-full bg-pilltime-grayDark/25 cursor-pointer"
-              >
-                약 삭제
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent className="bg-pilltime-grayLight !p-4 !rounded-lg">
-              <AlertDialogHeader>
-                <div className="flex items-center gap-2 w-full justify-center">
-                  <TriangleAlert size={20} />
-                  <AlertDialogTitle className="!text-pilltime-grayDark/90">
-                    정말 삭제할까요?
-                  </AlertDialogTitle>
-                </div>
-
-                <AlertDialogDescription className="!text-pilltime-grayDark/50 !pt-4 text-center">
-                  약과 관련된 모든 정보가 삭제됩니다!
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter className="flex gap-2 !px-12 sm:!px-0">
-                <AlertDialogAction
-                  className="!py-2 !px-4 bg-red-500 !text-white transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110"
-                  onClick={async () => {
-                    try {
-                      await deleteMedicine(String(id));
-                      toast.success("정보를 삭제했어요");
-                      startTransition(() => {
-                        router.push("/");
-                        router.refresh();
-                        onOpenChange(false);
-                      });
-                    } catch {
-                      toast.error("정보를 삭제하는 중 문제가 발생했어요");
-                    }
-                  }}
-                  disabled={busy}
-                >
-                  삭제
-                </AlertDialogAction>
-                <AlertDialogCancel
-                  className="!py-2 !px-4 transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110"
-                  disabled={busy}
-                >
-                  취소
-                </AlertDialogCancel>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          <Button
+            type="button"
+            variant="destructive"
+            disabled={busy}
+            className="!text-red-700 w-full bg-pilltime-grayDark/25 cursor-pointer"
+            onClick={() => setDeleteOpen(true)}
+          >
+            약 삭제
+          </Button>
         </DrawerFooter>
+        {deleteOpen && (
+          <DeleteMedicineDialog
+            id={String(id)}
+            open={deleteOpen}
+            onOpenChange={setDeleteOpen}
+            disabled={busy}
+            onDeleted={() => {
+              onOpenChange(false);
+              startTransition(() => router.refresh());
+            }}
+          />
+        )}
       </DrawerContent>
     </Drawer>
   );

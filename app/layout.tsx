@@ -13,13 +13,15 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { UserProvider } from "@/components/providers/UserProvider";
 import GlobalLoading from "@/components/layout/GlobalLoading";
-import { OnboardingManager } from "@/components/feature/notifications/OnboardingManager";
 
 const ScrollTopBtn = dynamic(() =>
   import("@/components/layout/ScrollToTop").then((mod) => mod.default)
 );
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://pilltime-pilltime.netlify.app/"
+  ),
   title: "아맞다약!",
   description:
     "잊지 말고 약을 챙겨드세요. 기록을 확인하세요. 알람도 보내드려요.",
@@ -69,7 +71,6 @@ export default function RootLayout({
         <UserProvider>{children}</UserProvider>
         {/* {children} */}
 
-        <OnboardingManager />
         <GlobalLoading />
         <Toaster
           position="top-center"
