@@ -1,4 +1,3 @@
-type WarmOpts = { qs?: string };
 const warmed = new Set<string>();
 
 export function warmImage(url: string) {

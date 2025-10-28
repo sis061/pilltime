@@ -4,7 +4,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 // ---- NEXT
-import Image, { type ImageProps as NextImageProps } from "next/image";
 import dynamic from "next/dynamic";
 // ---- COMPONENT
 //  모달용 컴포넌트만 framer-motion과 함께 동적 로드
@@ -13,8 +12,6 @@ const MotionOverlay = dynamic(
   () => import("./MotionOverlay").then((m) => m.MotionOverlay),
   { ssr: false }
 );
-// ---- UI
-import { Skeleton } from "@/components/ui/skeleton";
 
 type ZoomableImageProps = Omit<SmartImageProps, "onClick"> & {
   zoomable?: boolean;

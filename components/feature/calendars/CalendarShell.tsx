@@ -104,6 +104,7 @@ export default function CalendarShell(props: {
     ) {
       setViewMonth(nextFirst);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedYmd]);
 
   // 월별 캐시: { "YYYY-MM": MonthIndicatorMap }
@@ -178,6 +179,7 @@ export default function CalendarShell(props: {
     fetchDay(selectedYmd);
     stopLoading("open-calendar");
     return () => abortRef.current?.abort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedYmd]);
 
   return (

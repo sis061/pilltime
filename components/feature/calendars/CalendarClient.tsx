@@ -62,6 +62,7 @@ function useSelectedYmdSync(initial: string | null, variant: Variant) {
         }
       }, 250);
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [router]
   );
 
@@ -92,10 +93,9 @@ export default function CalendarClient({
     stopLoading("open-calendar");
   }, [stopLoading]);
 
+  const minTablet = useSSRMediaquery(768);
+  const [open, setOpen] = React.useState(true);
   if (variant === "drawer") {
-    const minTablet = useSSRMediaquery(768);
-    const [open, setOpen] = React.useState(true);
-
     return (
       <Drawer
         open={open}

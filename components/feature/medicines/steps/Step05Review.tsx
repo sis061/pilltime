@@ -1,10 +1,7 @@
 "use client";
 
-import fallbackImg from "@/public/fallback-medicine.webp";
 // ---- REACT
 import { useEffect } from "react";
-// ---- NEXT
-import Image from "next/image";
 // ---- UI
 import { Button } from "@/components/ui/button";
 // ---- UTIL

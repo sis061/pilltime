@@ -33,14 +33,17 @@ export function OnboardingManager() {
 
   const needNickname = useMemo(
     () => Boolean(user && user.nickname === null),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [user?.id, user?.nickname]
   );
   const needNoti = useMemo(
     () => Boolean(user && permission !== "granted" && !notiPrompted),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [user?.id, permission, notiPrompted]
   );
   const needGuide = useMemo(
     () => Boolean(user && permission !== "granted" && !guidePrompted),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [user?.id, permission, guidePrompted]
   );
 

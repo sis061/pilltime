@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { type Metadata } from "next";
-import { ChevronRight, ListOrdered } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import GuideDrawerClient from "./GuideDrawerClient";
 
 const STEPS = [
