@@ -36,7 +36,7 @@ export async function middleware(req: NextRequest) {
     }
   );
 
-  const { pathname, search } = req.nextUrl;
+  const { pathname } = req.nextUrl;
 
   // 퍼블릭 경로는 세션 검사 없이 통과
   if (

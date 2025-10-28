@@ -5,7 +5,7 @@ import * as React from "react";
 import { Calendar, CalendarDayButton } from "@/components/ui/calendar";
 // ---- UTIL
 import { statusBadgeClass } from "./CalendarShell";
-import { dateFromYmdKST, toYYYYMMDD, ymdKST } from "@/lib/date";
+import { dateFromYmdKST, ymdKST } from "@/lib/date";
 import { ko } from "date-fns/locale";
 import { addDays, format } from "date-fns";
 // ---- TYPE

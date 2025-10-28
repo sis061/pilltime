@@ -3,7 +3,6 @@
 // ---- REACT
 import { useCallback, useRef, useState } from "react";
 // ---- NEXT
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 // ---- COMPONENT
 import SmartImage from "@/components/layout/SmartImage";

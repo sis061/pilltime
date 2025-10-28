@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-// ---- NEXT
-import { useRouter } from "next/navigation";
 // ---- UI
 import {
   Drawer,

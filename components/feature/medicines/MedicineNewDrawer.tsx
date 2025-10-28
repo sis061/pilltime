@@ -2,7 +2,7 @@
 
 import { useRef, useTransition, useEffect } from "react";
 // ---- NEXT
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 // ---- COMPONENT
 import { WizardHeader } from "./steps/WizardHeader";
@@ -59,9 +59,6 @@ export default function MedicineNewDrawer({
   const submittedRef = useRef(false);
   // ---- NEXT
   const router = useRouter();
-  const q = useSearchParams();
-  const returnTo = q.get("returnTo") || "/";
-
   // ---- CUSTOM HOOKS
   const minTablet = useSSRMediaquery(768);
   // ---- STORE

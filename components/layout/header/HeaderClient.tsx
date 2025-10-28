@@ -50,7 +50,7 @@ export default function HeaderClient({
   // ---- REACT
   const [openNickname, setOpenNickname] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [mode, setMode] = useState<"edit" | "create">("edit");
+
   /** 🔔 전역 알림 토글 상태 + 낙관적 업데이트 */
   const [pendingGlobal, startTransition] = useTransition();
   // ---- NEXT
@@ -339,6 +339,7 @@ export default function HeaderClient({
     } else {
       clearUser();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user.id, user.email, user.nickname, setUser, clearUser]);
 
   /* ------
@@ -371,7 +372,7 @@ export default function HeaderClient({
         <NicknameDrawer
           open={openNickname}
           onOpenChange={setOpenNickname}
-          mode={mode}
+          mode="edit"
         />
       </div>
 
@@ -408,7 +409,7 @@ export default function HeaderClient({
               }) => (
                 <DropdownMenuItem
                   key={key}
-                  onSelect={(e) => {
+                  onSelect={() => {
                     // e.preventDefault();
                     onClick?.();
                   }}
@@ -424,7 +425,7 @@ export default function HeaderClient({
         <NicknameDrawer
           open={openNickname}
           onOpenChange={setOpenNickname}
-          mode={mode}
+          mode="edit"
         />
       </div>
     </div>

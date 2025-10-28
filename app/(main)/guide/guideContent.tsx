@@ -87,7 +87,7 @@ const NewStep = () => (
       eager
     />
     <p className="text-sm text-pilltime-grayDark/75">
-      '아맞다약!'이 처음이라면{" "}
+      &apos;아맞다약!&apos;이 처음이라면{" "}
       <CirclePlus
         strokeWidth={2}
         size={16}
@@ -681,9 +681,9 @@ const SettingsStep = () => (
       경우 <strong>알림 비활성화됨</strong>으로 표시됩니다.
     </p>
     <p className="text-sm text-pilltime-grayDark/75">
-      '아맞다약!'은 은 정시 알림을 먼저 보내드린 후 30분이 지나도 먹지 않으면
-      알림을 다시 보내드립니다. <strong>알림 비활성화됨</strong> 버튼을 눌러 꼭
-      알림을 허용해주세요.
+      &apos;아맞다약!&apos;은 은 정시 알림을 먼저 보내드린 후 30분이 지나도 먹지
+      않으면 알림을 다시 보내드립니다. <strong>알림 비활성화됨</strong> 버튼을
+      눌러 꼭 알림을 허용해주세요.
     </p>
     <p className="text-sm text-pilltime-grayDark/75">
       알림이 <strong>차단</strong>되어 있을 경우, 브라우저 주소창의 사이트

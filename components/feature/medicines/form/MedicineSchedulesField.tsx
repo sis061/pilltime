@@ -7,7 +7,6 @@ dayjs.locale("ko");
 import * as React from "react";
 // ---- UI
 import { toast } from "sonner";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 // ---- COMPONENT

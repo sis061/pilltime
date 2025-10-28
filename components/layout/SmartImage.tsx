@@ -77,6 +77,7 @@ export default function SmartImage({
   // src(최종) 바뀔 때마다 스켈레톤/페이드 리셋
   React.useEffect(() => {
     setLoaded(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasCustomString ? src : "fallback"]); // 의존성 키 고정
 
   const imageCommonProps = {
