@@ -4,14 +4,37 @@ import { useEffect, useRef, useState, useTransition } from "react";
 
 // ---- NEXT
 import { useParams, useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 
 // ---- COMPONENT
-import {
-  MedicineNameField,
-  MedicineDescriptionField,
-  MedicineSchedulesField,
-  MedicineImageField,
-} from "@/components/feature/medicines/form";
+const MedicineNameField = dynamic(
+  () =>
+    import("@/components/feature/medicines/form").then(
+      (m) => m.MedicineNameField
+    ),
+  { loading: () => <Skeleton className="h-10 w-full" /> }
+);
+const MedicineDescriptionField = dynamic(
+  () =>
+    import("@/components/feature/medicines/form").then(
+      (m) => m.MedicineDescriptionField
+    ),
+  { loading: () => <Skeleton className="h-10 w-full" /> }
+);
+const MedicineSchedulesField = dynamic(
+  () =>
+    import("@/components/feature/medicines/form").then(
+      (m) => m.MedicineSchedulesField
+    ),
+  { loading: () => <Skeleton className="h-10 w-full" /> }
+);
+const MedicineImageField = dynamic(
+  () =>
+    import("@/components/feature/medicines/form").then(
+      (m) => m.MedicineImageField
+    ),
+  { loading: () => <Skeleton className="h-10 w-full" /> }
+);
 
 // ---- UI
 import {
@@ -34,6 +57,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // ---- UTIL
 import { zodResolver } from "@hookform/resolvers/zod";

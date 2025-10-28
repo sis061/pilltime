@@ -1,9 +1,34 @@
-import {
-  MedicineNameField,
-  MedicineDescriptionField,
-  MedicineSchedulesField,
-  MedicineImageField,
-} from "../form";
+import { Skeleton } from "@/components/ui/skeleton";
+import dynamic from "next/dynamic";
+
+const MedicineNameField = dynamic(
+  () =>
+    import("@/components/feature/medicines/form").then(
+      (m) => m.MedicineNameField
+    ),
+  { loading: () => <Skeleton className="h-10 w-full" /> }
+);
+const MedicineDescriptionField = dynamic(
+  () =>
+    import("@/components/feature/medicines/form").then(
+      (m) => m.MedicineDescriptionField
+    ),
+  { loading: () => <Skeleton className="h-10 w-full" /> }
+);
+const MedicineSchedulesField = dynamic(
+  () =>
+    import("@/components/feature/medicines/form").then(
+      (m) => m.MedicineSchedulesField
+    ),
+  { loading: () => <Skeleton className="h-10 w-full" /> }
+);
+const MedicineImageField = dynamic(
+  () =>
+    import("@/components/feature/medicines/form").then(
+      (m) => m.MedicineImageField
+    ),
+  { loading: () => <Skeleton className="h-10 w-full" /> }
+);
 
 interface StepConfig {
   id: string;

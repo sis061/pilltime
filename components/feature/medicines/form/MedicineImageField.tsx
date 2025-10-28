@@ -4,6 +4,7 @@
 import { useCallback, useRef, useState } from "react";
 
 // ---- NEXT
+import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 
 // ---- COMPONENT
@@ -18,10 +19,13 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // ---- UTIL
 import { uploadMedicineImage } from "@/lib/supabase/upload";
-import ImageUploader from "../ImageUploader";
+const ImageUploader = dynamic(() => import("../ImageUploader"), {
+  loading: () => <Skeleton className="h-40" />,
+});
 import { preparePickedFile, revokeObjectURL } from "@/lib/image";
 
 // ---- LIB
@@ -220,7 +224,9 @@ export function MedicineImageField() {
             >
               취소
             </Button>
-            <DrawerTitle className="text-center">이미지 편집</DrawerTitle>
+            <DrawerTitle className="text-center text-base">
+              이미지 편집
+            </DrawerTitle>
             <div />
           </DrawerHeader>
 
