@@ -1,4 +1,5 @@
 "use client";
+
 import useSWR, { mutate as globalMutate } from "swr";
 
 const KEY = "/api/push/global";

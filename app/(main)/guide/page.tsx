@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { type Metadata } from "next";
-import { ChevronRight } from "lucide-react";
 import GuideDrawerClient from "./GuideDrawerClient";
+import { ChevronRight } from "lucide-react";
+import { type Metadata } from "next";
 
 const STEPS = [
   { id: "new", title: "1. 새로운 약 등록", href: "/guide/new" },

@@ -1,4 +1,3 @@
-// app/api/push/global/route.ts  (경로 가정)
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import { createRouteSupabaseClient } from "@/lib/supabase/route";

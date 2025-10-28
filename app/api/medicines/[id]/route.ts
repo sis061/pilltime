@@ -1,4 +1,3 @@
-// app/api/medicines/[id]/route.ts
 import { NextResponse, type NextRequest } from "next/server";
 import { createRouteSupabaseClient } from "@/lib/supabase/route";
 import { revalidateMonthIndicator } from "@/lib/calendar/indicator";

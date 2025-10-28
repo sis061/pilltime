@@ -1,7 +1,7 @@
 import { z } from "zod";
-import type { StaticImageData } from "next/image"; // ✅ 추가
+import type { StaticImageData } from "next/image";
 
-// ✅ StaticImageData 런타임 가드
+//  StaticImageData 런타임 가드
 function isStaticImageData(x: unknown): x is StaticImageData {
   if (!x || typeof x !== "object") return false;
   const anyX = x as any;

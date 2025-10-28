@@ -1,13 +1,17 @@
 "use client";
+
 // ---- REACT
 import { useEffect, useMemo, useState } from "react";
+
 // ---- NEXT
 import Link from "next/link";
+
 // ---- COMPONENT
 import ScheduleItem from "./ScheduleItem";
 import TodayProgress from "./TodayProgress";
 import { ZoomableImage } from "@/components/layout/ZoomableImage";
 import { MedicineNotifyToggle } from "./MedicineNotifyToggle";
+
 // ---- UI
 import { IntakeLog, MedicineDetail } from "@/types/medicines";
 import {
@@ -16,9 +20,11 @@ import {
   PopoverContent,
 } from "@/components/ui/popover";
 import { Info, Settings } from "lucide-react";
+
 // ---- UTIL
 import { toYYYYMMDD } from "@/lib/date";
 import { RenderTodaysMedicine } from "@/lib/medicine";
+
 // ---- STORE
 import { useGlobalLoading } from "@/store/useGlobalLoading";
 
@@ -34,11 +40,11 @@ export default function MedicineCard(medicine: MedicineDetail) {
   const { startLoading } = useGlobalLoading();
 
   const onOptimisticSet = (logId: number, status: IntakeLog["status"]) =>
-    setPending((p) => ({ ...p, [logId]: status })); // ✅ 성공 시에는 더 이상 즉시 지우지 않음
+    setPending((p) => ({ ...p, [logId]: status })); //  성공 시에는 더 이상 즉시 지우지 않음
   const onOptimisticClear = (logId: number) =>
     setPending(({ [logId]: _omit, ...rest }) => rest);
 
-  // ✅ 리컨실리에이션: 실제 스케줄 데이터가 pending과 같아지면 그 때만 pending 제거
+  //  리컨실리에이션: 실제 스케줄 데이터가 pending과 같아지면 그 때만 pending 제거
   useEffect(() => {
     if (!schedules?.length) return;
     const dateStr = toYYYYMMDD(new Date(), "Asia/Seoul");

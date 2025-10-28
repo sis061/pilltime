@@ -1,5 +1,4 @@
-// lib/supabase/service.ts
-// ❗️서버 전용. 클라이언트에서 import 금지
+// 서버 전용. 클라이언트에서 import 금지
 import "server-only";
 import { createClient } from "@supabase/supabase-js";
 

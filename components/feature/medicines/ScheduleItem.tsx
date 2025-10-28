@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
+
 // ---- UI
 import { toast } from "sonner";
 import {
@@ -9,9 +10,11 @@ import {
 } from "@/components/ui/button-group";
 import { Button } from "@/components/ui/button";
 import { Check, PinOff, Redo2 } from "lucide-react";
+
 // ---- UTIL
 import { formatTime, todayYmdKST, toHHMMSS } from "@/lib/date";
 import { getTodayIntakeLog } from "@/lib/medicine";
+
 // ---- TYPE
 import { IntakeLog, MedicineSchedule } from "@/types/medicines";
 
@@ -115,7 +118,7 @@ export default function ScheduleItem(schedule: ScheduleItemProps) {
         throw new Error(await res.text());
       }
 
-      // ✅ 성공 시에는 pending을 여기서 지우지 않는다!
+      //  성공 시에는 pending을 여기서 지우지 않는다!
       // (실제 데이터가 업데이트되어 schedules가 바뀌면, 상위 useEffect가 감지하고 지움)
     } catch {
       // 실패 롤백은 즉시 수행

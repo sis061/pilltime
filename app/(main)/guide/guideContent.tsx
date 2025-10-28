@@ -1,8 +1,11 @@
+import fallbackImg from "@/public/fallback-medicine.webp";
 import { useState, type JSX } from "react";
+
+// ---- NEXT
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import fallbackImg from "@/public/fallback-medicine.webp";
-import { guidePath } from "@/lib/imageWarm";
+
+// ---- UI
 import {
   AlarmClock,
   Check,
@@ -16,9 +19,10 @@ import {
   SquarePlus,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { StepId } from "@/lib/guideImages";
 
-const BLUR_1x1 = "data:image/gif;base64,R0lGODlhAQABAAAAACwAAAAAAQABAAA=";
+// ---- UTIL
+import { StepId } from "@/lib/guideImages";
+import { guidePath } from "@/lib/imageWarm";
 
 type GuideImgProps = {
   folder: string;
@@ -84,6 +88,10 @@ export function GuideImg({
     </figure>
   );
 }
+
+/* ------------
+ * 1. 약 정보 추가
+ * ------------ */
 
 const NewStep = () => (
   <div className="!space-y-4">
@@ -266,6 +274,10 @@ const NewStep = () => (
   </div>
 );
 
+/* ------------
+ * 2. 약 정보 확인하기
+ * ------------ */
+
 const CardStep = () => {
   const router = useRouter();
   return (
@@ -377,6 +389,10 @@ const CardStep = () => {
   );
 };
 
+/* ------------
+ * 3. 복용 기록 추가하기
+ * ------------ */
+
 const IntakeStep = () => (
   <div className="!space-y-4">
     <GuideImg
@@ -389,7 +405,7 @@ const IntakeStep = () => (
     />
     <p className="text-sm text-pilltime-grayDark/75">
       약이 등록되면 카드 형식으로 표시됩니다. 카드 하단에서 오늘의 복용 기록을
-      남기고 확인할 수 있습니다.
+      추가하고 확인할 수 있습니다.
     </p>
     <p className="text-base font-bold text-pilltime-grayDark/75">
       1. 복용 기록하기
@@ -463,6 +479,10 @@ const IntakeStep = () => (
   </div>
 );
 
+/* ------------
+ * 4. 약 정보 수정
+ * ------------ */
+
 const EditStep = () => (
   <div className="!space-y-4">
     <GuideImg
@@ -517,6 +537,10 @@ const EditStep = () => (
     </p>
   </div>
 );
+
+/* ------------
+ * 5. 지난 기록 보기
+ * ------------ */
 
 const CalendarStep = () => (
   <div className="!space-y-4">
@@ -624,6 +648,10 @@ const CalendarStep = () => (
     </p>
   </div>
 );
+
+/* ------------
+ * 6. 사용자 설정
+ * ------------ */
 
 const SettingsStep = () => (
   <div className="!space-y-4">

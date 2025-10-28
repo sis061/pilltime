@@ -1,20 +1,25 @@
 "use client";
 
 import { useRef, useTransition, useEffect } from "react";
+
 // ---- NEXT
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
+
 // ---- COMPONENT
 import { WizardHeader } from "./steps/WizardHeader";
 import { steps, StepWrapper } from "./steps/config";
 import { Step05Review } from "@/components/feature/medicines/steps/Step05Review";
+
 // ---- UI
 import { toast } from "sonner";
 import { PacmanLoader } from "react-spinners";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
+
 // ---- UTIL
 import { MedicineSchema, MedicineFormValues } from "@/lib/schemas/medicine";
 import { deleteMedicineImage } from "@/lib/supabase/upload";
+
 // ---- LIB
 // import { Wizard } from "react-use-wizard";
 const Wizard = dynamic(() => import("react-use-wizard").then((m) => m.Wizard), {
@@ -27,6 +32,7 @@ const Wizard = dynamic(() => import("react-use-wizard").then((m) => m.Wizard), {
 });
 import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+
 // ---- STORE
 import { useGlobalLoading } from "@/store/useGlobalLoading";
 import { useSSRMediaquery } from "@/hooks/useSSRMediaquery";
@@ -57,10 +63,13 @@ export default function MedicineNewDrawer({
   const submitBtnRef = useRef<HTMLButtonElement>(null);
   // 제출로 닫힘인지 구분 (orphan 삭제 방지)
   const submittedRef = useRef(false);
+
   // ---- NEXT
   const router = useRouter();
+
   // ---- CUSTOM HOOKS
   const minTablet = useSSRMediaquery(768);
+
   // ---- STORE
   const { isGLoading, startLoading, stopLoading, forceStop } =
     useGlobalLoading();
@@ -128,10 +137,10 @@ export default function MedicineNewDrawer({
       // 제출로 닫힘 표시 (취소 로직/refresh 차단용)
       submittedRef.current = true;
 
-      // ✅ 닫기 신호만 (부모가 setOpen(false) + replace 수행)
+      //  닫기 신호만 (부모가 setOpen(false) + replace 수행)
       onOpenChange(false);
 
-      // ✅ 부모 네비 반영 후에 새로고침
+      //  부모 네비 반영 후에 새로고침
       requestAnimationFrame(() => {
         startTransition(() => router.refresh());
       });

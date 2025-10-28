@@ -1,8 +1,8 @@
 import { Metadata } from "next";
+import CalendarClient from "@/components/feature/calendars/CalendarClient";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getMonthIndicatorMap } from "@/lib/calendar/indicator";
 import { toYYYYMMDD } from "@/lib/date";
-import CalendarClient from "@/components/feature/calendars/CalendarClient";
 
 export async function generateMetadata({
   searchParams,

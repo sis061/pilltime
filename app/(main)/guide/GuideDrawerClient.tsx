@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+
 // ---- UI
 import {
   Drawer,
@@ -12,10 +13,12 @@ import {
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, List } from "lucide-react";
+
 // ---- UTIL
 import { FIRST_IMAGE, SEQUENCE, STEPS, type StepId } from "@/lib/guideImages";
 import { warmOptimizer, guidePath } from "@/lib/imageWarm";
 import { STEP_CONTENT } from "./guideContent";
+
 // ---- STORE
 import { useGlobalLoading } from "@/store/useGlobalLoading";
 import { useSSRMediaquery } from "@/hooks/useSSRMediaquery";

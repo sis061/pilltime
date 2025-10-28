@@ -2,10 +2,13 @@
 
 // ---- REACT
 import { useCallback, useRef, useState } from "react";
+
 // ---- NEXT
 import { usePathname } from "next/navigation";
+
 // ---- COMPONENT
 import SmartImage from "@/components/layout/SmartImage";
+
 // ---- UI
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -15,14 +18,18 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
+
 // ---- UTIL
 import { uploadMedicineImage } from "@/lib/supabase/upload";
 import ImageUploader from "../ImageUploader";
 import { preparePickedFile, revokeObjectURL } from "@/lib/image";
+
 // ---- LIB
 import { useFormContext } from "react-hook-form";
+
 // ---- STORE
 import { useUserStore } from "@/store/useUserStore";
+
 // ---- CUSTOM HOOKS
 import { useSSRMediaquery } from "@/hooks/useSSRMediaquery";
 import { useGlobalLoading } from "@/store/useGlobalLoading";
@@ -42,13 +49,13 @@ export function MedicineImageField() {
   const { watch, setValue } = useFormContext();
   const imageUrl = watch("imageUrl");
 
-  // ✅ 서브 Drawer 상태
+  //  서브 Drawer 상태
 
   const [cropOpen, setCropOpen] = useState(false);
   const [rawFile, setRawFile] = useState<File | Blob | null>(null);
   const [uploading, setUploading] = useState(false);
 
-  // ✅ 파일 선택 핸들러 (변경 버튼 눌렀을 때)
+  //  파일 선택 핸들러 (변경 버튼 눌렀을 때)
   const handleSelectFile = () => {
     if (uploading || pickLockRef.current) return;
     const input = document.createElement("input");
@@ -79,7 +86,7 @@ export function MedicineImageField() {
       try {
         startLoading("prepare-image", "이미지를 불러오는 중이에요..");
 
-        // ✅ iCloud 0바이트 대기 루프 (최대 2.5초)
+        //  iCloud 0바이트 대기 루프 (최대 2.5초)
         let tries = 0;
         while (file.size === 0 && tries < 25) {
           await new Promise((r) => setTimeout(r, 100));
@@ -193,7 +200,7 @@ export function MedicineImageField() {
           </Button>
         </div>
       </div>
-      {/* ✅ 크롭 Drawer */}
+      {/*  크롭 Drawer */}
       <Drawer
         open={cropOpen}
         onOpenChange={setCropOpen}

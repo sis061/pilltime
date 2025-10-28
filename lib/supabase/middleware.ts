@@ -1,4 +1,3 @@
-// middleware.ts
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 
@@ -22,7 +21,7 @@ export async function middleware(req: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        // ✅ Next 15: req/res 기반 동기 접근 사용
+        //  Next 15: req/res 기반 동기 접근 사용
         get(name: string) {
           return req.cookies.get(name)?.value ?? null;
         },
@@ -47,7 +46,7 @@ export async function middleware(req: NextRequest) {
     return res;
   }
 
-  // 👇 만료/리프레시 시 Set-Cookie가 res에 기록됨
+  // 만료/리프레시 시 Set-Cookie가 res에 기록됨
   const {
     data: { user },
   } = await supabase.auth.getUser();

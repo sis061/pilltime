@@ -1,4 +1,5 @@
 // lib/useHasTouch.ts
+
 import { useEffect, useState } from "react";
 
 export function useHasTouch() {

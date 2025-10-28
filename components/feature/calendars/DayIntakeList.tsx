@@ -1,10 +1,9 @@
-// components/feature/calendars/DayIntakeList.tsx
 "use client";
 
 import * as React from "react";
+import { statusBadgeClass } from "./CalendarShell";
 import { PacmanLoader } from "react-spinners";
 import { formatTime } from "@/lib/date";
-import { statusBadgeClass } from "./CalendarShell";
 import type { DayIntakeItem } from "@/types/calendar";
 
 function getIntakeSummary(intakes: DayIntakeItem[]): string[] {

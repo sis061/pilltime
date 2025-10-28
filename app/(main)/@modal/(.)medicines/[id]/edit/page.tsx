@@ -11,7 +11,7 @@ export default function EditMedicinePage() {
       open={true}
       onOpenChange={(open) => {
         if (!open) {
-          router.back(); // 닫으면 원래 페이지로 돌아감
+          router.back();
         }
       }}
     />

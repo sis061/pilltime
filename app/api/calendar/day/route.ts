@@ -1,4 +1,3 @@
-// app/api/calendar/day/route.ts
 import { NextResponse, type NextRequest } from "next/server";
 import type { DayIntakeResponse } from "@/types/calendar";
 import { createRouteSupabaseClient } from "@/lib/supabase/route";
@@ -14,7 +13,7 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  // ✅ Route Handler 전용: req에서 읽고 res에 Set-Cookie 기록
+  // Route Handler 전용: req에서 읽고 res에 Set-Cookie 기록
   const { supabase, res } = await createRouteSupabaseClient(req);
 
   const {
@@ -67,6 +66,6 @@ export async function GET(req: NextRequest) {
     }) ?? [];
 
   const payload: DayIntakeResponse = { date, items };
-  // ✅ Set-Cookie 포함해서 응답
+  // Set-Cookie 포함해서 응답
   return NextResponse.json(payload, { headers: res.headers });
 }

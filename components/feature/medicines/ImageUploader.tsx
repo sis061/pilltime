@@ -1,13 +1,17 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+
+import { dataURLToBlob, revokeObjectURL, toObjectURL } from "@/lib/image";
 import ReactCrop, { PercentCrop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
-import { useGlobalLoading } from "@/store/useGlobalLoading";
-import { toast } from "sonner";
-import { dataURLToBlob, revokeObjectURL, toObjectURL } from "@/lib/image";
 // import imageCompression from "browser-image-compression";
+
+import { useGlobalLoading } from "@/store/useGlobalLoading";
+
 interface Props {
   file: File | null;
   onCropped: (cropped: File | Blob, previewUrl: string) => void;
@@ -124,14 +128,14 @@ export default function ImageUploader({ file, onCropped }: Props) {
       let output: Blob = input;
       try {
         const imageCompression = await getImageCompression();
-        // ✅ iOS/Safari에선 웹워커 비활성화
+        //  iOS/Safari에선 웹워커 비활성화
         output = await imageCompression(input as any, {
           maxSizeMB: 0.3,
           maxWidthOrHeight: 512,
           useWebWorker: !isIOS && typeof Worker !== "undefined",
         });
       } catch (_) {
-        // ✅ 압축 실패하면 원본 그대로 사용 (크래시 방지)
+        //  압축 실패하면 원본 그대로 사용 (크래시 방지)
         output = input;
       }
 
@@ -179,7 +183,7 @@ export default function ImageUploader({ file, onCropped }: Props) {
         <ReactCrop
           crop={crop}
           onChange={(_, percentCrop) => setCrop(percentCrop)}
-          aspect={1} // ✅ 정방형
+          aspect={1} //  정방형
           keepSelection
         >
           <img
@@ -187,7 +191,7 @@ export default function ImageUploader({ file, onCropped }: Props) {
             alt="crop-target"
             ref={imgRef}
             onLoad={handleImageLoad}
-            className="object-contain mx-auto max-h-[60vh]" // ✅ 원래 스타일 유지
+            className="object-contain mx-auto max-h-[60vh]" //  원래 스타일 유지
             style={{ imageOrientation: "from-image" as any }} // 지원 브라우저에서 EXIF 반영 힌트
           />
         </ReactCrop>

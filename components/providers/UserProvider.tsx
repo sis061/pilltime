@@ -50,7 +50,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_IN" && session?.user) {
-        // ✅ 세션이 확정된 뒤에만 구독 시도
+        //  세션이 확정된 뒤에만 구독 시도
         try {
           await subscribe();
         } catch (err) {
