@@ -94,7 +94,7 @@ export function GuideImg({
  * ------------ */
 
 const NewStep = () => (
-  <div className="!space-y-4">
+  <div className="!space-y-4 [&_>p]:text-sm [&_>p]:text-pilltime-grayDark/75 [&_>h3]:text-base [&_>h3]:font-bold [&_>h3]:text-pilltime-grayDark/75">
     <h3>1. 등록하러 가기</h3>
     <GuideImg
       folder="new"
