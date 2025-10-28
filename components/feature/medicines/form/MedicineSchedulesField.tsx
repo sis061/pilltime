@@ -1,20 +1,25 @@
 "use client";
 
-import "dayjs/locale/ko";
-import dayjs from "dayjs";
-dayjs.locale("ko");
 // ---- REACT
 import * as React from "react";
+
 // ---- UI
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+
 // ---- COMPONENT
 import TimePicker from "antd/es/time-picker";
 import koKR from "antd/locale/ko_KR";
+
 // ---- UTIL
 import { MedicineFormValues } from "@/lib/schemas/medicine";
+
 // ---- LIB
+import "dayjs/locale/ko";
+import dayjs from "dayjs";
+dayjs.locale("ko");
+
 import { useFormContext, useFieldArray, Controller } from "react-hook-form";
 import { useHasTouch } from "@/hooks/useHasTouch";
 
@@ -224,7 +229,7 @@ export function MedicineSchedulesField() {
           {fields.map((f, index) => (
             <div key={f.__key} className="flex flex-col gap-2 items-center ">
               <div className="flex gap-2 items-center justify-between w-full">
-                {/* ✅ 도메인 PK(id) 숨김 input → diff용으로 서버에 항상 전달 */}
+                {/*  도메인 PK(id) 숨김 input → diff용으로 서버에 항상 전달 */}
                 <input
                   type="hidden"
                   {...register(`schedules.${index}.id`, {
@@ -265,7 +270,7 @@ export function MedicineSchedulesField() {
                     return (
                       <div className="!border-pilltime-grayLight grow !ml-1">
                         {hasTouch ? (
-                          // ✅ 모바일: 네이티브 time 입력
+                          //  모바일: 네이티브 time 입력
                           <div
                             className={[
                               // --- shadcn Input 기본 클래스 ---
@@ -319,7 +324,7 @@ export function MedicineSchedulesField() {
                             />
                           </div>
                         ) : (
-                          // ✅ 태블릿/데스크톱: antd TimePicker
+                          //  태블릿/데스크톱: antd TimePicker
                           <TimePicker
                             locale={tpLocale}
                             value={

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+
 // ---- UI
 import {
   Drawer,
@@ -11,10 +12,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+
 // ---- UTIL
 import { createClient } from "@/lib/supabase/client";
+
 // ---- CUSTOM HOOKS
 import { useSSRMediaquery } from "@/hooks/useSSRMediaquery";
+
 // ---- STORE
 import { useUserStore } from "@/store/useUserStore";
 import { useGlobalLoading } from "@/store/useGlobalLoading";
@@ -32,20 +36,22 @@ export default function NicknameDrawer({
   mode = "edit",
   onCompleted,
 }: Props) {
-  // const router = useRouter();
   // ---- UTIL
   const supabase = createClient();
+
   // ---- STORE
   const user = useUserStore((s) => s.user);
   const setUser = useUserStore((s) => s.setUser);
   const { isGLoading, startLoading, stopLoading, forceStop } =
     useGlobalLoading();
+
   // ---- REACT
   const [submitting, setSubmitting] = useState(false);
   const [nickname, setNickname] = useState(user?.nickname || "");
   const submitBtnRef = useRef<HTMLButtonElement>(null);
   const modeAtOpenRef = useRef<"create" | "edit">(mode);
   const inputRef = useRef<HTMLInputElement | null>(null);
+
   // ---- CUSTOM HOOKS
   const minTablet = useSSRMediaquery(768);
 

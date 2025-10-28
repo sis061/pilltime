@@ -1,4 +1,3 @@
-// lib/calendar/invalidate.ts
 import "server-only";
 import { revalidateMonthIndicator } from "./indicator";
 

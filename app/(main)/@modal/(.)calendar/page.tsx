@@ -37,8 +37,6 @@ export default async function CalendarInterceptPage({
   const today = toYYYYMMDD(new Date(), "Asia/Seoul");
   const monthMap = await getMonthIndicatorMap(user.id, today);
 
-  // onClose는 router.back()
-  // (주의: Client 컴포넌트 내부에서 처리됨)
   return (
     <CalendarClient
       variant="drawer"

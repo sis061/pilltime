@@ -72,7 +72,7 @@ export default function FirstVisitBanner({
   const handleEnable = async () => {
     try {
       await subscribe(); // 권한 요청 → SW ready → 구독 저장
-      await refresh(); // ✅ 즉시 강제 동기화 (모든 환경에서 확정적으로 반영)
+      await refresh(); //  즉시 강제 동기화 (모든 환경에서 확정적으로 반영)
       // 가끔 iOS에서 한 틱 늦을 때 보정
       if (document.visibilityState === "visible") {
         queueMicrotask(() => refresh());

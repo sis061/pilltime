@@ -1,4 +1,3 @@
-// components/feature/medicines/MedicineNotifyToggle.tsx
 "use client";
 
 /**

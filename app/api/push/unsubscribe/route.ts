@@ -3,7 +3,7 @@
  * - 클라에서 현재 구독의 endpoint를 보내면
  * - 서버 DB에서 해당 row 삭제 → 브라우저에서도 unsubscribe()
  */
-// app/api/push/unsubscribe/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createRouteSupabaseClient } from "@/lib/supabase/route";

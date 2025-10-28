@@ -1,5 +1,3 @@
-//TODO 가이드 라우터 만들기
-
 import "@ant-design/v5-patch-for-react-19";
 
 import dynamic from "next/dynamic";

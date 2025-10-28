@@ -1,4 +1,3 @@
-// app/api/medicines/[id]/notify/route.ts
 /**
  * 약별 알림 토글 API
  * - PATCH /api/medicines/:id/notify  { enabled: boolean }

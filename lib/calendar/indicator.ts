@@ -1,4 +1,3 @@
-// lib/calendar/indicator.ts
 import "server-only";
 import { unstable_cache, revalidateTag } from "next/cache";
 import { createServiceSupabaseClient } from "@/lib/supabase/service";
@@ -140,7 +139,7 @@ export function monthTag(userId: string, anyYmdInMonth: string) {
   return `intake:summary:${userId}:${ym}`;
 }
 
-/** ✅ 동적 태그를 등록하는 캐시 래퍼 */
+/**  동적 태그를 등록하는 캐시 래퍼 */
 export async function getMonthIndicatorMap(userId: string, centerYmd: string) {
   const { ym } = monthParts(centerYmd);
   const tag = monthTag(userId, centerYmd);
@@ -153,7 +152,7 @@ export async function getMonthIndicatorMap(userId: string, centerYmd: string) {
   return cached();
 }
 
-/** ✅ 무효화 헬퍼: YYYY-MM 기준으로 invalidate */
+/**  무효화 헬퍼: YYYY-MM 기준으로 invalidate */
 export function revalidateMonthIndicator(userId: string, dateYmd: string) {
   return revalidateTag(monthTag(userId, dateYmd));
 }

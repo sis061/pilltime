@@ -3,8 +3,10 @@
 // ---- REACT
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
+
 // ---- NEXT
 import dynamic from "next/dynamic";
+
 // ---- COMPONENT
 //  모달용 컴포넌트만 framer-motion과 함께 동적 로드
 import SmartImage, { SmartImageProps } from "./SmartImage";

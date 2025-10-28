@@ -1,11 +1,12 @@
-// components/feature/calendars/CalendarShell.tsx
 "use client";
 
 // ---- REACT
 import * as React from "react";
+
 // ---- COMPONENT
 import PillCalendar from "./PillCalendar";
 import DayIntakeList from "./DayIntakeList";
+
 // ---- UTIL
 import {
   addDays,
@@ -14,8 +15,10 @@ import {
   todayYmdKST,
   ymdKST,
 } from "@/lib/date";
+
 // ---- STORE
 import { useGlobalLoading } from "@/store/useGlobalLoading";
+
 // ---- TYPE
 import type {
   MonthIndicatorMap,
@@ -47,9 +50,9 @@ const STATUS = [
   },
 ] as const;
 
-/* ------
- function
------- */
+/* --------
+ * function
+ * -------- */
 
 function normalizeYmd(ymd: string | null, maxFutureDays: number) {
   const today = todayYmdKST();

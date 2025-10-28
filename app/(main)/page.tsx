@@ -2,10 +2,12 @@
 
 // ---- NEXT
 import { redirect } from "next/navigation";
+
 // ---- COMPONENT
 // import HomeProfile from "@/components/feature/profiles/HomeProfile";
 import MedicineList from "@/components/feature/medicines/MedicineList";
 import HomeToday from "@/components/feature/calendars/HomeToday";
+
 // ---- UTIL
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
@@ -15,7 +17,6 @@ export const fetchCache = "default-no-store";
 export default async function Home() {
   const supabase = await createServerSupabaseClient();
 
-  // ✅ 로그인 유저 확인
   const {
     data: { user },
     error: userErr,

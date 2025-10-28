@@ -1,10 +1,11 @@
 "use client";
 
-// ---- REACT
 import { useState } from "react";
+
 // ---- UI
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+
 // ---- STORE
 import { useGlobalLoading } from "@/store/useGlobalLoading";
 
@@ -15,7 +16,7 @@ export default function SocialLogin() {
   const { startLoading, stopLoading } = useGlobalLoading();
 
   async function getSupabase() {
-    const { createClient } = await import("@/lib/supabase/client"); // ✅ 지연 로드
+    const { createClient } = await import("@/lib/supabase/client");
     return createClient();
   }
 
@@ -26,11 +27,11 @@ export default function SocialLogin() {
       "http://localhost:3000";
 
     if (typeof window === "undefined") {
-      // ✅ SSR 시점: 그냥 NEXT_PUBLIC_SITE_URL 기반으로 반환
+      // SSR 시점: 그냥 NEXT_PUBLIC_SITE_URL 기반으로 반환
       return `${base}/callback`;
     }
 
-    // ✅ CSR 시점 (Next Auth UI 등): 실제 origin 기준
+    // CSR 시점 (Next Auth UI 등): 실제 origin 기준
     const origin = window.location.origin?.replace(/\/+$/, "") || base;
     return `${origin}/callback`;
   }

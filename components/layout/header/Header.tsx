@@ -13,7 +13,7 @@ export default async function Header({ user }: { user: User }) {
     .eq("id", user.id)
     .maybeSingle();
 
-  // ✅ 전역 알림 상태 (없으면 true로 간주)
+  //  전역 알림 상태 (없으면 true로 간주)
   const { data: settings } = await supabase
     .from("user_notification_settings")
     .select("global_notify_enabled")

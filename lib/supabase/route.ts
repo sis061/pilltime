@@ -4,10 +4,10 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import type { Database } from "../../types_db";
 
 export async function createRouteSupabaseClient(req: NextRequest) {
-  // ✅ cookies()는 반드시 await 필요
+  //  cookies()는 반드시 await 필요
   const cookieStore = await cookies();
 
-  // ✅ Route Handler에서는 next()를 호출하지 않음
+  //  Route Handler에서는 next()를 호출하지 않음
   const res = new NextResponse();
 
   const supabase = createServerClient<Database>(

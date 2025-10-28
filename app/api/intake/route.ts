@@ -1,4 +1,3 @@
-// app/api/your-endpoint/route.ts (PUT)
 import { NextResponse, type NextRequest } from "next/server";
 import { createRouteSupabaseClient } from "@/lib/supabase/route";
 import { revalidateMonthIndicator } from "@/lib/calendar/indicator";
@@ -6,7 +5,7 @@ import { revalidateMonthIndicator } from "@/lib/calendar/indicator";
 export const runtime = "nodejs";
 
 export async function PUT(req: NextRequest) {
-  // ✅ Route Handler 전용: req에서 읽고, res에 Set-Cookie 기록
+  // Route Handler 전용: req에서 읽고, res에 Set-Cookie 기록
   const { supabase, res } = await createRouteSupabaseClient(req);
 
   const {
@@ -17,7 +16,7 @@ export async function PUT(req: NextRequest) {
   if (authError || !user) {
     return NextResponse.json(
       { error: "Unauthorized" },
-      { status: 401, headers: res.headers } // ✅ 쿠키 전파
+      { status: 401, headers: res.headers } // 쿠키 전파
     );
   }
 
@@ -27,7 +26,7 @@ export async function PUT(req: NextRequest) {
   if (!idNum || !body?.status) {
     return NextResponse.json(
       { error: "Missing required fields" },
-      { status: 400, headers: res.headers } // ✅ 쿠키 전파
+      { status: 400, headers: res.headers } // 쿠키 전파
     );
   }
 
@@ -37,7 +36,7 @@ export async function PUT(req: NextRequest) {
     source: body.source ?? "manual",
   };
 
-  // ✅ taken/missed/skipped 확정 시에만 checked_at 갱신
+  // taken/missed/skipped 확정 시에만 checked_at 갱신
   if (["taken", "missed", "skipped"].includes(body.status)) {
     updatePayload.checked_at = now;
   }
@@ -55,7 +54,7 @@ export async function PUT(req: NextRequest) {
     console.error("DB Error:", error.message);
     return NextResponse.json(
       { error: error.message },
-      { status: 500, headers: res.headers } // ✅ 쿠키 전파
+      { status: 500, headers: res.headers } // 쿠키 전파
     );
   }
 
@@ -63,7 +62,7 @@ export async function PUT(req: NextRequest) {
     await revalidateMonthIndicator(user.id, updated.date as string);
   }
 
-  // ✅ 성공 응답에도 Set-Cookie 포함
+  // 성공 응답에도 Set-Cookie 포함
   return NextResponse.json(
     { success: true },
     { status: 200, headers: res.headers }

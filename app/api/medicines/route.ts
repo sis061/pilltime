@@ -1,4 +1,3 @@
-// app/api/medicines/route.ts
 import { NextResponse, type NextRequest } from "next/server";
 import { createRouteSupabaseClient } from "@/lib/supabase/route";
 import { revalidateMonthIndicator } from "@/lib/calendar/indicator";
@@ -11,7 +10,7 @@ export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
   try {
-    // ✅ Route Handler 전용: req에서 읽고 res에 Set-Cookie 기록
+    // Route Handler 전용: req에서 읽고 res에 Set-Cookie 기록
     const { supabase, res } = await createRouteSupabaseClient(req);
 
     // 1) 로그인 유저 확인 (우선 인증 확인)
@@ -23,7 +22,7 @@ export async function POST(req: NextRequest) {
     if (userError || !user) {
       return NextResponse.json(
         { error: "로그인이 필요합니다." },
-        { status: 401, headers: res.headers } // ✅ 쿠키 전파
+        { status: 401, headers: res.headers } // 쿠키 전파
       );
     }
 
@@ -33,7 +32,7 @@ export async function POST(req: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json(
         { error: parsed.error.flatten() },
-        { status: 400, headers: res.headers } // ✅ 쿠키 전파
+        { status: 400, headers: res.headers } // 쿠키 전파
       );
     }
 
@@ -58,7 +57,7 @@ export async function POST(req: NextRequest) {
     if (medicineError || !medicine) {
       return NextResponse.json(
         { error: medicineError?.message ?? "medicine 생성 실패" },
-        { status: 500, headers: res.headers } // ✅ 쿠키 전파
+        { status: 500, headers: res.headers } // 쿠키 전파
       );
     }
 
@@ -93,7 +92,7 @@ export async function POST(req: NextRequest) {
     if (scheduleError || !scheduleRows) {
       return NextResponse.json(
         { error: scheduleError?.message ?? "스케줄 생성 실패" },
-        { status: 500, headers: res.headers } // ✅ 쿠키 전파
+        { status: 500, headers: res.headers } // 쿠키 전파
       );
     }
 
@@ -121,7 +120,7 @@ export async function POST(req: NextRequest) {
       if (genErr) {
         console.error("❌ RPC error:", genErr.message);
       } else {
-        console.log(`✅ ${insertedCount} logs generated for schedule ${s.id}`);
+        console.log(` ${insertedCount} logs generated for schedule ${s.id}`);
       }
 
       ymToInvalidate.add(fromStr.slice(0, 7)); // "YYYY-MM"
@@ -136,7 +135,7 @@ export async function POST(req: NextRequest) {
     // 7) 성공 응답 (Location 헤더 포함) + Set-Cookie 전파
     const json = NextResponse.json(medicine, {
       status: 201,
-      headers: res.headers, // ✅ 쿠키 전파
+      headers: res.headers, // 쿠키 전파
     });
     json.headers.set("Location", `/medicines/${medicine.id}`);
     return json;

@@ -1,4 +1,3 @@
-// components/common/SmartImage.tsx
 "use client";
 
 import * as React from "react";

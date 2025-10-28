@@ -1,7 +1,6 @@
-// app/api/push/dispatch/route.ts
-// ✅ Netlify에서도 Node 런타임 강제
+// Node 런타임 강제
 export const runtime = "nodejs";
-// ✅ 캐시 회피(혹시 모를 Revalidate 이슈 예방)
+// 캐시 회피(혹시 모를 Revalidate 이슈 예방)
 export const dynamic = "force-dynamic";
 
 import webpush from "web-push";
@@ -31,7 +30,7 @@ const asDate = (d: Date) =>
   `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const asTime = (d: Date) => `${pad(d.getHours())}:${pad(d.getMinutes())}:00`;
 
-// ✅ 헤더 시크릿 안전 추출(트림/대소문자 무관)
+// 헤더 시크릿 안전 추출(트림/대소문자 무관)
 function readCronSecret(req: Request) {
   // Web Headers는 키 대소문자 무시하지만, 안전하게 두 번 시도
   const raw =
@@ -193,7 +192,7 @@ export async function POST(req: Request) {
               error: String(e?.body || e?.message),
             });
 
-            // ❗문자열 포함검사 대신 statusCode로 분기
+            // 문자열 포함검사 대신 statusCode로 분기
             if (code === 404 || code === 410) {
               // 죽은 구독은 즉시 제거(고아 구독 누적 방지)
               await sb.from("push_subscriptions").delete().eq("id", s.id);

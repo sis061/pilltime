@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
+
 // ---- NEXT
 import { useParams, useRouter } from "next/navigation";
+
 // ---- COMPONENT
 import {
   MedicineNameField,
@@ -10,6 +12,7 @@ import {
   MedicineSchedulesField,
   MedicineImageField,
 } from "@/components/feature/medicines/form";
+
 // ---- UI
 import {
   Drawer,
@@ -31,16 +34,20 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+
 // ---- UTIL
 import { zodResolver } from "@hookform/resolvers/zod";
 import { MedicineSchema, MedicineFormValues } from "@/lib/schemas/medicine";
 import { toHHmm } from "@/lib/date";
 import { buildPatch } from "@/lib/medicine";
 import { deleteMedicineImage } from "@/lib/supabase/upload";
+
 // ---- LIB
 import { useForm, FormProvider } from "react-hook-form";
+
 // ---- STORE
 import { useGlobalLoading } from "@/store/useGlobalLoading";
+
 // ---- TYPE
 import {
   MedicineSchedule,
@@ -99,11 +106,14 @@ export default function MedicineEditDrawer({
   const submitBtnRef = useRef<HTMLButtonElement>(null);
   const initSchedulesRef = useRef<UISchedule[]>([]); // 서버 상태 스냅샷
   const [isPendingNav, startTransition] = useTransition();
+
   // ---- NEXT
   const { id } = useParams();
   const router = useRouter();
+
   // ---- CUSTOM HOOKS
   const minTablet = useSSRMediaquery(768);
+
   // ---- STORE
   const { isGLoading, startLoading, stopLoading, forceStop } =
     useGlobalLoading();

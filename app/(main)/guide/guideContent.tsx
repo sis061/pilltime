@@ -1,7 +1,11 @@
-import type { JSX } from "react";
+import fallbackImg from "@/public/fallback-medicine.webp";
+import { useState, type JSX } from "react";
+
+// ---- NEXT
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { guidePath } from "@/lib/image";
+
+// ---- UI
 import {
   AlarmClock,
   Check,
@@ -14,23 +18,21 @@ import {
   Share,
   SquarePlus,
 } from "lucide-react";
-import { StepId } from "@/lib/guideImages";
+import { Skeleton } from "@/components/ui/skeleton";
 
-const BLUR_1x1 = "data:image/gif;base64,R0lGODlhAQABAAAAACwAAAAAAQABAAA=";
+// ---- UTIL
+import { StepId } from "@/lib/guideImages";
+import { guidePath } from "@/lib/imageWarm";
 
 type GuideImgProps = {
   folder: string;
   file: string;
   alt: string;
-  /** 원본 이미지의 가로/세로(px) */
   w: number;
   h: number;
   caption?: string;
-  /** 첫 장이면 true (선택) */
   eager?: boolean;
-  /** 서버 변환 폭/품질 (디폴트 900/80) */
-  maxW?: number;
-  quality?: number;
+  maxW?: number; // 레이아웃 기준 폭
 };
 
 export function GuideImg({
@@ -42,28 +44,42 @@ export function GuideImg({
   caption,
   eager = false,
   maxW = 900,
-  quality = 80,
 }: GuideImgProps) {
-  // 표시용 크기(가로 기준으로 축소)
+  const [loaded, setLoaded] = useState(false);
+  const [useFallback, setUseFallback] = useState(false);
+
   const displayW = Math.min(maxW, w);
   const displayH = Math.round((displayW * h) / w);
 
-  const src = guidePath(folder, file, `width=${maxW}&quality=${quality}`);
+  const src = useFallback ? (fallbackImg as any) : guidePath(folder, file);
 
   return (
-    <figure className="rounded-xl border overflow-hidden !shadow-md bg-white">
-      <Image
-        src={src}
-        alt={alt}
-        width={displayW}
-        height={displayH}
-        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 900px"
-        priority={eager}
-        fetchPriority={eager ? "high" : "auto"}
-        placeholder="blur"
-        blurDataURL={BLUR_1x1}
-        style={{ width: "100%", height: "auto" }}
-      />
+    <figure className="rounded-xl border overflow-hidden shadow-md bg-white">
+      <div className="relative" style={{ width: "100%", height: "auto" }}>
+        <Image
+          src={src}
+          alt={alt}
+          width={displayW}
+          height={displayH}
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 900px"
+          priority={eager}
+          fetchPriority={eager ? "high" : "auto"}
+          className={
+            loaded ? "opacity-100 transition-opacity duration-300" : "opacity-0"
+          }
+          style={{ width: "100%", height: "auto", display: "block" }}
+          onLoad={() => setLoaded(true)}
+          onError={() => {
+            if (!useFallback) {
+              setUseFallback(true);
+              setLoaded(false);
+            }
+          }}
+        />
+        {!loaded && (
+          <Skeleton className="absolute inset-0 h-full w-full bg-[#2D383E]" />
+        )}
+      </div>
       {caption && (
         <figcaption className="px-3 py-2 text-xs text-gray-600">
           {caption}
@@ -72,6 +88,10 @@ export function GuideImg({
     </figure>
   );
 }
+
+/* ------------
+ * 1. 약 정보 추가
+ * ------------ */
 
 const NewStep = () => (
   <div className="!space-y-4">
@@ -254,6 +274,10 @@ const NewStep = () => (
   </div>
 );
 
+/* ------------
+ * 2. 약 정보 확인하기
+ * ------------ */
+
 const CardStep = () => {
   const router = useRouter();
   return (
@@ -365,6 +389,10 @@ const CardStep = () => {
   );
 };
 
+/* ------------
+ * 3. 복용 기록 추가하기
+ * ------------ */
+
 const IntakeStep = () => (
   <div className="!space-y-4">
     <GuideImg
@@ -377,7 +405,7 @@ const IntakeStep = () => (
     />
     <p className="text-sm text-pilltime-grayDark/75">
       약이 등록되면 카드 형식으로 표시됩니다. 카드 하단에서 오늘의 복용 기록을
-      남기고 확인할 수 있습니다.
+      추가하고 확인할 수 있습니다.
     </p>
     <p className="text-base font-bold text-pilltime-grayDark/75">
       1. 복용 기록하기
@@ -451,6 +479,10 @@ const IntakeStep = () => (
   </div>
 );
 
+/* ------------
+ * 4. 약 정보 수정
+ * ------------ */
+
 const EditStep = () => (
   <div className="!space-y-4">
     <GuideImg
@@ -505,6 +537,10 @@ const EditStep = () => (
     </p>
   </div>
 );
+
+/* ------------
+ * 5. 지난 기록 보기
+ * ------------ */
 
 const CalendarStep = () => (
   <div className="!space-y-4">
@@ -612,6 +648,10 @@ const CalendarStep = () => (
     </p>
   </div>
 );
+
+/* ------------
+ * 6. 사용자 설정
+ * ------------ */
 
 const SettingsStep = () => (
   <div className="!space-y-4">

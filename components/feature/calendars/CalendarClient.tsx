@@ -5,8 +5,8 @@ import { usePathname, useRouter } from "next/navigation";
 import CalendarShell from "./CalendarShell";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import { useSSRMediaquery } from "@/hooks/useSSRMediaquery";
-import type { MonthIndicatorMap } from "@/types/calendar";
 import { useGlobalLoading } from "@/store/useGlobalLoading";
+import type { MonthIndicatorMap } from "@/types/calendar";
 
 type Variant = "drawer" | "page";
 

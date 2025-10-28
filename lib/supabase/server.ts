@@ -1,10 +1,9 @@
-// lib/supabase/server.ts
 import { cookies } from "next/headers";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import type { Database } from "../../types_db";
 
 export async function createServerSupabaseClient() {
-  // ✅ Next.js 15: 반드시 await
+  //  Next.js 15: 반드시 await
   const cookieStore = await cookies();
 
   return createServerClient<Database>(

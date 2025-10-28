@@ -100,7 +100,7 @@ export function usePush(vapidPublicKey: string, userId?: string) {
     }
   }, []);
 
-  // ✅ 권한 변경 자동 반영(가능 브라우저)
+  //  권한 변경 자동 반영(가능 브라우저)
   useEffect(() => {
     if (typeof navigator === "undefined" || !("permissions" in navigator))
       return;
@@ -145,7 +145,7 @@ export function usePush(vapidPublicKey: string, userId?: string) {
     return () => document.removeEventListener("visibilitychange", onVis);
   }, [refresh]);
 
-  /** ✅ VAPID 변경 시 기존 구독 정리 (401/403 예방) */
+  /**  VAPID 변경 시 기존 구독 정리 (401/403 예방) */
   const ensureVAPIDMatch = useCallback(
     async (reg: ServiceWorkerRegistration) => {
       const sub = await reg.pushManager.getSubscription();
@@ -312,7 +312,7 @@ export function usePush(vapidPublicKey: string, userId?: string) {
       navigator.serviceWorker.removeEventListener("controllerchange", onCtrl);
   }, [autoHeal]);
 
-  // ✅ 파생 값: 권한 + 구독이 모두 true
+  //  파생 값: 권한 + 구독이 모두 true
   const notifyReady = permission === "granted" && isSubscribed === true;
 
   return {

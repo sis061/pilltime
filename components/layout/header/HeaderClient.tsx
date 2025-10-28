@@ -1,15 +1,19 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+
 // ---- NEXT
 import { useRouter, usePathname } from "next/navigation";
+
 // ---- CUSTOM HOOKS
 import { useGlobalNotify } from "@/hooks/useGlobalNotify";
+
 // ---- COMPONENT
 import NavbarDrawer from "./NavbarDrawer";
 import { SmartButtonGroup } from "./SmartButtons";
 import NicknameDrawer from "@/components/feature/profiles/NicknameDrawer";
 import ProfileBadge from "@/components/feature/profiles/ProfileBadge";
+
 // ---- UI
 import { toast } from "sonner";
 import {
@@ -30,11 +34,13 @@ import {
   UserPen,
   BookOpen,
 } from "lucide-react";
+
 // ---- STORE
 import { useUserStore } from "@/store/useUserStore";
 import { useGlobalLoading } from "@/store/useGlobalLoading";
 // import { useSSRMediaquery } from "@/hooks/useSSRMediaquery";
 import { usePush } from "@/hooks/usePush";
+
 // ---- TYPE
 import type { User } from "@/types/profile";
 
@@ -51,11 +57,13 @@ export default function HeaderClient({
   const [openNickname, setOpenNickname] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  /** 🔔 전역 알림 토글 상태 + 낙관적 업데이트 */
+  /** 전역 알림 토글 상태 + 낙관적 업데이트 */
   const [pendingGlobal, startTransition] = useTransition();
+
   // ---- NEXT
   const router = useRouter();
   const pathname = usePathname();
+
   // ---- CUSTOM HOOKS
   // const minMobile = useSSRMediaquery(640);
   const { enabled, setEnabledOptimistic, mutateGlobal, revalidate } =
@@ -63,6 +71,7 @@ export default function HeaderClient({
   const vapid = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!;
   const { permission, isSubscribed, subscribe, refresh, notifyReady } =
     usePush(vapid);
+
   // ---- STORE
   const setUser = useUserStore((s) => s.setUser);
   const clearUser = useUserStore((s) => s.clearUser);
