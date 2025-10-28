@@ -14,14 +14,12 @@ export default function NewMedicinePage() {
   const [open, setOpen] = useState(true);
 
   useEffect(() => {
-    if (pathname?.startsWith("/medicines/new")) {
-      setOpen(true);
-    }
-  }, [pathname, q]);
+    setOpen(pathname?.startsWith("/medicines/new") ?? false);
+  }, [pathname]);
 
   return (
     <MedicineNewDrawer
-      key={q.toString()}
+      // key={q.toString()}
       open={open}
       onOpenChange={(next) => {
         // ✅ 먼저 시각적으로 닫고

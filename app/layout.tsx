@@ -54,21 +54,6 @@ export default function RootLayout({
       <head>
         {/* PWA */}
         <link rel="manifest" href="/manifest.json" />
-        <link
-          rel="preconnect"
-          href="https://cxkefmygfdtcwidshaoa.supabase.co"
-          crossOrigin=""
-        />
-        <link
-          rel="dns-prefetch"
-          href="https://cxkefmygfdtcwidshaoa.supabase.co"
-        />
-        <link
-          rel="preload"
-          as="image"
-          imageSrcSet="https://cxkefmygfdtcwidshaoa.supabase.co/storage/v1/object/public/guide/new/01.webp?width=900&quality=80"
-          imageSizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 900px"
-        />
         <meta name="theme-color" content="#3B82F6" />
         <meta name="application-name" content="아맞다약!" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
