@@ -13,9 +13,11 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, List } from "lucide-react";
 import { STEP_CONTENT, STEPS, type StepId } from "./guideContent";
 import { useSSRMediaquery } from "@/hooks/useSSRMediaquery";
+import { useGlobalLoading } from "@/store/useGlobalLoading";
 
 export default function GuideDrawerClient() {
   const minTablet = useSSRMediaquery(768);
+  const { startLoading } = useGlobalLoading();
   const router = useRouter();
   const pathname = usePathname();
   const q = useSearchParams();
@@ -58,6 +60,14 @@ export default function GuideDrawerClient() {
     const params = new URLSearchParams(q);
     params.delete("step");
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  };
+
+  const openNewDrawer = async () => {
+    await router.prefetch("/medicines/new");
+    await router.replace("/", { scroll: false });
+    startLoading("open-medicine-new", "새로운 약을 등록하러 가는중..");
+    await new Promise((r) => setTimeout(r, 100));
+    router.push("/medicines/new");
   };
 
   return (
@@ -127,7 +137,7 @@ export default function GuideDrawerClient() {
                 </Button>
               ) : (
                 <Button
-                  onClick={() => router.replace("/", { scroll: false })}
+                  onClick={openNewDrawer}
                   className="font-bold text-sm !text-pilltime-blue transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-105"
                 >
                   시작하기 <ChevronRight className="h-4 w-4" color="#3b82f6" />
