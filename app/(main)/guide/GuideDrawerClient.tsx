@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   Drawer,
@@ -11,9 +11,15 @@ import {
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, List } from "lucide-react";
-import { STEP_CONTENT, STEPS, type StepId } from "./guideContent";
+import { STEP_CONTENT } from "./guideContent";
+import { FIRST_IMAGE, SEQUENCE, STEPS, type StepId } from "@/lib/guideImages";
+// import { guidePath } from "@/lib/image";
+import { guideUrl, warmImage } from "@/lib/imageWarm";
 import { useSSRMediaquery } from "@/hooks/useSSRMediaquery";
 import { useGlobalLoading } from "@/store/useGlobalLoading";
+
+const GUIDE_CDN_BASE =
+  "https://cxkefmygfdtcwidshaoa.supabase.co/storage/v1/object/public/guide";
 
 export default function GuideDrawerClient() {
   const minTablet = useSSRMediaquery(768);
@@ -35,6 +41,71 @@ export default function GuideDrawerClient() {
   // 드로어 내부 스크롤 컨테이너
   const bodyRef = useRef<HTMLDivElement | null>(null);
   const titleRef = useRef<HTMLHeadingElement | null>(null);
+
+  // prev/next 대표 1장 즉시 워밍업
+  useEffect(() => {
+    if (!step) return;
+    const idx = STEPS.findIndex((s) => s.id === step);
+    const targets = [STEPS[idx - 1], STEPS[idx + 1]].filter(Boolean);
+    for (const t of targets as unknown as typeof STEPS) {
+      const folder = t.id; // 폴더명이 step id와 동일
+      const file = FIRST_IMAGE[t.id as StepId];
+      warmImage(guideUrl(GUIDE_CDN_BASE, folder, file));
+    }
+  }, [step]);
+
+  // 아이들 타임에 "다다음" 대표 1장 워밍업
+  useEffect(() => {
+    if (!step) return;
+    const i = STEPS.findIndex((s) => s.id === step);
+    const next2 = STEPS[i + 2];
+    if (!next2) return;
+    const id = (window as any).requestIdleCallback?.(
+      () => {
+        warmImage(
+          guideUrl(
+            GUIDE_CDN_BASE,
+            next2.id as StepId,
+            FIRST_IMAGE[next2.id as StepId]
+          )
+        );
+      },
+      { timeout: 1200 }
+    );
+    return () => id && (window as any).cancelIdleCallback?.(id);
+  }, [step]);
+
+  // 같은 스텝 내 후속 이미지: 본문 컨테이너 근처 가시성 기준 점진 워밍업
+  const onBodyScrollWarm = useCallback(() => {
+    if (!step || !bodyRef.current) return;
+    const files = SEQUENCE[step] || [];
+    const top = bodyRef.current.scrollTop;
+    const vh = bodyRef.current.clientHeight;
+    // 스크롤 상단에서 1.5~2.0뷰포트 이내의 이미지만 워밍업 (과욕 금지)
+    const threshold = top + vh * 2;
+
+    // 파일명은 콘텐츠에서 실제 쓰는 순서대로 구성해두는 게 가장 정확
+    for (const f of files) {
+      const url = guideUrl(GUIDE_CDN_BASE, step, f);
+      warmImage(url);
+    }
+  }, [step]);
+
+  useEffect(() => {
+    const el = bodyRef.current;
+    if (!el) return;
+    // 최초 한 번
+    onBodyScrollWarm();
+    // 스크롤로 근접 시 추가 예열
+    el.addEventListener("scroll", onBodyScrollWarm, { passive: true });
+    return () => el.removeEventListener("scroll", onBodyScrollWarm);
+  }, [onBodyScrollWarm]);
+
+  // [다음]/[이전] 버튼 hover/focus 시 워밍업
+  const warmStep = useCallback((id?: StepId | null) => {
+    if (!id) return;
+    warmImage(guideUrl(GUIDE_CDN_BASE, id, FIRST_IMAGE[id]));
+  }, []);
 
   // 스텝 변경 시 드로어 내부 스크롤/포커스 초기화
   useEffect(() => {
@@ -63,11 +134,13 @@ export default function GuideDrawerClient() {
   };
 
   const openNewDrawer = async () => {
-    await router.prefetch("/medicines/new");
-    await router.replace("/", { scroll: false });
     startLoading("open-medicine-new", "새로운 약을 등록하러 가는중..");
-    await new Promise((r) => setTimeout(r, 100));
-    router.push("/medicines/new");
+
+    if (pathname !== "/") {
+      router.replace("/", { scroll: false });
+      await new Promise((r) => requestAnimationFrame(r));
+    }
+    router.push("/medicines/new?returnTo=/", { scroll: false });
   };
 
   return (
@@ -118,6 +191,8 @@ export default function GuideDrawerClient() {
               <Button
                 variant="ghost"
                 disabled={!prev}
+                onMouseEnter={() => warmStep(prev?.id)}
+                onFocus={() => warmStep(prev?.id)}
                 onClick={() => goto(prev?.id)}
                 className="font-bold text-sm !text-pilltime-violet transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-105"
               >
@@ -130,6 +205,8 @@ export default function GuideDrawerClient() {
               {next ? (
                 <Button
                   variant="ghost"
+                  onMouseEnter={() => warmStep(next.id)}
+                  onFocus={() => warmStep(next.id)}
                   onClick={() => goto(next.id)}
                   className="font-bold text-sm !text-pilltime-violet transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-105"
                 >

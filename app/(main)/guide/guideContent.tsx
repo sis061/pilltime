@@ -14,23 +14,7 @@ import {
   Share,
   SquarePlus,
 } from "lucide-react";
-
-export type StepId =
-  | "new"
-  | "card"
-  | "intake"
-  | "edit"
-  | "calendar"
-  | "settings";
-
-export const STEPS = [
-  { id: "new", title: "1. 새로운 약 등록", href: "/guide?step=new" },
-  { id: "card", title: "2. 약 정보 확인", href: "/guide?step=card" },
-  { id: "intake", title: "3. 복용 기록 남기기", href: "/guide?step=intake" },
-  { id: "edit", title: "4. 약 정보 수정", href: "/guide?step=edit" },
-  { id: "calendar", title: "5. 지난 기록 보기", href: "/guide?step=calendar" },
-  { id: "settings", title: "6. 사용자 설정", href: "/guide?step=settings" },
-] as const satisfies ReadonlyArray<{ id: StepId; title: string; href: string }>;
+import { StepId } from "@/lib/guideImages";
 
 const BLUR_1x1 = "data:image/gif;base64,R0lGODlhAQABAAAAACwAAAAAAQABAAA=";
 

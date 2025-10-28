@@ -2,7 +2,7 @@
 
 import { useRef, useTransition, useEffect } from "react";
 // ---- NEXT
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 // ---- COMPONENT
 import { WizardHeader } from "./steps/WizardHeader";
@@ -55,8 +55,13 @@ export default function MedicineNewDrawer({
   // ---- REACT
   const [isPendingNav, startTransition] = useTransition();
   const submitBtnRef = useRef<HTMLButtonElement>(null);
+  // 제출로 닫힘인지 구분 (orphan 삭제 방지)
+  const submittedRef = useRef(false);
   // ---- NEXT
   const router = useRouter();
+  const q = useSearchParams();
+  const returnTo = q.get("returnTo") || "/";
+
   // ---- CUSTOM HOOKS
   const minTablet = useSSRMediaquery(768);
   // ---- STORE
@@ -123,10 +128,15 @@ export default function MedicineNewDrawer({
 
       toast.success(`${_data.name}의 정보를 등록했어요`);
 
-      // 부모(RSC) 최신화 + 닫기
-      startTransition(() => {
-        router.refresh();
-        onOpenChange(false);
+      // 제출로 닫힘 표시 (취소 로직/refresh 차단용)
+      submittedRef.current = true;
+
+      // ✅ 닫기 신호만 (부모가 setOpen(false) + replace 수행)
+      onOpenChange(false);
+
+      // ✅ 부모 네비 반영 후에 새로고침
+      requestAnimationFrame(() => {
+        startTransition(() => router.refresh());
       });
       stopLoading("fetch-medicine-new");
     } catch (error) {
@@ -140,16 +150,20 @@ export default function MedicineNewDrawer({
     <Drawer
       open={open}
       onOpenChange={async (nextOpen) => {
-        if (nextOpen) stopLoading("open-medicine-new");
-        if (!nextOpen) {
-          // Drawer가 닫힐 때 → 취소 로직 실행
-          await handleCancel();
-          onOpenChange(false);
-          // 혹시 중간까지 입력 후 닫혔던 경우를 대비해 목록 갱신
-          startTransition(() => router.refresh());
-        } else {
+        if (nextOpen) {
+          stopLoading("open-medicine-new");
           onOpenChange(true);
+          return;
         }
+
+        if (submittedRef.current) {
+          submittedRef.current = false;
+          return;
+        }
+
+        // 취소로 닫힘일 때만 리소스 정리
+        await handleCancel();
+        onOpenChange(false); // 라우팅은 부모(NewMedicinePage)가 처리
       }}
       direction={minTablet ? "right" : "bottom"}
       repositionInputs={false}
