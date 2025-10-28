@@ -8,7 +8,7 @@ import dynamic from "next/dynamic";
 
 // ---- COMPONENT
 import { WizardHeader } from "./steps/WizardHeader";
-import { steps, StepWrapper } from "./steps/config";
+
 import { Step05Review } from "@/components/feature/medicines/steps/Step05Review";
 
 // ---- UI
@@ -19,6 +19,7 @@ import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 // ---- UTIL
 import { MedicineSchema, MedicineFormValues } from "@/lib/schemas/medicine";
 import { deleteMedicineImage } from "@/lib/supabase/upload";
+import { steps, StepWrapper } from "./steps/config";
 
 // ---- LIB
 // import { Wizard } from "react-use-wizard";

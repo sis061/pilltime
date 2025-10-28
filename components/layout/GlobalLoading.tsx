@@ -1,6 +1,6 @@
 "use client";
 
-import { PacmanLoader } from "react-spinners";
+import PacmanLoader from "react-spinners/PacmanLoader";
 import { useGlobalLoading } from "@/store/useGlobalLoading";
 import { Button } from "@/components/ui/button";
 
