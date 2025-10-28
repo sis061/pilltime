@@ -162,7 +162,11 @@ export default function NicknameDrawer({
     }
   }
 
-  const busy = isGLoading;
+  const busy = isGLoading || submitting;
+  const prevNickname = user?.nickname ?? "";
+  const nextNickname = nickname.trim();
+  const disabled =
+    busy || nextNickname.length === 0 || nextNickname === prevNickname;
 
   return (
     <Drawer
@@ -192,9 +196,11 @@ export default function NicknameDrawer({
           </DrawerTitle>
           <Button
             type="submit"
-            disabled={busy}
+            disabled={disabled}
             variant={"ghost"}
-            className="!pl-1 font-bold !text-pilltime-violet transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110"
+            className={`!pl-1 font-bold !text-pilltime-violet transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110 ${
+              disabled ? "opacity-50 cursor-not-allowed" : ""
+            }`}
             onClick={() =>
               submitBtnRef?.current && submitBtnRef.current.click()
             }
@@ -207,7 +213,7 @@ export default function NicknameDrawer({
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            if (!busy) handleSave();
+            if (!disabled) handleSave();
           }}
           className="flex flex-col gap-8 max-h-[80vh] md:h-screen overflow-y-auto !px-2 !pb-8"
         >
@@ -233,7 +239,7 @@ export default function NicknameDrawer({
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !busy) {
                   e.preventDefault();
-                  handleSave();
+                  if (!disabled) handleSave();
                 }
               }}
               placeholder="별명을 입력하세요"

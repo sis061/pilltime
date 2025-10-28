@@ -281,9 +281,9 @@ export default function MedicineEditDrawer({
           <Button
             type="submit"
             variant="ghost"
-            disabled={busy}
+            disabled={busy || !formState.isDirty}
             className={`!pl-1 font-bold !text-pilltime-violet  transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110 ${
-              busy && "opacity-50"
+              (busy || !formState.isDirty) && "opacity-50"
             }`}
             onClick={() => submitBtnRef.current?.click()}
           >
