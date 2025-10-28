@@ -59,7 +59,7 @@ export const steps: StepConfig[] = [
     id: "schedules",
     title: "복용 주기와 시간을 입력하세요 (필수)",
     subtitle: [
-      "매일 / 매주 특정 요일 / 매월 1, 10, 20, 30일 중 선택 가능",
+      "매일 / 매주 특정 요일 / 매달 1, 10, 20, 30일 중 선택 가능",
       "일일 복용 시간은 자유롭게 추가할 수 있어요",
     ],
     Component: MedicineSchedulesField,

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 // ---- NEXT
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 // ---- CUSTOM HOOKS
 import { useGlobalNotify } from "@/hooks/useGlobalNotify";
 // ---- COMPONENT
@@ -23,17 +23,17 @@ import {
   Bell,
   BellOff,
   CalendarSearch,
+  ListRestart,
   LogOut,
   Menu,
   Plus,
   UserPen,
+  BookOpen,
 } from "lucide-react";
-// ---- UTIL
-import { toYYYYMMDD } from "@/lib/date";
 // ---- STORE
 import { useUserStore } from "@/store/useUserStore";
 import { useGlobalLoading } from "@/store/useGlobalLoading";
-import { useSSRMediaquery } from "@/hooks/useSSRMediaquery";
+// import { useSSRMediaquery } from "@/hooks/useSSRMediaquery";
 import { usePush } from "@/hooks/usePush";
 // ---- TYPE
 import type { User } from "@/types/profile";
@@ -50,12 +50,14 @@ export default function HeaderClient({
   // ---- REACT
   const [openNickname, setOpenNickname] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [mode, setMode] = useState<"edit" | "create">("edit");
   /** 🔔 전역 알림 토글 상태 + 낙관적 업데이트 */
   const [pendingGlobal, startTransition] = useTransition();
   // ---- NEXT
   const router = useRouter();
+  const pathname = usePathname();
   // ---- CUSTOM HOOKS
-  const minMobile = useSSRMediaquery(640);
+  // const minMobile = useSSRMediaquery(640);
   const { enabled, setEnabledOptimistic, mutateGlobal, revalidate } =
     useGlobalNotify();
   const vapid = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!;
@@ -64,7 +66,7 @@ export default function HeaderClient({
   // ---- STORE
   const setUser = useUserStore((s) => s.setUser);
   const clearUser = useUserStore((s) => s.clearUser);
-  const { startLoading } = useGlobalLoading();
+  const { startLoading, stopLoading } = useGlobalLoading();
 
   // 오늘 날짜 계산
   // const today = new Date();
@@ -78,6 +80,8 @@ export default function HeaderClient({
 
   const enabledForRender = enabled ?? initialGlobalEnabled;
   const notifyOn = notifyReady && enabledForRender === true;
+  const isPathCalendar = pathname.startsWith("/calendar");
+  const isPathGuide = pathname.startsWith("/guide");
 
   /** 공통 버튼 config (props로 내려줄 것) */
   const baseWhiteBtn =
@@ -101,15 +105,43 @@ export default function HeaderClient({
     },
     {
       key: "calendar",
-      label: "지난 기록 보기",
+      label: isPathCalendar ? "홈으로 돌아가기" : "지난 기록 보기",
       iconColor: "#fff",
-      iconLeft: CalendarSearch,
+      iconLeft: isPathCalendar ? ListRestart : CalendarSearch,
       className: baseWhiteBtn,
-      onClick: () => {
-        setMenuOpen(false);
-        router.push(`/calendar?d=${todayYmd}`);
-        startLoading("open-calendar", "정보를 불러오는 중이에요..");
-      },
+      onClick: goToCalendar,
+    },
+    // {
+    //   key: "global",
+    //   // label: notifyOn ? "모든 알림 켜짐" : "모든 알림 꺼짐",
+    //   label: !notifyReady
+    //     ? "알림 비활성화됨"
+    //     : enabledForRender
+    //     ? "모든 알림 켜짐"
+    //     : "모든 알림 꺼짐",
+    //   iconColor: notifyOn ? "#fff" : "#ffffff75",
+    //   iconLeft: notifyOn ? Bell : BellOff,
+    //   className: baseWhiteBtn,
+    //   onClick: () => !pendingGlobal && toggleGlobal(),
+    // },
+    {
+      key: "guide",
+      label: isPathGuide ? "홈으로 돌아가기" : "사용 가이드",
+      iconColor: "#fff",
+      iconLeft: isPathGuide ? ListRestart : BookOpen,
+      className: baseWhiteBtn,
+      onClick: goToGuide,
+    },
+  ];
+
+  const menuBtns = [
+    {
+      key: "edit",
+      label: "프로필 편집",
+      iconLeft: UserPen,
+      iconColor: "#3B82F6",
+      className: baseBlueBtn,
+      onClick: () => setOpenNickname(true),
     },
     {
       key: "global",
@@ -119,25 +151,16 @@ export default function HeaderClient({
         : enabledForRender
         ? "모든 알림 켜짐"
         : "모든 알림 꺼짐",
-      iconColor: notifyOn ? "#fff" : "#ffffff75",
       iconLeft: notifyOn ? Bell : BellOff,
-      className: baseWhiteBtn,
-      onClick: () => !pendingGlobal && toggleGlobal(),
-    },
-  ];
-
-  const menuBtns = [
-    {
-      key: "edit",
-      label: "프로필 편집",
-      iconLeft: UserPen,
+      iconColor: notifyOn ? "#3B82F6" : "#1F293775",
       className: baseBlueBtn,
-      onClick: () => setOpenNickname(true),
+      onClick: () => !pendingGlobal && toggleGlobal(),
     },
     {
       key: "logout",
       label: "로그아웃",
       iconLeft: LogOut,
+      iconColor: "#3B82F6",
       className: baseBlueBtn,
       onClick: logout,
     },
@@ -170,6 +193,30 @@ export default function HeaderClient({
     setMenuOpen(false);
     router.push("/medicines/new");
     startLoading("open-medicine-new", "템플릿을 불러오는 중이에요..");
+  }
+
+  function goToCalendar() {
+    if (isPathCalendar) {
+      stopLoading("open-calendar");
+      router.push("/", { scroll: false });
+      setMenuOpen(false);
+    } else {
+      setMenuOpen(false);
+      startLoading("open-calendar", "정보를 불러오는 중이에요..");
+      router.push(`/calendar?d=${todayYmd}`);
+    }
+  }
+
+  function goToGuide() {
+    if (isPathGuide) {
+      // stopLoading("open-calendar");
+      router.push("/", { scroll: false });
+      setMenuOpen(false);
+    } else {
+      setMenuOpen(false);
+      // startLoading("open-calendar", "정보를 불러오는 중이에요..");
+      router.push(`/guide`);
+    }
   }
 
   function toggleGlobal() {
@@ -315,6 +362,8 @@ export default function HeaderClient({
           open={menuOpen}
           onOpenChange={setMenuOpen}
           logout={logout}
+          pendingGlobal={pendingGlobal}
+          toggleGlobal={toggleGlobal}
           openNickname={() => setOpenNickname(true)}
           buttons={drawerBtns}
           menuButtons={menuBtns}
@@ -322,7 +371,7 @@ export default function HeaderClient({
         <NicknameDrawer
           open={openNickname}
           onOpenChange={setOpenNickname}
-          mode="edit"
+          mode={mode}
         />
       </div>
 
@@ -340,25 +389,32 @@ export default function HeaderClient({
             >
               {/* <UserCog className="h-6 w-6" color="#fff" /> */}
               <ProfileBadge initialUser={user} />
-              <span className="!pt-2">프로필 관리</span>
+              <span className="!pt-2">사용자 설정</span>
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent
             side="bottom"
             align="end"
-            className="border-1 bg-white !border-pilltime-violet shadow-lg !w-28 !pl-2"
+            className="border-1 bg-white !border-pilltime-violet shadow-lg !px-1 w-full"
           >
             {menuBtns.map(
-              ({ key, label, iconLeft: Icon, onClick, className }) => (
+              ({
+                key,
+                label,
+                iconLeft: Icon,
+                onClick,
+                className,
+                iconColor,
+              }) => (
                 <DropdownMenuItem
                   key={key}
                   onSelect={(e) => {
                     // e.preventDefault();
                     onClick?.();
                   }}
-                  className={`hover:!bg-pilltime-violet/15 !text-sm font-bold !my-1 w-28 ${className}`}
+                  className={`hover:!bg-pilltime-violet/15 !text-sm font-bold !my-1 w-full ${className}`}
                 >
-                  {Icon ? <Icon className="h-5 w-5" color="#3B82F6" /> : null}
+                  {Icon ? <Icon className="h-5 w-5" color={iconColor} /> : null}
                   {label}
                 </DropdownMenuItem>
               )
@@ -368,7 +424,7 @@ export default function HeaderClient({
         <NicknameDrawer
           open={openNickname}
           onOpenChange={setOpenNickname}
-          mode="edit"
+          mode={mode}
         />
       </div>
     </div>

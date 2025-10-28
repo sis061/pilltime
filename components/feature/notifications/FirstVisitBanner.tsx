@@ -14,11 +14,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { usePush } from "@/hooks/usePush"; // ✅ 경로 업데이트 반영
+import { usePush } from "@/hooks/usePush";
 import { BellRing, Menu } from "lucide-react";
 import { useUserStore } from "@/store/useUserStore";
 
-export default function FirstVisitBanner() {
+export default function FirstVisitBanner({
+  onCompleted,
+}: {
+  onCompleted?: () => void;
+}) {
   const user = useUserStore((s) => s.user);
   const vapid = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!;
   const { permission, subscribe, loading, refresh } = usePush(vapid);
@@ -59,6 +63,12 @@ export default function FirstVisitBanner() {
     }
   }, [permission, user]);
 
+  const finish = () => {
+    localStorage.setItem("pt:notiPrompted", "1");
+    setOpen(false);
+    onCompleted?.();
+  };
+
   const handleEnable = async () => {
     try {
       await subscribe(); // 권한 요청 → SW ready → 구독 저장
@@ -68,14 +78,12 @@ export default function FirstVisitBanner() {
         queueMicrotask(() => refresh());
       }
     } finally {
-      localStorage.setItem("pt:notiPrompted", "1");
-      setOpen(false);
+      finish();
     }
   };
 
   const handleLater = () => {
-    localStorage.setItem("pt:notiPrompted", "1");
-    setOpen(false);
+    finish();
   };
 
   return (
@@ -93,7 +101,7 @@ export default function FirstVisitBanner() {
           <div className="!space-y-3 !py-4 !bg-pilltime-grayLight sm:!pl-2">
             <div className="[&_p]:!text-pilltime-grayDark/50 !space-y-1">
               <p>
-                <strong>아 맞 다 약!</strong> 은 정시 알림을 먼저 보내드린 후
+                <strong>아맞다약!</strong> 은 정시 알림을 먼저 보내드린 후
                 30분이 지나도 먹지 않으면 알림을 다시 보내드려요!
               </p>
               <p className="!pt-2">

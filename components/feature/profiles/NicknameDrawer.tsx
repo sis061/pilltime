@@ -25,14 +25,16 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   mode?: "create" | "edit"; // 최초 입력 / 수정 모드
+  onCompleted?: (mode: "create" | "edit") => void;
 }
 
 export default function NicknameDrawer({
   open,
   onOpenChange,
   mode = "edit",
+  onCompleted,
 }: Props) {
-  const router = useRouter();
+  // const router = useRouter();
   // ---- UTIL
   const supabase = createClient();
   // ---- STORE
@@ -139,11 +141,12 @@ export default function NicknameDrawer({
       );
       onOpenChange(false);
 
-      if (openedMode === "create") {
-        startLoading("open-medicine-new", "새로운 약을 등록하러 가는중..");
-        router.push("/medicines/new");
-      }
+      // if (openedMode === "create") {
+      //   startLoading("open-medicine-new", "새로운 약을 등록하러 가는중..");
+      //   router.push("/medicines/new");
+      // }
       stopLoading("fetch-profile");
+      onCompleted?.(openedMode);
     } catch (err: any) {
       // 실패 시 롤백
       console.error("별명 업데이트 실패:", err?.message || err);
@@ -159,7 +162,11 @@ export default function NicknameDrawer({
     }
   }
 
-  const busy = isGLoading;
+  const busy = isGLoading || submitting;
+  const prevNickname = user?.nickname ?? "";
+  const nextNickname = nickname.trim();
+  const disabled =
+    busy || nextNickname.length === 0 || nextNickname === prevNickname;
 
   return (
     <Drawer
@@ -171,7 +178,7 @@ export default function NicknameDrawer({
       direction={minTablet ? "right" : "bottom"}
       repositionInputs={false}
     >
-      <DrawerContent className="!p-4 bg-slate-100 min-h-[70dvh] max-h-[96dvh] md:max-h-[100dvh] md:w-[480px] md:!ml-auto md:top-0 md:rounded-tr-none md:rounded-bl-[10px]">
+      <DrawerContent className="!p-4 bg-slate-100 min-h-[70dvh] max-h-[96dvh] md:max-h-[100dvh] md:w-[480px] md:!ml-auto md:top-0 md:rounded-tr-none md:rounded-bl-[10px] !z-[999] ">
         {/* Header */}
         <DrawerHeader className="!pb-4 flex w-full items-center justify-between">
           <Button
@@ -189,9 +196,11 @@ export default function NicknameDrawer({
           </DrawerTitle>
           <Button
             type="submit"
-            disabled={busy}
+            disabled={disabled}
             variant={"ghost"}
-            className="!pl-1 font-bold !text-pilltime-violet transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110"
+            className={`!pl-1 font-bold !text-pilltime-violet transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110 ${
+              disabled ? "opacity-50 cursor-not-allowed" : ""
+            }`}
             onClick={() =>
               submitBtnRef?.current && submitBtnRef.current.click()
             }
@@ -204,7 +213,7 @@ export default function NicknameDrawer({
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            if (!busy) handleSave();
+            if (!disabled) handleSave();
           }}
           className="flex flex-col gap-8 max-h-[80vh] md:h-screen overflow-y-auto !px-2 !pb-8"
         >
@@ -230,11 +239,11 @@ export default function NicknameDrawer({
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !busy) {
                   e.preventDefault();
-                  handleSave();
+                  if (!disabled) handleSave();
                 }
               }}
               placeholder="별명을 입력하세요"
-              className="!px-2 !border-pilltime-grayLight w-[98%] !ml-1"
+              className="!px-2 !border-pilltime-grayLight w-[98%] !ml-1 !z-[999]"
             />
           </div>
           <button ref={submitBtnRef} type="submit" className="hidden">

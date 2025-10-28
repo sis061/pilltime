@@ -76,7 +76,7 @@ export function WizardHeader({
         )}
 
         {/* 타이틀 */}
-        <h2 className="text-md font-bold">새로운 약 등록</h2>
+        <h2 className="text-base font-bold">새로운 약 등록</h2>
 
         {/* 오른쪽 버튼 */}
         {isLastStep ? (

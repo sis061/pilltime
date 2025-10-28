@@ -184,7 +184,7 @@ export default function CalendarShell(props: {
     <div
       className={
         props.layout === "page"
-          ? "grid gap-4"
+          ? "grid gap-4 grid-rows-[auto_auto_1fr] max-h-[calc(100dvh-11.5rem)] h-screen"
           : "grid gap-4 grid-rows-[auto_auto_1fr] h-full overflow-hidden"
       }
     >

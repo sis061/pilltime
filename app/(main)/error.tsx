@@ -17,7 +17,7 @@ export default function ErrorBoundary({
   }, [error]);
 
   return (
-    <section className="inner min-h-[calc(100dvh-11.5rem)] flex flex-col items-center justify-center !mx-auto !w-full !p-6">
+    <section className="inner min-h-[calc(100dvh-10.75rem)] flex flex-col items-center justify-center !mx-auto !w-full !p-6">
       <div className="bg-card !p-8 max-w-md text-center">
         <h2 className="text-lg font-semibold !mb-8 text-pilltime-grayDark/75">
           데이터를 불러올 수 없어요

@@ -48,6 +48,7 @@ import {
   UISchedule,
 } from "@/types/medicines";
 import { useSSRMediaquery } from "@/hooks/useSSRMediaquery";
+import { TriangleAlert } from "lucide-react";
 
 /* ---------------------------
  * API
@@ -276,13 +277,13 @@ export default function MedicineEditDrawer({
           >
             취소
           </Button>
-          <DrawerTitle className="text-md">약 정보 편집</DrawerTitle>
+          <DrawerTitle className="text-base">약 정보 편집</DrawerTitle>
           <Button
             type="submit"
             variant="ghost"
-            disabled={busy}
+            disabled={busy || !formState.isDirty}
             className={`!pl-1 font-bold !text-pilltime-violet  transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110 ${
-              busy && "opacity-50"
+              (busy || !formState.isDirty) && "opacity-50"
             }`}
             onClick={() => submitBtnRef.current?.click()}
           >
@@ -317,20 +318,18 @@ export default function MedicineEditDrawer({
             </AlertDialogTrigger>
             <AlertDialogContent className="bg-pilltime-grayLight !p-4 !rounded-lg">
               <AlertDialogHeader>
-                <AlertDialogTitle className="!text-pilltime-grayDark/90">
-                  정말 삭제할까요?
-                </AlertDialogTitle>
-                <AlertDialogDescription className="!text-pilltime-grayDark/50">
+                <div className="flex items-center gap-2 w-full justify-center">
+                  <TriangleAlert size={20} />
+                  <AlertDialogTitle className="!text-pilltime-grayDark/90">
+                    정말 삭제할까요?
+                  </AlertDialogTitle>
+                </div>
+
+                <AlertDialogDescription className="!text-pilltime-grayDark/50 !pt-4 text-center">
                   약과 관련된 모든 정보가 삭제됩니다!
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter className="flex gap-2 !px-12 sm:!px-0">
-                <AlertDialogCancel
-                  className="!py-2 !px-4 transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110"
-                  disabled={busy}
-                >
-                  취소
-                </AlertDialogCancel>
                 <AlertDialogAction
                   className="!py-2 !px-4 bg-red-500 !text-white transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110"
                   onClick={async () => {
@@ -350,6 +349,12 @@ export default function MedicineEditDrawer({
                 >
                   삭제
                 </AlertDialogAction>
+                <AlertDialogCancel
+                  className="!py-2 !px-4 transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110"
+                  disabled={busy}
+                >
+                  취소
+                </AlertDialogCancel>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
