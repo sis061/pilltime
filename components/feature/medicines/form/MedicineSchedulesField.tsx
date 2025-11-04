@@ -353,7 +353,7 @@ export function MedicineSchedulesField() {
                             variant="borderless"
                             allowClear={false}
                             placeholder="약 먹을 시간을 입력하세요"
-                            className="!px-2 !py-2 shadow-sm w-[98%] !ml-1"
+                            className="!px-2 !py-2 shadow-sm w-[98%] !ml-1 placeholder:text-sm placeholder-pilltime-grayDark/25 placeholder:font-bold"
                             getPopupContainer={(trigger) =>
                               (trigger?.parentElement as HTMLElement) ??
                               document.body

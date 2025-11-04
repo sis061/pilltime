@@ -16,7 +16,7 @@ export function MedicineNameField() {
         {...register("name", {
           required: "필수 항목입니다!",
         })}
-        className="!px-2 !border-pilltime-grayLight w-[98%] !ml-1"
+        className="!px-2 !border-pilltime-grayLight w-[98%] !ml-1 placeholder:text-sm placeholder-pilltime-grayDark/25 placeholder:font-bold"
         placeholder="약 이름을 입력하세요."
       />
       {errors.name && (
