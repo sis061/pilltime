@@ -119,6 +119,25 @@ export async function POST(req: Request) {
     // 5) 구독 조회
     const targets = [...(onTime || []), ...(reminder || [])];
     const userIds = [...new Set(targets.map((l: any) => l.user_id))];
+
+    // 사용자가 전체 알림 켰는지 유무 확인
+    const settingsByUser = new Map<string, boolean>();
+
+    if (userIds.length) {
+      const { data: settings, error: setErr } = await sb
+        .from("user_notification_settings")
+        .select("user_id, global_notify_enabled")
+        .in("user_id", userIds);
+
+      if (!setErr && settings) {
+        for (const s of settings) {
+          settingsByUser.set(s.user_id, !!s.global_notify_enabled);
+        }
+      } else {
+        console.warn("[cron] settings read error:", setErr?.message);
+      }
+    }
+
     const subsByUser = new Map<string, any[]>();
 
     if (userIds.length) {
@@ -142,6 +161,12 @@ export async function POST(req: Request) {
     // 6) 발송 + 기록
     async function sendAndLog(kind: "on_time" | "reminder", rows: any[]) {
       for (const log of rows) {
+        const enabled = settingsByUser.has(log.user_id)
+          ? settingsByUser.get(log.user_id)!
+          : true;
+
+        if (!enabled) continue;
+
         const subs = subsByUser.get(log.user_id) || [];
         if (subs.length === 0) continue;
 
