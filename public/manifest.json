@@ -2,6 +2,8 @@
   "name": "아맞다약!",
   "short_name": "아맞다약!",
   "start_url": "/",
+  "scope": "/",
+  "id": "/",
   "display": "standalone",
   "background_color": "#fafafa",
   "theme_color": "#3B82F6",
