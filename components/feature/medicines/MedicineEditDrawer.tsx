@@ -105,6 +105,15 @@ async function updateMedicine(id: string, values: any) {
   }
 }
 
+async function deleteMedicine(id: string) {
+  const res = await fetch(`/api/medicines/${id}`, { method: "DELETE" });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err?.error ?? "약정보 삭제 실패");
+  }
+  return res.json();
+}
+
 export default function MedicineEditDrawer({
   open,
   onOpenChange: parentOnOpenChange,

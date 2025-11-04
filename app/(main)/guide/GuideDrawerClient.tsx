@@ -141,14 +141,14 @@ export default function GuideDrawerClient() {
   };
 
   // "시작하기" 버튼 동작: 홈으로 살짝 이동 후 new 페이지로
-  // const openNewDrawer = async () => {
-  //   startLoading("open-medicine-new", "새로운 약을 등록하러 가는중..");
-  //   // if (pathname !== "/") {
-  //   //   router.replace("/", { scroll: false });
-  //   //   await new Promise((r) => requestAnimationFrame(r));
-  //   // }
-  //   router.push("/medicines/new?returnTo=/", { scroll: false });
-  // };
+  const openNewDrawer = async () => {
+    startLoading("open-medicine-new", "새로운 약을 등록하러 가는중..");
+    if (pathname !== "/") {
+      router.replace("/", { scroll: false });
+      await new Promise((r) => requestAnimationFrame(r));
+    }
+    router.push("/medicines/new?returnTo=/", { scroll: false });
+  };
 
   /* ---------------------------
    * RENDER
@@ -225,8 +225,7 @@ export default function GuideDrawerClient() {
                 </Button>
               ) : (
                 <Button
-                  // onClick={openNewDrawer}
-                  onClick={() => router.push("/")}
+                  onClick={openNewDrawer}
                   className="font-bold text-sm !text-pilltime-blue transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-105"
                 >
                   시작하기 <ChevronRight className="h-4 w-4" color="#3b82f6" />
