@@ -14,6 +14,17 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const setUser = useUserStore((s) => s.setUser);
   const clearUser = useUserStore((s) => s.clearUser);
 
+  // 앱 복귀 시 세션 재확인
+  useEffect(() => {
+    const supabase = createClient();
+    const onVisible = async () => {
+      if (document.visibilityState !== "visible") return;
+      await supabase.auth.getSession();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, []);
+
   useEffect(() => {
     async function loadUser() {
       const {

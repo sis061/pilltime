@@ -107,7 +107,7 @@ async function updateMedicine(id: string, values: any) {
 
 export default function MedicineEditDrawer({
   open,
-  onOpenChange,
+  onOpenChange: parentOnOpenChange,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -145,7 +145,23 @@ export default function MedicineEditDrawer({
     mode: "onSubmit",
   });
 
-  const { handleSubmit, formState, reset, getValues } = methods;
+  const { handleSubmit, formState, reset, getValues, watch } = methods;
+
+  // 251104 -- drawer 닫거나 새로고침 시 confirm 추가
+
+  const imageFilePath = watch("imageFilePath");
+  const hasUnsavedChanges = formState.isDirty || !!imageFilePath;
+
+  useEffect(() => {
+    if (!open || !hasUnsavedChanges) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      // 일부 브라우저(iOS 포함)는 커스텀 문구 미지원. returnValue 설정만으로 기본 다이얼로그 표시.
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [hasUnsavedChanges]);
 
   useEffect(() => {
     if (!id || !open) return;
@@ -261,6 +277,7 @@ export default function MedicineEditDrawer({
     try {
       startLoading("fetch-medicine-edit", "수정 중이에요..");
       await updateMedicine(String(id), payload);
+      reset(v, { keepValues: true });
       if (originalImageUrl && v.imageUrl !== originalImageUrl) {
         const oldPath = originalImageUrl.split("/medicine-images/")[1];
         if (oldPath) deleteMedicineImage(oldPath).catch(() => {});
@@ -268,7 +285,7 @@ export default function MedicineEditDrawer({
       initSchedulesRef.current = next;
       toast.success(`${v.name}의 정보를 수정했어요`);
       startTransition(() => router.refresh());
-      onOpenChange(false);
+      parentOnOpenChange(false);
       stopLoading("fetch-medicine-edit");
     } catch (err: any) {
       forceStop();
@@ -281,18 +298,37 @@ export default function MedicineEditDrawer({
       open={open}
       onOpenChange={async (nextOpen) => {
         if (!nextOpen) {
+          if (hasUnsavedChanges) {
+            const ok = window.confirm(
+              "변경사항이 저장되지 않았어요. 닫을까요?"
+            );
+            if (!ok) {
+              queueMicrotask(() => parentOnOpenChange(true));
+              return;
+            } // 닫기 취소
+          }
           await handleCancel();
-          onOpenChange(false);
+          parentOnOpenChange(false);
           startTransition(() => router.refresh());
-        } else onOpenChange(true);
+        } else parentOnOpenChange(true);
       }}
       direction={minTablet ? "right" : "bottom"}
       repositionInputs={false}
+      dismissible={!hasUnsavedChanges}
     >
       <DrawerContent className="!p-4 bg-slate-100 max-h-[96dvh] md:max-h-[100dvh] md:w-[480px] md:!ml-auto md:top-0 md:rounded-tr-none md:rounded-bl-[10px]">
         <DrawerHeader className="!pb-4 flex w-full items-center justify-between">
           <Button
-            onClick={() => onOpenChange(false)}
+            onClick={() => {
+              if (busy) return;
+              if (hasUnsavedChanges) {
+                const ok = window.confirm(
+                  "변경사항이 저장되지 않았어요. 닫을까요?"
+                );
+                if (!ok) return;
+              }
+              parentOnOpenChange(false);
+            }}
             variant="ghost"
             disabled={busy}
             className="!pr-2 font-bold !text-pilltime-violet transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110"
@@ -316,7 +352,7 @@ export default function MedicineEditDrawer({
         <FormProvider {...methods}>
           <form
             onSubmit={handleSubmit(onSubmit)}
-            className="flex flex-col gap-8 max-h-[80vh] md:h-screen overflow-y-auto px-2"
+            className="flex flex-col gap-8 max-h-[96dvh] md:h-screen overflow-y-auto px-2"
           >
             <MedicineImageField />
             <MedicineNameField />
@@ -344,7 +380,7 @@ export default function MedicineEditDrawer({
             onOpenChange={setDeleteOpen}
             disabled={busy}
             onDeleted={() => {
-              onOpenChange(false);
+              parentOnOpenChange(false);
               startTransition(() => router.refresh());
             }}
           />
