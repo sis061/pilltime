@@ -376,6 +376,7 @@ export function MedicineSchedulesField() {
                   variant="ghost"
                   size="sm"
                   className="!text-red-500 !ml-0.5 transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-95"
+                  disabled={fields.length <= 1}
                   onClick={() => remove(index)}
                 >
                   삭제

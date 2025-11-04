@@ -63,7 +63,7 @@ async function createMedicine(values: MedicineFormValues) {
 
 export default function MedicineNewDrawer({
   open,
-  onOpenChange,
+  onOpenChange: parentOnOpenChange,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -93,7 +93,16 @@ export default function MedicineNewDrawer({
     handleSubmit,
     formState: { isSubmitting },
     reset,
+    watch,
   } = methods;
+
+  // 251104 -- drawer 닫거나 새로고침 시 confirm 추가
+
+  const imageFilePath = watch("imageFilePath");
+  const hasUnsavedChanges = methods.formState.isDirty || !!imageFilePath;
+
+  const initialNameField = watch("name");
+  const initialTimeField = watch("schedules")[0].time;
 
   const busy = isSubmitting || isGLoading || isPendingNav;
 
@@ -105,7 +114,17 @@ export default function MedicineNewDrawer({
     if (open) {
       reset(INITIAL_VALUES, { keepDefaultValues: false });
     }
-  }, [open, methods]);
+  }, [open, reset]);
+
+  useEffect(() => {
+    if (!open || !hasUnsavedChanges) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [hasUnsavedChanges]);
 
   // supabase storage 에 orphan 파일 삭제용
   async function handleCancel() {
@@ -117,6 +136,15 @@ export default function MedicineNewDrawer({
         console.error("이미지 삭제 실패:", e);
       }
     }
+  }
+
+  function closeAfterConfirm() {
+    if (busy) return;
+    if (hasUnsavedChanges) {
+      const ok = window.confirm("변경사항이 저장되지 않았어요. 닫을까요?");
+      if (!ok) return;
+    }
+    parentOnOpenChange(false);
   }
 
   /* ------
@@ -142,13 +170,14 @@ export default function MedicineNewDrawer({
       startLoading("fetch-medicine-new", "새로운 약을 등록 중이에요...");
       await createMedicine(_data);
 
+      reset(data, { keepValues: true });
       toast.success(`${_data.name}의 정보를 등록했어요`);
 
       // 제출로 닫힘 표시 (취소 로직/refresh 차단용)
       submittedRef.current = true;
 
       //  닫기 신호만 (부모가 setOpen(false) + replace 수행)
-      onOpenChange(false);
+      parentOnOpenChange(false);
 
       //  부모 네비 반영 후에 새로고침
       requestAnimationFrame(() => {
@@ -168,7 +197,7 @@ export default function MedicineNewDrawer({
       onOpenChange={async (nextOpen) => {
         if (nextOpen) {
           stopLoading("open-medicine-new");
-          onOpenChange(true);
+          parentOnOpenChange(true);
           return;
         }
 
@@ -177,28 +206,37 @@ export default function MedicineNewDrawer({
           return;
         }
 
-        // 취소로 닫힘일 때만 리소스 정리
+        // 취소로 닫힘 -> confirm & 리소스 정리
+        if (hasUnsavedChanges) {
+          const ok = window.confirm("변경사항이 저장되지 않았어요. 닫을까요?");
+          if (!ok) return; // ⛔ 닫기 취소 → Drawer 유지
+        }
         await handleCancel();
-        onOpenChange(false); // 라우팅은 부모(NewMedicinePage)가 처리
+        parentOnOpenChange(false); // 라우팅은 부모(NewMedicinePage)가 처리
       }}
       direction={minTablet ? "right" : "bottom"}
       repositionInputs={false}
+      /** 입력 중엔 스와이프/백드롭 닫기 자체를 막음 */
+      dismissible={!hasUnsavedChanges}
     >
-      <DrawerContent className="!p-4 bg-slate-100 min-h-[70dvh] max-h-[96dvh] md:max-h-[100dvh] md:w-[480px] md:!ml-auto md:top-0 md:rounded-tr-none md:rounded-bl-[10px]">
+      <DrawerContent className="!p-4 bg-slate-100 h-[96%] md:h-full min-h-[85dvh] max-h-[99dvh] md:max-h-[100dvh] md:w-[480px] md:!ml-auto md:top-0 md:rounded-tr-none md:rounded-bl-[10px]">
         <DrawerTitle className="text-md " hidden>
           새로운 약 등록
         </DrawerTitle>
         <FormProvider {...methods}>
           <form
             onSubmit={handleSubmit(onSubmit)}
-            className="flex flex-col gap-8 max-h-[80vh] md:h-screen px-2"
+            className="flex flex-col gap-8 max-h-[98dvh] h-full md:h-screen px-2"
           >
             <Wizard
               header={
                 <WizardHeader
                   // onImageUploadCancel={handleCancel}
-                  onClose={() => onOpenChange(false)}
+                  onClose={closeAfterConfirm}
                   submitBtnRef={submitBtnRef}
+                  initialNameField={initialNameField}
+                  initialTimeField={initialTimeField}
+                  busy={busy}
                 />
               }
             >
@@ -209,9 +247,10 @@ export default function MedicineNewDrawer({
                   title={title}
                   subtitle={subtitle}
                   Component={Component}
+                  onClose={closeAfterConfirm}
                 />
               ))}
-              <Step05Review />
+              <Step05Review onClose={closeAfterConfirm} busy={busy} />
             </Wizard>
             <button ref={submitBtnRef} type="submit" hidden disabled={busy}>
               저장
