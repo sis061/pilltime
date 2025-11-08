@@ -74,7 +74,7 @@ export default function RootLayout({
         <GlobalLoading />
         <Toaster
           position="top-center"
-          duration={3000}
+          duration={2000}
           closeButton
           theme="light"
         />

@@ -79,3 +79,65 @@ export async function GET(req: NextRequest) {
   to.headers.set("Cache-Control", "no-store");
   return withSetCookie(res, to);
 }
+
+export async function POST(req: NextRequest) {
+  // (보안) same-origin 요청만 허용
+  const origin = req.headers.get("origin");
+  if (origin && origin !== req.nextUrl.origin) {
+    return new NextResponse("forbidden", { status: 403 });
+  }
+
+  const { supabase, res } = await createRouteSupabaseClient(req);
+
+  type Body = {
+    event?: string;
+    session?: {
+      access_token?: string;
+      refresh_token?: string;
+      // 전체 Session을 보내는 경우도 있어서 any로 수용
+      [k: string]: any;
+    } | null;
+  };
+
+  let body: Body;
+  try {
+    body = await req.json();
+  } catch {
+    return new NextResponse("bad request", { status: 400 });
+  }
+
+  const event = body.event ?? "";
+  const hasTokens =
+    !!body.session?.access_token && !!body.session?.refresh_token;
+
+  // 로그아웃/세션 소거
+  if (event === "SIGNED_OUT" || !hasTokens) {
+    // supabase-js가 쿠키 어댑터(res.cookies.set)로 삭제 헤더를 넣도록 local scope signOut
+    await supabase.auth.signOut({ scope: "local" });
+    const out = new NextResponse(null, { status: 204 });
+    // res(Set-Cookie) → out으로 복사
+    res.headers.forEach((v, k) => {
+      if (k.toLowerCase() === "set-cookie") out.headers.append(k, v);
+    });
+    out.headers.set("Cache-Control", "no-store");
+    return out;
+  }
+
+  // 세션 갱신(토큰 미러링) — access/refresh 토큰만 넘기면 됨
+  const { error } = await supabase.auth.setSession({
+    access_token: body.session!.access_token!,
+    refresh_token: body.session!.refresh_token!,
+  });
+
+  if (error) {
+    // 실패해도 다음 트리거에서 복구되므로 400만 반환
+    return new NextResponse("setSession failed", { status: 400 });
+  }
+
+  const out = new NextResponse(null, { status: 204 });
+  res.headers.forEach((v, k) => {
+    if (k.toLowerCase() === "set-cookie") out.headers.append(k, v);
+  });
+  out.headers.set("Cache-Control", "no-store");
+  return out;
+}
