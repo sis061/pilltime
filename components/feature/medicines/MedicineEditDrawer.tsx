@@ -125,6 +125,8 @@ export default function MedicineEditDrawer({
 
   // ---- CUSTOM HOOKS
   const minTablet = useSSRMediaquery(768);
+  const drawerDir =
+    minTablet === null ? "bottom" : minTablet ? "right" : "bottom";
 
   // ---- STORE
   const { isGLoading, startLoading, stopLoading, forceStop } =
@@ -312,7 +314,7 @@ export default function MedicineEditDrawer({
           startTransition(() => router.refresh());
         } else parentOnOpenChange(true);
       }}
-      direction={minTablet ? "right" : "bottom"}
+      direction={drawerDir as any}
       repositionInputs={false}
       dismissible={!hasUnsavedChanges}
     >

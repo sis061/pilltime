@@ -30,32 +30,39 @@ export function OnboardingManager() {
   const startedRef = useRef(false);
 
   // 환경 체크
-  const permission =
-    typeof window !== "undefined" ? Notification?.permission : "default";
-  const notiPrompted =
-    typeof window !== "undefined"
-      ? localStorage.getItem("pt:notiPrompted")
-      : "1";
-  const guidePrompted =
-    typeof window !== "undefined"
-      ? localStorage.getItem("pt:guidePrompted")
-      : "1";
+  const [permission, setPermission] =
+    useState<NotificationPermission>("default");
+  const [notiPrompted, setNotiPrompted] = useState<string | null>(null);
+  const [guidePrompted, setGuidePrompted] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setPermission(
+      "Notification" in window ? Notification.permission : "default"
+    );
+    setNotiPrompted(localStorage.getItem("pt:notiPrompted"));
+    setGuidePrompted(localStorage.getItem("pt:guidePrompted"));
+  }, []);
 
   const needNickname = useMemo(
     () => Boolean(user && user.nickname === null),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [user?.id, user?.nickname]
   );
-  const needNoti = useMemo(
-    () => Boolean(user && permission !== "granted" && !notiPrompted),
+
+  const needNoti = useMemo(() => {
+    if (!user) return false;
+    if (permission === "default" && notiPrompted === null) return false; // 아직 미결정 상태 → 초기고정
+    return permission !== "granted" && !notiPrompted;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [user?.id, permission, notiPrompted]
-  );
-  const needGuide = useMemo(
-    () => Boolean(user && permission !== "granted" && !guidePrompted),
+  }, [user?.id, permission, notiPrompted]);
+
+  const needGuide = useMemo(() => {
+    if (!user) return false;
+    if (permission === "default" && guidePrompted === null) return false;
+    return permission !== "granted" && !guidePrompted;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [user?.id, permission, guidePrompted]
-  );
+  }, [user?.id, permission, guidePrompted]);
 
   // 최초 진입 분기
   useEffect(() => {

@@ -47,6 +47,9 @@ export function MedicineImageField() {
   const isPathnameNew = pathname.includes("new");
 
   const minTablet = useSSRMediaquery(768);
+  const drawerDir =
+    minTablet === null ? "bottom" : minTablet ? "right" : "bottom";
+
   const { isGLoading, startLoading, stopLoading, forceStop } =
     useGlobalLoading();
 
@@ -208,7 +211,7 @@ export function MedicineImageField() {
       <Drawer
         open={cropOpen}
         onOpenChange={setCropOpen}
-        direction={minTablet ? "right" : "bottom"}
+        direction={drawerDir as any}
         dismissible={false}
       >
         <DrawerContent className="!p-4 bg-white min-h-[92dvh] md:max-h-[100dvh] md:w-[472px] md:!ml-auto md:top-0 md:rounded-tr-none md:rounded-bl-[10px]">

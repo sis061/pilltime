@@ -20,7 +20,6 @@ import { warmOptimizer, guidePath } from "@/lib/imageWarm";
 import { STEP_CONTENT } from "./guideContent";
 
 // ---- STORE
-import { useGlobalLoading } from "@/store/useGlobalLoading";
 import { useSSRMediaquery } from "@/hooks/useSSRMediaquery";
 
 type StepMeta = (typeof STEPS)[number];
@@ -34,7 +33,8 @@ export default function GuideDrawerClient() {
   const open = !!step;
 
   const minTablet = useSSRMediaquery(768);
-  const { startLoading } = useGlobalLoading();
+  const drawerDir =
+    minTablet === null ? "bottom" : minTablet ? "right" : "bottom";
 
   // 현재 스텝 인덱스 계산
   const idx = useMemo(
@@ -160,7 +160,7 @@ export default function GuideDrawerClient() {
       onOpenChange={(v) => {
         if (!v) close();
       }}
-      direction={minTablet ? "right" : "bottom"}
+      direction={drawerDir as any}
       repositionInputs={false}
     >
       <DrawerContent className="!p-4 bg-slate-100 max-h-[96dvh] min-h-[90dvh] md:max-h-[100dvh] md:w-[480px] md:!ml-auto md:top-0 md:rounded-tr-none md:rounded-bl-[10px]">

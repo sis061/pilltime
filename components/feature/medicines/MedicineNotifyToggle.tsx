@@ -32,16 +32,13 @@ export function MedicineNotifyToggle({
   const vapid = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!;
   const { notifyReady, refresh } = usePush(vapid);
   const minMobile = useSSRMediaquery(640);
+  const drawerDir = minMobile === null ? "메뉴" : minMobile ? "상단" : "메뉴";
 
   const handleToggle = () => {
     if (pending) return;
 
     if (!notifyReady || globalOn === false) {
-      toast.info(
-        `전체 알림이 꺼져 있어요. ${
-          minMobile ? "상단" : "메뉴"
-        }에서 먼저 켜 주세요.`
-      );
+      toast.info(`전체 알림이 꺼져 있어요. ${drawerDir}에서 먼저 켜 주세요.`);
       return;
     }
 

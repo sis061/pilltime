@@ -28,40 +28,30 @@ export default function FirstVisitBanner({
   const { permission, subscribe, loading, refresh } = usePush(vapid);
 
   const [open, setOpen] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
+  const [isSafari, setIsSafari] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(false);
 
-  // iOS Safari 감지 (대략적)
-  const isIOS = useMemo(
-    () =>
-      typeof window !== "undefined" &&
-      /iPad|iPhone|iPod/.test(navigator.userAgent),
-    []
-  );
-  const isSafari = useMemo(
-    () =>
-      typeof window !== "undefined" &&
-      /^((?!chrome|android).)*safari/i.test(navigator.userAgent),
-    []
-  );
-  const isStandalone = useMemo(() => {
-    if (typeof window === "undefined") return false;
-    // iOS PWA: navigator.standalone, 표준: display-mode: standalone
-    return (
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const ua = navigator.userAgent;
+    setIsIOS(/iPad|iPhone|iPod/.test(ua));
+    setIsSafari(/^((?!chrome|android).)*safari/i.test(ua));
+    const standalone =
       (window.matchMedia &&
         window.matchMedia("(display-mode: standalone)").matches) ||
-      (navigator as any).standalone === true
-    );
+      (navigator as any).standalone === true;
+    setIsStandalone(Boolean(standalone));
   }, []);
 
   useEffect(() => {
-    // 이미 허용이면 X, 한 번 본 적 있으면 X
-    const prompted =
-      typeof window !== "undefined" && localStorage.getItem("pt:notiPrompted");
-    if (user?.id && permission !== "granted" && !prompted) {
-      setOpen(true);
-    } else {
-      setOpen(false);
-    }
-  }, [permission, user]);
+    if (!user) return;
+    if (permission === "granted") return setOpen(false);
+    if (typeof window === "undefined") return;
+
+    const prompted = localStorage.getItem("pt:notiPrompted");
+    setOpen(!prompted); // 상태로 반영
+  }, [user, permission]);
 
   const finish = () => {
     localStorage.setItem("pt:notiPrompted", "1");
