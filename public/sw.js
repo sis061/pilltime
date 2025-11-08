@@ -1,14 +1,15 @@
 /**
- * PillTime Service Worker (최소 구현 + 안전 가드)
- * - 역할: 서버에서 보낸 Web Push를 수신해 Notification을 표시
- * - 배포 팁: 버전 상수만 바꿔도 브라우저가 새 SW로 교체하기 쉬움
+ * PillTime Service Worker (prod 캐시 안정화 버전)
  */
-/* PillTime SW: Dev(로컬)에서는 캐싱 OFF, Prod에서만 캐싱 ON */
 const IS_DEV =
   self.location.hostname === "localhost" ||
   self.location.hostname === "127.0.0.1";
 
-const CACHE_NAME = "pilltime-cache-v4";
+const CACHE_PREFIX = "pilltime-cache";
+const CACHE_VERSION = "v7"; // ← 배포 때마다 버전만 올리면 됨
+const CACHE_NAME = `${CACHE_PREFIX}-${CACHE_VERSION}`;
+
+// 오프라인에 필요한 최소 셸(HTML/아이콘 등 "변하지 않는" 것만)
 const APP_SHELL = [
   "/offline.html",
   "/pilltime_mark_duotone.svg",
@@ -17,25 +18,27 @@ const APP_SHELL = [
   "/icon-512.png",
 ];
 
-/* --- 공통: install/activate(캐시 준비는 prod에서만) --- */
+/* ---------------- install ---------------- */
 self.addEventListener("install", (event) => {
   if (!IS_DEV) {
     event.waitUntil(
       (async () => {
         const cache = await caches.open(CACHE_NAME);
         const urls = APP_SHELL.map((u) => new URL(u, self.location).toString());
-
         const results = await Promise.allSettled(
           urls.map((u) => fetch(u, { cache: "reload" }))
         );
-
         await Promise.all(
           results.map(async (res, i) => {
             const url = urls[i];
-            if (res.status === "fulfilled" && res.value && res.value.ok) {
+            if (
+              res.status === "fulfilled" &&
+              res.value &&
+              res.value.ok &&
+              res.value.type !== "opaqueredirect"
+            ) {
               await cache.put(url, res.value.clone());
             } else {
-              // 조용히 건너뜀 (로그만 남김)
               console.warn("[SW] skip precache:", url, res);
             }
           })
@@ -46,25 +49,43 @@ self.addEventListener("install", (event) => {
   self.skipWaiting();
 });
 
-/* --- fetch: 개발에선 네트워크만, 프로덕션에서만 캐싱 전략 --- */
+/* ---------------- activate ----------------
+ * - 예전 캐시 전량 삭제
+ * - 즉시 제어권 획득
+ */
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    (async () => {
+      const names = await caches.keys();
+      await Promise.all(
+        names
+          .filter((n) => n.startsWith(CACHE_PREFIX) && n !== CACHE_NAME)
+          .map((n) => caches.delete(n))
+      );
+      await self.clients.claim();
+    })()
+  );
+});
+
+/* ---------------- fetch ---------------- */
 self.addEventListener("fetch", (event) => {
-  if (IS_DEV) return; // ← 개발모드: 아무 것도 가로채지 않음
+  if (IS_DEV) return;
 
   const req = event.request;
   const url = new URL(req.url);
 
+  // 인증/콜백 관련은 SW 개입 않음
   if (url.pathname.startsWith("/callback")) return;
   if (url.pathname.startsWith("/login")) return;
-  if (req.mode === "navigate" && url.searchParams.has("code")) {
-    return;
-  }
+  if (req.mode === "navigate" && url.searchParams.has("code")) return;
 
   // 네비게이션 요청: 네트워크 우선 → 실패 시 캐시 → offline.html
   if (req.mode === "navigate") {
     event.respondWith(
       (async () => {
         try {
-          return await fetch(req);
+          const res = await fetch(req, { cache: "no-store" }); // HTML은 항상 최신
+          return res;
         } catch {
           const cache = await caches.open(CACHE_NAME);
           return (await cache.match("/offline.html")) || Response.error();
@@ -74,38 +95,52 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // 정적 자원만 Stale-While-Revalidate
-  if (["image", "font", "style", "script"].includes(req.destination)) {
+  // -------- 정적 자원 캐시 전략 --------
+  // 1) Next 해시된 불변 정적(청크/에셋): SWR
+  const isNextStatic =
+    url.pathname.startsWith("/_next/static/") ||
+    url.pathname.startsWith("/assets/");
+
+  // 2) 폰트/이미지/스타일은 SWR
+  const isAsset = ["image", "font", "style"].includes(req.destination);
+
+  // 3) 스크립트는 "불변 경로"만 캐시. 그 외 스크립트는 항상 네트워크로 우회.
+  const isScript = req.destination === "script";
+
+  if (isNextStatic || isAsset) {
     event.respondWith(
       (async () => {
         const cache = await caches.open(CACHE_NAME);
         const cached = await cache.match(req);
         const fetchPromise = fetch(req)
           .then((res) => {
-            cache.put(req, res.clone());
+            if (res && res.ok && res.type !== "opaqueredirect") {
+              cache.put(req, res.clone()).catch(() => {});
+            }
             return res;
           })
           .catch(() => null);
         return cached || (await fetchPromise) || Response.error();
       })()
     );
+    return;
   }
-});
 
-/**
- * ===== Push / Notification =====
- * - 서버(우리 /api/push/dispatch)에서 JSON.stringify(payload)로 보낸 데이터를 받는다.
- * - payload 예: { title, body, tag, data:{url,log_id}, icon, badge, image, renotify, requireInteraction, ... }
- */
+  if (isScript) {
+    // 해시 없는 스크립트는 항상 최신만
+    event.respondWith(fetch(req, { cache: "no-store" }));
+    return;
+  }
+
+  // 나머지 요청은 SW 개입 X → 브라우저 기본 동작
+});
+/* ---------------- Push ---------------- */
 self.addEventListener("push", (event) => {
   if (!event.data) return;
-
   let payload = {};
   try {
-    // 정상 케이스: JSON
-    payload = event.data ? event.data.json() : {};
+    payload = event.data.json();
   } catch {
-    // 예외: 텍스트로 온 경우
     payload = {};
   }
   const title = payload.title || "PillTime";
@@ -118,7 +153,7 @@ self.addEventListener("push", (event) => {
       body,
       tag,
       icon: "/icon-192.png",
-      badge: "/icon-192.png", // 안드로이드 위주
+      badge: "/icon-192.png",
       data,
       requireInteraction: false,
       renotify: false,
@@ -126,11 +161,7 @@ self.addEventListener("push", (event) => {
   );
 });
 
-/**
- * notificationclick:
- * - 클릭 시 기존 탭 포커스, 없으면 새 창 오픈
- * - 서버에서 payload.data.url을 넣어주면 특정 페이지로 이동 가능(예: 캘린더)
- */
+/* ---------------- notificationclick ---------------- */
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   const url = event.notification.data?.url || "/";

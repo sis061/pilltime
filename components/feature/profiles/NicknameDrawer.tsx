@@ -248,7 +248,7 @@ export default function NicknameDrawer({
                 }
               }}
               placeholder="별명을 입력하세요"
-              className="!px-2 !border-pilltime-grayLight w-[98%] !ml-1 !z-[999] placeholder:text-sm placeholder-pilltime-grayDark/25 placeholder:font-bold"
+              className="!px-2 !border-pilltime-grayLight w-[98%] !ml-1 !z-[999] placeholder:text-sm placeholder-pilltime-grayDark/25"
             />
           </div>
           <button ref={submitBtnRef} type="submit" className="hidden">
