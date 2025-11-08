@@ -8,7 +8,7 @@ const IS_DEV =
   self.location.hostname === "localhost" ||
   self.location.hostname === "127.0.0.1";
 
-const CACHE_NAME = "pilltime-cache-v11";
+const CACHE_NAME = "pilltime-cache-v12";
 const APP_SHELL = [
   "/offline.html",
   "/pilltime_mark_duotone.svg",
@@ -128,7 +128,7 @@ self.addEventListener("push", (event) => {
   } catch {
     payload = {};
   }
-  const title = payload.title || "PillTime";
+  const title = payload.title || "아맞다약!";
   const body = payload.body || "알림이 도착했어요";
   const data = payload.data || {};
   const tag = payload.tag || `pilltime-${Date.now()}`;
@@ -140,8 +140,8 @@ self.addEventListener("push", (event) => {
       data,
       icon: "/icon-192.png",
       badge: "/icon-192.png",
-      renotify: false,
-      requireInteraction: false,
+      renotify: true,
+      requireInteraction: true,
     })
   );
 });
