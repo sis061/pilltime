@@ -1,10 +1,6 @@
 "use client";
-/**
- * 첫 방문 배너
- * - 권한이 'granted'가 아니고, 로컬스토리지 플래그가 없으면 노출
- * - "알림 켜기"를 누르면 usePush.subscribe() 호출 → 성공/실패 상관없이 한 번 본 것으로 처리
- */
-import { useEffect, useMemo, useState } from "react";
+
+import { useEffect, useState, useRef } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,6 +11,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { usePush } from "@/hooks/usePush";
+import { usePlatformInfo } from "@/hooks/usePlatformInfo";
 import { BellRing, Menu } from "lucide-react";
 import { useUserStore } from "@/store/useUserStore";
 
@@ -24,37 +21,38 @@ export default function FirstVisitBanner({
   onCompleted?: () => void;
 }) {
   const user = useUserStore((s) => s.user);
+
+  // NEXT_PUBLIC_* 은 빌드타임 치환이라 클라에서 사용 OK
   const vapid = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!;
   const { permission, subscribe, loading, refresh } = usePush(vapid);
+  const { isIOS, isSafari, isStandalone } = usePlatformInfo();
 
   const [open, setOpen] = useState(false);
-  const [isIOS, setIsIOS] = useState(false);
-  const [isSafari, setIsSafari] = useState(false);
-  const [isStandalone, setIsStandalone] = useState(false);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const ua = navigator.userAgent;
-    setIsIOS(/iPad|iPhone|iPod/.test(ua));
-    setIsSafari(/^((?!chrome|android).)*safari/i.test(ua));
-    const standalone =
-      (window.matchMedia &&
-        window.matchMedia("(display-mode: standalone)").matches) ||
-      (navigator as any).standalone === true;
-    setIsStandalone(Boolean(standalone));
-  }, []);
-
+  // --- 열림 조건 판단도 마운트 후에만 수행 (localStorage 접근 포함)
   useEffect(() => {
     if (!user) return;
-    if (permission === "granted") return setOpen(false);
+    if (permission === "granted") {
+      setOpen(false);
+      return;
+    }
     if (typeof window === "undefined") return;
 
-    const prompted = localStorage.getItem("pt:notiPrompted");
-    setOpen(!prompted); // 상태로 반영
+    let prompted: string | null = null;
+    try {
+      prompted = localStorage.getItem("pt:notiPrompted");
+    } catch {
+      // 일부 환경(프라이빗 모드 등)에서 예외 가능 → 없다고 간주
+      prompted = null;
+    }
+    // 권한 미허용 + 아직 안내 본 적 없으면 open
+    setOpen(!prompted);
   }, [user, permission]);
 
   const finish = () => {
-    localStorage.setItem("pt:notiPrompted", "1");
+    try {
+      localStorage.setItem("pt:notiPrompted", "1");
+    } catch {}
     setOpen(false);
     onCompleted?.();
   };
@@ -62,12 +60,18 @@ export default function FirstVisitBanner({
   const handleEnable = async () => {
     try {
       await subscribe(); // 권한 요청 → SW ready → 구독 저장
-      await refresh(); //  즉시 강제 동기화 (모든 환경에서 확정적으로 반영)
-      // 가끔 iOS에서 한 틱 늦을 때 보정
-      if (document.visibilityState === "visible") {
+      await refresh(); // 즉시 반영
+      if (
+        typeof document !== "undefined" &&
+        document.visibilityState === "visible"
+      ) {
         queueMicrotask(() => refresh());
       }
+      // if (isStandalone || (isIOS && isSafari)) {
+      //   queueMicrotask(() => window.location.reload());
+      // }
     } finally {
+      // 성공/실패와 무관하게 이번 세션에선 배너 종료
       finish();
     }
   };
@@ -77,9 +81,8 @@ export default function FirstVisitBanner({
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={setOpen}>
-      {/* AlertDialogTrigger는 자동 팝업이라 필요 없음 */}
-
+    <AlertDialog open={open} onOpenChange={(next) => setOpen(next)}>
+      {/* AlertDialogTrigger는 자동 팝업이라 불필요 */}
       <AlertDialogContent className="sm:max-w-[480px] !bg-pilltime-grayLight !p-4 !rounded-lg">
         <AlertDialogHeader>
           <div className="flex items-center gap-2 w-full justify-center">
@@ -88,6 +91,7 @@ export default function FirstVisitBanner({
               알림을 허용해주세요!
             </AlertDialogTitle>
           </div>
+
           <div className="!space-y-3 !py-4 !bg-pilltime-grayLight sm:!pl-2">
             <div className="[&_p]:!text-pilltime-grayDark/50 !space-y-1">
               <p>

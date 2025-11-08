@@ -60,7 +60,7 @@ function useSelectedYmdSync(initial: string | null, variant: Variant) {
       }, 250);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [router]
+    [router, pathname, variant]
   );
 
   const onChangeDate = React.useCallback(
