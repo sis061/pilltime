@@ -8,7 +8,7 @@ const IS_DEV =
   self.location.hostname === "localhost" ||
   self.location.hostname === "127.0.0.1";
 
-const CACHE_NAME = "pilltime-cache-v12";
+const CACHE_NAME = "pilltime-cache-v13";
 const APP_SHELL = [
   "/offline.html",
   "/pilltime_mark_duotone.svg",
@@ -77,6 +77,13 @@ self.addEventListener("fetch", (event) => {
     url.pathname === "/manifest.json"
   ) {
     return;
+  }
+  if (
+    url.pathname.startsWith("/auth/v1/") ||
+    url.pathname.startsWith("/api/auth") ||
+    url.hostname.endsWith("supabase.co")
+  ) {
+    return; // 캐싱/응답 가로채지 않음
   }
 
   // *** 모든 document 네비게이션은 respondWith로 처리 (preload 경고 제거) ***

@@ -8,34 +8,43 @@ const BYPASS_PATHS = [
   "/favicon.ico",
   "/robots.txt",
   "/sitemap.xml",
+  "/.well-known/", // Apple/웹 인증 파일들
   "/icon", // /icon-192.png 등
   "/apple-touch-icon", // iOS 아이콘
-  "/callback", // OAuth 콜백
+  // ❌ "/callback" 은 여기서 제외 (정규화 대상)
 ];
 
 export function middleware(req: NextRequest) {
-  const url = new URL(req.url);
-  const host = req.headers.get("host") || "";
-  const site = process.env.NEXT_PUBLIC_SITE_URL!;
-  const mainHost = new URL(site).host;
+  const url = req.nextUrl;
+  const site = process.env.NEXT_PUBLIC_SITE_URL;
 
-  // 1) 빌드/정적/콜백/내부API는 미들웨어 간섭 금지
+  // 환경이 미설정이면 패스
+  if (!site) return NextResponse.next();
+
+  const mainUrl = new URL(site);
+  const currentHost = url.host; // ex) preview-xxxxx.vercel.app
+  const mainHost = mainUrl.host; // ex) pilltime.app
+
+  // 0) 정적/내부 경로는 미들웨어 간섭 금지
   if (BYPASS_PATHS.some((p) => url.pathname.startsWith(p))) {
     return NextResponse.next();
   }
 
-  // 2) code 파라미터가 달린 네비게이션은 간섭 금지 (루프 방지)
+  // 1) 호스트 정규화는 가장 먼저 (✅ /callback 포함)
+  if (currentHost !== mainHost) {
+    // 쿼리 그대로 보존 (code/state 포함)
+    const to = `${site}${url.pathname}${url.search}`;
+    // 308(영구) 사용: 메소드/바디 보존. GET도 문제없고, 추후 POST에도 안전.
+    return NextResponse.redirect(to, 308);
+  }
+
+  // 2) 여기부터는 이미 메인 호스트.
+  //    code 파라미터가 달린 네비게이션은 간섭 금지 (루프 방지)
   if (url.searchParams.has("code")) {
     return NextResponse.next();
   }
 
-  // 3) 프리뷰/브랜치/기타 호스트 → 메인 호스트로 301
-  if (host !== mainHost) {
-    const to = `${site}${url.pathname}${url.search}`;
-    return NextResponse.redirect(to, 301);
-  }
-
-  // 4) 기본 통과
+  // 3) 기본 통과
   return NextResponse.next();
 }
 
