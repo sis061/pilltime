@@ -11,10 +11,13 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { BookOpen } from "lucide-react";
+import { usePlatformInfo } from "@/hooks/usePlatformInfo";
 
 export function GuideBanner({ onCompleted }: { onCompleted?: () => void }) {
   const [open, setOpen] = useState(true);
   const router = useRouter();
+
+  const { isIOS, isSafari, isStandalone } = usePlatformInfo();
 
   useEffect(() => {
     const seen = localStorage.getItem("pt:guidePrompted");
@@ -25,6 +28,9 @@ export function GuideBanner({ onCompleted }: { onCompleted?: () => void }) {
     localStorage.setItem("pt:guidePrompted", "1");
     setOpen(false);
     onCompleted?.();
+    if (isStandalone || (isIOS && isSafari)) {
+      queueMicrotask(() => window.location.reload());
+    }
   };
 
   const goToGuide = () => {

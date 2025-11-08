@@ -24,16 +24,18 @@ import { useUserStore } from "@/store/useUserStore";
 
 export function OnboardingManager() {
   const user = useUserStore((s) => s.user);
+
   const [openNickname, setOpenNickname] = useState(false);
   const [showNotiBanner, setShowNotiBanner] = useState(false);
   const [showGuideBanner, setShowGuideBanner] = useState(false);
-  const startedRef = useRef(false);
 
   // 환경 체크
   const [permission, setPermission] =
     useState<NotificationPermission>("default");
   const [notiPrompted, setNotiPrompted] = useState<string | null>(null);
   const [guidePrompted, setGuidePrompted] = useState<string | null>(null);
+
+  const [envReady, setEnvReady] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -42,6 +44,7 @@ export function OnboardingManager() {
     );
     setNotiPrompted(localStorage.getItem("pt:notiPrompted"));
     setGuidePrompted(localStorage.getItem("pt:guidePrompted"));
+    setEnvReady(true);
   }, []);
 
   const needNickname = useMemo(
@@ -51,46 +54,45 @@ export function OnboardingManager() {
   );
 
   const needNoti = useMemo(() => {
-    if (!user) return false;
-    if (permission === "default" && notiPrompted === null) return false; // 아직 미결정 상태 → 초기고정
+    if (!envReady || !user) return false; // 준비 전엔 false로 고정
     return permission !== "granted" && !notiPrompted;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, permission, notiPrompted]);
+  }, [envReady, user?.id, permission, notiPrompted]);
 
   const needGuide = useMemo(() => {
-    if (!user) return false;
-    if (permission === "default" && guidePrompted === null) return false;
+    if (!envReady || !user) return false;
     return permission !== "granted" && !guidePrompted;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, permission, guidePrompted]);
+  }, [envReady, user?.id, permission, guidePrompted]);
 
   // 최초 진입 분기
+
+  const startedRef = useRef(false);
+
   useEffect(() => {
-    if (!user || startedRef.current) return;
+    if (!envReady || !user || startedRef.current) return;
     startedRef.current = true;
 
     if (needNickname) {
       setOpenNickname(true);
       return;
     }
-    // 닉네임 이미 있으면 바로 2단계 판단
     if (needNoti) {
-      // 약간의 딜레이로 자연스러움
       setTimeout(() => setShowNotiBanner(true), 300);
       return;
     }
     if (needGuide) {
-      // 알림도 끝난 상태면 가이드로
-      setTimeout(() => setShowGuideBanner(true), 500);
+      setTimeout(() => setShowGuideBanner(true), 300);
     }
-  }, [user, needNickname, needNoti, needGuide]);
+  }, [envReady, user, needNickname, needNoti, needGuide]);
 
   // 1단계 완료 → 2단계로
   const handleNicknameCompleted = () => {
     setOpenNickname(false);
-    if (needNoti) {
+    // 완료 이후에는 그 시점의 needNoti/needGuide를 다시 본다.
+    if (permission !== "granted" && !notiPrompted) {
       setTimeout(() => setShowNotiBanner(true), 200);
-    } else {
+    } else if (!guidePrompted) {
       setTimeout(() => setShowGuideBanner(true), 400);
     }
   };

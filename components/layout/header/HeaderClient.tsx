@@ -43,6 +43,7 @@ import { usePush } from "@/hooks/usePush";
 
 // ---- TYPE
 import type { User } from "@/types/profile";
+import { usePlatformInfo } from "@/hooks/usePlatformInfo";
 
 export default function HeaderClient({
   user,
@@ -71,6 +72,7 @@ export default function HeaderClient({
   const vapid = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!;
   const { permission, isSubscribed, subscribe, refresh, notifyReady } =
     usePush(vapid);
+  const { isIOS, isSafari, isStandalone } = usePlatformInfo();
 
   // ---- STORE
   const setUser = useUserStore((s) => s.setUser);
@@ -244,6 +246,9 @@ export default function HeaderClient({
           if (!ok || Notification.permission !== "granted") {
             toast.error("알림 구독에 실패했어요. 잠시 후 다시 시도해 주세요.");
             await refresh();
+            if (isStandalone || (isIOS && isSafari)) {
+              queueMicrotask(() => window.location.reload());
+            }
             return;
           }
           // 구독 성공 → 서버 설정도 켬
