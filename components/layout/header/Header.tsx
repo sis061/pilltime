@@ -3,6 +3,8 @@ import HeaderClient from "./HeaderClient";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { User } from "@/types/profile";
 import { toYYYYMMDD } from "@/lib/date";
+import dynamic from "next/dynamic";
+import HeaderClientWrapper from "./HeaderClientWrapper";
 
 export default async function Header({ user }: { user: User }) {
   const supabase = await createServerSupabaseClient();
@@ -34,7 +36,7 @@ export default async function Header({ user }: { user: User }) {
       <div className="inner flex justify-between items-center !mx-auto h-full">
         <HeaderLogo />
 
-        <HeaderClient
+        <HeaderClientWrapper
           user={userMini}
           initialGlobalEnabled={initialGlobalEnabled}
           todayYmd={todayYmd}
