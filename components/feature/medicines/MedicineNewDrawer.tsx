@@ -79,6 +79,8 @@ export default function MedicineNewDrawer({
 
   // ---- CUSTOM HOOKS
   const minTablet = useSSRMediaquery(768);
+  const drawerDir =
+    minTablet === null ? "bottom" : minTablet ? "right" : "bottom";
 
   // ---- STORE
   const { isGLoading, startLoading, stopLoading, forceStop } =
@@ -214,7 +216,7 @@ export default function MedicineNewDrawer({
         await handleCancel();
         parentOnOpenChange(false); // 라우팅은 부모(NewMedicinePage)가 처리
       }}
-      direction={minTablet ? "right" : "bottom"}
+      direction={drawerDir as any}
       repositionInputs={false}
       /** 입력 중엔 스와이프/백드롭 닫기 자체를 막음 */
       dismissible={!hasUnsavedChanges}

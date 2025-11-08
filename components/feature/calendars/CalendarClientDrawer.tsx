@@ -63,7 +63,7 @@ function useSelectedYmdSync(initial: string | null, variant: Variant) {
       }, 250);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [router]
+    [router, pathname, variant]
   );
 
   const onChangeDate = React.useCallback(
@@ -94,6 +94,8 @@ export default function CalendarClientDrawer({
   }, [stopLoading]);
 
   const minTablet = useSSRMediaquery(768);
+  const drawerDir =
+    minTablet === null ? "bottom" : minTablet ? "right" : "bottom";
   const [open, setOpen] = React.useState(true);
   if (variant === "drawer") {
     return (
@@ -109,7 +111,7 @@ export default function CalendarClientDrawer({
             setOpen(true);
           }
         }}
-        direction={minTablet ? "right" : "bottom"}
+        direction={drawerDir as any}
         repositionInputs={false}
       >
         <DrawerContent className="!p-4 bg-slate-100 h-[95dvh] md:h-[100dvh] md:w-[480px] md:!ml-auto md:top-0 md:rounded-tr-none md:rounded-bl-[10px] w-full">

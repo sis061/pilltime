@@ -44,29 +44,6 @@ import { usePush } from "@/hooks/usePush";
 // ---- TYPE
 import type { User } from "@/types/profile";
 
-function LocalErrorBoundary({ children }: { children: React.ReactNode }) {
-  const [err, setErr] = useState<Error | null>(null);
-  if (err) return null; // 헤더 UI만 숨김, 상위 구조 보존
-  return <ErrorCatcher onError={setErr}>{children}</ErrorCatcher>;
-}
-
-// 아주 얇은 try/catch를 위한 컴포넌트
-function ErrorCatcher({
-  onError,
-  children,
-}: {
-  onError: (e: Error) => void;
-  children: React.ReactNode;
-}) {
-  // 렌더 에러는 boundary로만 잡힘. 효과/이벤트 에러는 window.onerror에서 잡으세요.
-  try {
-    return <>{children}</>;
-  } catch (e: any) {
-    onError(e);
-    return null;
-  }
-}
-
 export default function HeaderClient({
   user,
   initialGlobalEnabled,

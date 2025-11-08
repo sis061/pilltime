@@ -55,6 +55,8 @@ export default function NicknameDrawer({
 
   // ---- CUSTOM HOOKS
   const minTablet = useSSRMediaquery(768);
+  const drawerDir =
+    minTablet === null ? "bottom" : minTablet ? "right" : "bottom";
 
   // Drawer가 열릴 때, 그 시점의 모드를 고정(부모 리렌더 영향 차단)
   useEffect(() => {
@@ -198,7 +200,7 @@ export default function NicknameDrawer({
           }
         onOpenChange(nextOpen);
       }}
-      direction={minTablet ? "right" : "bottom"}
+      direction={drawerDir as any}
       repositionInputs={false}
       dismissible={!hasUnsavedChanges}
     >
