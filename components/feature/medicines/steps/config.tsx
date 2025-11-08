@@ -4,17 +4,26 @@ import {
   MedicineSchedulesField,
   MedicineImageField,
 } from "../form";
+import { Button } from "@/components/ui/button";
+import { useWizard } from "react-use-wizard";
 
 interface StepConfig {
   id: string;
   title: string;
   subtitle?: string[];
   Component: React.ComponentType;
+  onClose?: () => void;
 }
 
-export function StepWrapper({ title, subtitle, Component }: StepConfig) {
+export function StepWrapper({
+  title,
+  subtitle,
+  Component,
+  onClose,
+}: StepConfig) {
+  const { isFirstStep } = useWizard();
   return (
-    <div className="flex flex-col gap-2 !pb-4 overflow-y-auto">
+    <div className="flex flex-col gap-2 !pb-12 overflow-y-auto h-full relative">
       <div className="!pb-4">
         <h2 className="text-sm font-bold !text-pilltime-grayDark/40">
           {title}
@@ -34,6 +43,18 @@ export function StepWrapper({ title, subtitle, Component }: StepConfig) {
       </div>
 
       <Component />
+      {!isFirstStep && (
+        <div className="absolute bottom-0 right-0">
+          <Button
+            type="button"
+            onClick={onClose}
+            variant="ghost"
+            className={`transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110 !text-pilltime-grayDark/50 font-bold`}
+          >
+            닫기
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

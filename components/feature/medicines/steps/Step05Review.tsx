@@ -19,8 +19,14 @@ import { useFormContext, useWatch } from "react-hook-form";
 import { useReturnToStore } from "@/store/returnTo";
 import SmartImage from "@/components/layout/SmartImage";
 
-export function Step05Review() {
-  const { activeStep, goToStep } = useWizard();
+export function Step05Review({
+  onClose,
+  busy,
+}: {
+  onClose?: () => void;
+  busy: boolean;
+}) {
+  const { activeStep, goToStep, isFirstStep } = useWizard();
   const { getValues, setValue, control } = useFormContext<MedicineFormValues>();
   const { setReturnTo } = useReturnToStore();
 
@@ -48,7 +54,7 @@ export function Step05Review() {
   }, [values.description, setValue]);
 
   return (
-    <div className="flex flex-col gap-6 !pb-8 !-mt-4 overflow-y-auto">
+    <div className="flex flex-col gap-6 !pb-0 !-mt-4 overflow-y-auto !mb-10 h-full">
       <h2 className="text-sm font-bold !text-pilltime-grayDark/40">
         마지막으로 정보가 맞는지 확인하고 저장하세요
       </h2>
@@ -173,6 +179,19 @@ export function Step05Review() {
           수정
         </Button>
       </div>
+      {!isFirstStep && (
+        <div className="absolute bottom-4 right-4">
+          <Button
+            type="button"
+            onClick={onClose}
+            disabled={busy}
+            variant="ghost"
+            className={`transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110 !text-pilltime-grayDark/50 font-bold`}
+          >
+            닫기
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

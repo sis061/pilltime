@@ -42,6 +42,30 @@ function isBrowserOK() {
   );
 }
 
+async function waitForControllerOrTimeout(ms = 5000) {
+  if (navigator.serviceWorker.controller) return true;
+  return await new Promise<boolean>((resolve) => {
+    let done = false;
+    const t = setTimeout(() => {
+      if (!done) {
+        done = true;
+        resolve(false);
+      }
+    }, ms);
+    const onCtrl = () => {
+      if (!done) {
+        done = true;
+        clearTimeout(t);
+        navigator.serviceWorker.removeEventListener("controllerchange", onCtrl);
+        resolve(true);
+      }
+    };
+    navigator.serviceWorker.addEventListener("controllerchange", onCtrl, {
+      once: true,
+    });
+  });
+}
+
 /** 활성 ServiceWorkerRegistration 확보 */
 async function getActiveRegistration(): Promise<ServiceWorkerRegistration | null> {
   if (!isBrowserOK()) return null;
@@ -49,14 +73,26 @@ async function getActiveRegistration(): Promise<ServiceWorkerRegistration | null
   try {
     let reg = await navigator.serviceWorker.getRegistration();
     if (!reg) {
-      reg = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+      reg = await navigator.serviceWorker.register("/sw.js", {
+        scope: "/",
+        // ★ 캐시 우회 업데이트: 구 청크/HTML이 캐시에 남지 않도록
+        updateViaCache: "none",
+      });
     }
 
-    // ready 대기 (최대 5초)
+    // 최신 SW 확인(무해, 실패 무시)
+    reg.update?.().catch(() => {});
+
+    // ready 또는 controllerchange 중 먼저 오는 쪽을 5초 한도로 대기
     const timeout = new Promise<null>((resolve) =>
       setTimeout(() => resolve(null), 5000)
     );
     const ready = await Promise.race([navigator.serviceWorker.ready, timeout]);
+
+    // ready가 안 왔으면 controller가 잡히는지 한 번 더 시도
+    if (!ready) {
+      await waitForControllerOrTimeout(3000);
+    }
 
     return (ready as ServiceWorkerRegistration | null) || reg;
   } catch (err) {
@@ -95,7 +131,8 @@ export function usePush(vapidPublicKey: string, userId?: string) {
     if (!isBrowserOK()) return;
     if (process.env.NODE_ENV === "production") {
       navigator.serviceWorker
-        .register("/sw.js", { scope: "/" })
+        .register("/sw.js", { scope: "/", updateViaCache: "none" })
+        .then((reg) => reg.update?.().catch(() => {}))
         .catch(() => {});
     }
   }, []);
@@ -172,6 +209,7 @@ export function usePush(vapidPublicKey: string, userId?: string) {
 
   /** 구독 생성 */
   const subscribe = useCallback(async () => {
+    if (loading) return false;
     setLoading(true);
     try {
       if (!isBrowserOK())
@@ -186,16 +224,22 @@ export function usePush(vapidPublicKey: string, userId?: string) {
       let perm: NotificationPermission = Notification.permission;
       if (perm === "default") perm = await Notification.requestPermission();
       setPermission(perm);
+
       if (perm !== "granted")
         throw new Error("알림 권한이 허용되지 않았습니다.");
 
       // 3) 기존 구독 재사용 또는 신규
       let sub = await reg.pushManager.getSubscription();
       if (!sub) {
-        sub = await reg.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: b64ToU8(vapidPublicKey),
-        });
+        try {
+          sub = await reg.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: b64ToU8(vapidPublicKey),
+          });
+        } catch (e: any) {
+          // 유저 취소 / 브라우저 정책 오류 등
+          throw new Error(e?.message || "구독 생성에 실패했습니다.");
+        }
       }
 
       // 4) 서버 저장(+메타)
@@ -206,7 +250,7 @@ export function usePush(vapidPublicKey: string, userId?: string) {
       await fetch("/api/push/subscribe", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ ...json, ua, platform }),
+        body: JSON.stringify({ ...json, ua, platform, userId }),
       });
 
       setIsSubscribed(true);
@@ -215,7 +259,7 @@ export function usePush(vapidPublicKey: string, userId?: string) {
       setLoading(false);
       refresh();
     }
-  }, [vapidPublicKey, ensureVAPIDMatch, refresh]);
+  }, [vapidPublicKey, ensureVAPIDMatch, refresh, userId]);
 
   /** 구독 해제 */
   const unsubscribe = useCallback(async () => {

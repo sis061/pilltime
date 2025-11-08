@@ -10,10 +10,16 @@ import { useReturnToStore } from "@/store/returnTo";
 export function WizardHeader({
   submitBtnRef,
   onClose,
+  initialNameField,
+  initialTimeField,
+  busy,
 }: // onImageUploadCancel,
 {
   submitBtnRef: RefObject<HTMLButtonElement | null>;
   onClose: () => void;
+  initialNameField: string;
+  initialTimeField: string;
+  busy: boolean;
   // onImageUploadCancel?: () => void;
 }) {
   const {
@@ -30,6 +36,9 @@ export function WizardHeader({
   const isLoading = useGlobalLoading((s) => s.isGLoading);
   const popReturnTo = useReturnToStore((s) => s.popReturnTo);
   const { returnToStep } = useReturnToStore();
+  const isRequiredFilled =
+    (activeStep === 0 && initialNameField?.length === 0) ||
+    (activeStep === 2 && initialTimeField?.length === 0);
 
   // 스텝별 검증 필드 매핑
   const stepValidationMap: Record<number, string[] | undefined> = {
@@ -60,7 +69,10 @@ export function WizardHeader({
             type="button"
             onClick={onClose}
             variant="ghost"
-            className="transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110"
+            disabled={!!returnToStep}
+            className={`transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110 ${
+              !!returnToStep && "!opacity-0"
+            }`}
           >
             취소
           </Button>
@@ -68,8 +80,11 @@ export function WizardHeader({
           <Button
             type="button"
             onClick={previousStep}
+            disabled={!!returnToStep || busy}
             variant="ghost"
-            className="transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110"
+            className={`transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110 ${
+              !!returnToStep && "!opacity-0"
+            }`}
           >
             이전
           </Button>
@@ -83,7 +98,7 @@ export function WizardHeader({
           <Button
             type="button"
             variant="ghost"
-            disabled={isLoading}
+            disabled={isLoading || busy}
             onClick={() =>
               submitBtnRef?.current && submitBtnRef.current?.click()
             }
@@ -101,12 +116,13 @@ export function WizardHeader({
             variant="ghost"
             className="transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110"
           >
-            수정
+            완료
           </Button>
         ) : (
           <Button
             type="button"
             onClick={handleNext}
+            disabled={isRequiredFilled}
             variant="ghost"
             className="transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110"
           >

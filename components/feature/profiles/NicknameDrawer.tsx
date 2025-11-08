@@ -51,6 +51,7 @@ export default function NicknameDrawer({
   const submitBtnRef = useRef<HTMLButtonElement>(null);
   const modeAtOpenRef = useRef<"create" | "edit">(mode);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const hasUnsavedChanges = nickname.trim() !== (user?.nickname ?? "").trim();
 
   // ---- CUSTOM HOOKS
   const minTablet = useSSRMediaquery(768);
@@ -67,6 +68,17 @@ export default function NicknameDrawer({
       setNickname(user?.nickname || "");
     }
   }, [open, user]);
+
+  useEffect(() => {
+    if (!open || !hasUnsavedChanges) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      // 일부 브라우저(iOS 포함)는 커스텀 문구 미지원. returnValue 설정만으로 기본 다이얼로그 표시.
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [hasUnsavedChanges]);
 
   /* ---------------------------
    * API
@@ -177,18 +189,34 @@ export default function NicknameDrawer({
     <Drawer
       open={open}
       onOpenChange={(nextOpen) => {
-        if (busy && !nextOpen) return;
+        if (busy && !nextOpen)
+          if (hasUnsavedChanges) {
+            const ok = window.confirm(
+              "변경사항이 저장되지 않았어요. 닫을까요?"
+            );
+            if (!ok) return;
+          }
         onOpenChange(nextOpen);
       }}
       direction={minTablet ? "right" : "bottom"}
       repositionInputs={false}
+      dismissible={!hasUnsavedChanges}
     >
       <DrawerContent className="!p-4 bg-slate-100 min-h-[70dvh] max-h-[96dvh] md:max-h-[100dvh] md:w-[480px] md:!ml-auto md:top-0 md:rounded-tr-none md:rounded-bl-[10px] !z-[999] ">
         {/* Header */}
         <DrawerHeader className="!pb-4 flex w-full items-center justify-between">
           <Button
             disabled={busy}
-            onClick={() => onOpenChange(false)}
+            onClick={() => {
+              if (busy) return;
+              if (hasUnsavedChanges) {
+                const ok = window.confirm(
+                  "변경사항이 저장되지 않았어요. 닫을까요?"
+                );
+                if (!ok) return;
+              }
+              onOpenChange(false);
+            }}
             variant={"ghost"}
             className={`!pr-2 font-bold transition-transform duration-200 ease-in-out scale-100 cursor-pointer touch-manipulation active:scale-95 hover:scale-110  ${
               mode === "create" ? `!text-transparent` : `!text-pilltime-violet`
@@ -248,7 +276,7 @@ export default function NicknameDrawer({
                 }
               }}
               placeholder="별명을 입력하세요"
-              className="!px-2 !border-pilltime-grayLight w-[98%] !ml-1 !z-[999]"
+              className="!px-2 !border-pilltime-grayLight w-[98%] !ml-1 !z-[999] placeholder:text-sm placeholder-pilltime-grayDark/25"
             />
           </div>
           <button ref={submitBtnRef} type="submit" className="hidden">
