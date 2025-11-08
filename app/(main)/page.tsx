@@ -11,9 +11,25 @@ import HomeToday from "@/components/feature/calendars/HomeToday";
 
 // ---- UTIL
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { toYYYYMMDD } from "@/lib/date";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "default-no-store";
+
+function kstNowParts() {
+  const now = new Date();
+  // KST로 안전 변환
+  const kst = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
+  return {
+    ymd: toYYYYMMDD(kst, "Asia/Seoul"),
+    month: String(kst.getMonth() + 1),
+    day: String(kst.getDate()),
+    weekday: new Intl.DateTimeFormat("ko-KR", {
+      weekday: "short",
+      timeZone: "Asia/Seoul",
+    }).format(now),
+  };
+}
 
 export default async function Home() {
   const supabase = await createServerSupabaseClient();
@@ -26,6 +42,8 @@ export default async function Home() {
   if (userErr || !user) {
     redirect(`/login?next=${encodeURIComponent("/")}`);
   }
+
+  const kst = kstNowParts();
 
   const medicinesResult = await supabase
     .from("medicines")
@@ -62,7 +80,7 @@ export default async function Home() {
   return (
     <section className="inner min-h-[calc(100dvh-10.75rem)] !text-pilltime-blue text-3xl !mx-auto !w-full h-full !mb-8 !p-2">
       <div className="flex flex-col items-center !pb-4 !pt-6 justify-center">
-        <HomeToday />
+        <HomeToday initial={kst} />
       </div>
 
       {medicines ? (

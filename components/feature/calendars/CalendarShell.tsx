@@ -54,8 +54,12 @@ const STATUS = [
  * function
  * -------- */
 
-function normalizeYmd(ymd: string | null, maxFutureDays: number) {
-  const today = todayYmdKST();
+function normalizeYmd(
+  ymd: string | null,
+  maxFutureDays: number,
+  todayYmd: string
+) {
+  const today = todayYmd;
   if (!ymd || !/^\d{4}-\d{2}-\d{2}$/.test(ymd)) return today;
   const max = ymdKST(addDays(dateFromYmdKST(today), maxFutureDays));
   return ymd > max ? max : ymd;
@@ -87,11 +91,16 @@ export default function CalendarShell(props: {
   const { stopLoading } = useGlobalLoading();
 
   const futureWindowDays = 7;
+
   const todayYmd = React.useMemo(
     () => props.todayYmdOverride ?? todayYmdKST(),
     [props.todayYmdOverride]
   );
-  const selectedYmd = normalizeYmd(props.dateParam, futureWindowDays);
+
+  const selectedYmd = React.useMemo(
+    () => normalizeYmd(props.dateParam, futureWindowDays, todayYmd),
+    [props.dateParam, futureWindowDays, todayYmd]
+  );
 
   // 초기 viewMonth = 선택월 1일(KST)
   const [viewMonth, setViewMonth] = React.useState<Date>(() =>
