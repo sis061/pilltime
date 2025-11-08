@@ -23,8 +23,8 @@ export function MedicineDescriptionField() {
                 });
               },
             })}
-            placeholder="상세 정보를 입력하세요."
-            className="!px-2 !border-pilltime-grayLight !mx-1 placeholder:text-sm placeholder-pilltime-grayDark/25 placeholder:font-bold"
+            placeholder="상세 정보를 입력하세요"
+            className="!px-2 !border-pilltime-grayLight !mx-1 placeholder:text-sm placeholder-pilltime-grayDark/25"
           />
           <Button
             type="button"

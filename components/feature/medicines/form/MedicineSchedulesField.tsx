@@ -285,10 +285,10 @@ export function MedicineSchedulesField() {
                             {/* 화면에 보이는 값(placeholder 역할 포함) */}
                             <span
                               className={[
-                                "pointer-events-none select-none w-full ",
+                                "pointer-events-none select-none w-full text-sm",
                                 field.value
                                   ? "!text-black"
-                                  : "!text-pilltime-grayDark/50",
+                                  : "!text-pilltime-grayDark/25",
                               ].join(" ")}
                             >
                               {field.value
@@ -299,7 +299,7 @@ export function MedicineSchedulesField() {
                                   )
                                     .locale("ko")
                                     .format("A hh:mm")
-                                : "약 먹을 시간을 입력하세요."}
+                                : "약 먹을 시간을 입력하세요"}
                             </span>
                             <input
                               type="time"
@@ -353,7 +353,7 @@ export function MedicineSchedulesField() {
                             variant="borderless"
                             allowClear={false}
                             placeholder="약 먹을 시간을 입력하세요"
-                            className="!px-2 !py-2 shadow-sm w-[98%] !ml-1 placeholder:text-sm placeholder-pilltime-grayDark/25 placeholder:font-bold"
+                            className="!px-2 !py-2 shadow-sm w-[98%] !ml-1 placeholder:text-sm !placeholder-pilltime-grayDark/25"
                             getPopupContainer={(trigger) =>
                               (trigger?.parentElement as HTMLElement) ??
                               document.body

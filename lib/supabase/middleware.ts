@@ -13,7 +13,21 @@ const PUBLIC_PATHS = [
   "/api/auth/set",
 ];
 
+const CANONICAL_HOST = process.env.NEXT_PUBLIC_SITE_URL
+  ? new URL(process.env.NEXT_PUBLIC_SITE_URL).host
+  : null;
+
 export async function middleware(req: NextRequest) {
+  if (CANONICAL_HOST) {
+    const host = req.headers.get("host") || "";
+    const isNetlifyPreview = /--.+\.netlify\.app$/.test(host);
+    if (isNetlifyPreview && host !== CANONICAL_HOST) {
+      const url = new URL(req.url);
+      url.host = CANONICAL_HOST;
+      return NextResponse.redirect(url, 308);
+    }
+  }
+
   // 이 응답 객체에 Supabase가 Set-Cookie를 기록하게 함
   const res = NextResponse.next();
 

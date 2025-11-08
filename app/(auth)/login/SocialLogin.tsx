@@ -21,19 +21,24 @@ export default function SocialLogin() {
   }
 
   function getRedirectToURL() {
-    // NEXT_PUBLIC_SITE_URL이 항상 정의되어 있지 않을 수 있으므로 안전 처리
-    const base =
-      process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "") ||
-      "http://localhost:3000";
+    // .env 에 정규 호스트를 넣어둡니다. 예: https://pilltime-pilltime.netlify.app
+    const canonical = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "");
 
+    // 프로덕션에선 무조건 정규 호스트로 콜백 고정
+    if (process.env.NODE_ENV === "production" && canonical) {
+      return `${canonical}/callback`;
+    }
+
+    // 개발(로컬)일 때만 현재 origin 사용
+    const base = canonical || "http://localhost:3000"; // fallback
     if (typeof window === "undefined") {
-      // SSR 시점: 그냥 NEXT_PUBLIC_SITE_URL 기반으로 반환
       return `${base}/callback`;
     }
 
-    // CSR 시점 (Next Auth UI 등): 실제 origin 기준
-    const origin = window.location.origin?.replace(/\/+$/, "") || base;
-    return `${origin}/callback`;
+    // 만약 프리뷰/브랜치 호스트로 열려 있다면 강제로 정규 도메인 사용
+    const origin = window.location.origin.replace(/\/+$/, "");
+    const isNetlifyPreview = /--.+\.netlify\.app$/.test(new URL(origin).host); // deployId-- or branch--
+    return `${isNetlifyPreview && canonical ? canonical : origin}/callback`;
   }
 
   const redirectToURL = getRedirectToURL();
