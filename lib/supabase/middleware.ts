@@ -10,6 +10,7 @@ const PUBLIC_PATHS = [
   "/manifest.json",
   "/icon", // /icon-192.png 등
   "/apple-touch-icon", // iOS 아이콘
+  "/api/auth/set",
 ];
 
 export async function middleware(req: NextRequest) {
