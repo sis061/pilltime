@@ -2,7 +2,14 @@ import type { NextConfig } from "next";
 import withBundleAnalyzer from "@next/bundle-analyzer";
 
 const nextConfig: NextConfig = {
+  env: {
+    __NEXT_BUILD_ID: process.env.VERCEL_GIT_COMMIT_SHA || Date.now().toString(),
+  },
   reactStrictMode: false,
+  generateBuildId: async () => {
+    // 매 배포마다 바뀌는 고유 buildId
+    return `${Date.now()}`;
+  },
   images: {
     formats: ["image/avif", "image/webp"],
     //  원격(최적화 이미지) 캐시 TTL — 브라우저/중간 캐시들이 길게 잡을 수 있게 힌트

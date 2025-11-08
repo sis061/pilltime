@@ -13,6 +13,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { UserProvider } from "@/components/providers/UserProvider";
 import GlobalLoading from "@/components/layout/GlobalLoading";
+import ServiceWorkerRegister from "./ServiceWorkerRegister";
 
 const ScrollTopBtn = dynamic(() =>
   import("@/components/layout/ScrollToTop").then((mod) => mod.default)
@@ -68,6 +69,7 @@ export default function RootLayout({
         />
       </head>
       <body>
+        <ServiceWorkerRegister />
         <UserProvider>{children}</UserProvider>
         {/* {children} */}
 
