@@ -1,12 +1,7 @@
 "use client";
-
 import { useState } from "react";
-
-// ---- UI
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-
-// ---- STORE
 import { useGlobalLoading } from "@/store/useGlobalLoading";
 
 export default function SocialLogin() {
@@ -20,23 +15,9 @@ export default function SocialLogin() {
     return createClient();
   }
 
-  function getRedirectToURL() {
-    // NEXT_PUBLIC_SITE_URL이 항상 정의되어 있지 않을 수 있으므로 안전 처리
-    const base =
-      process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "") ||
-      "http://localhost:3000";
-
-    if (typeof window === "undefined") {
-      // SSR 시점: 그냥 NEXT_PUBLIC_SITE_URL 기반으로 반환
-      return `${base}/callback`;
-    }
-
-    // CSR 시점 (Next Auth UI 등): 실제 origin 기준
-    const origin = window.location.origin?.replace(/\/+$/, "") || base;
-    return `${origin}/callback`;
-  }
-
-  const redirectToURL = getRedirectToURL();
+  // ✅ 항상 메인 오리진을 사용
+  const redirectToURL =
+    (process.env.NEXT_PUBLIC_SITE_URL || "").replace(/\/+$/, "") + "/callback";
 
   async function handleLogin(provider: "google" | "apple") {
     try {
@@ -45,12 +26,10 @@ export default function SocialLogin() {
       const supabase = await getSupabase();
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
-        options: {
-          redirectTo: redirectToURL,
-        },
+        options: { redirectTo: redirectToURL },
       });
       if (error) throw error;
-    } catch (_) {
+    } catch {
       toast.error("로그인 중 문제가 발생했어요");
       setLoadingProvider(null);
       stopLoading("login");

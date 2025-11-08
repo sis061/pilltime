@@ -1,14 +1,14 @@
 /**
- * PillTime Service Worker (최소 구현 + 안전 가드)
- * - 역할: 서버에서 보낸 Web Push를 수신해 Notification을 표시
- * - 배포 팁: 버전 상수만 바꿔도 브라우저가 새 SW로 교체하기 쉬움
+ * PillTime Service Worker (Vercel)
+ * - HTML/JS/CSS 캐시 금지
+ * - 이미지/폰트만 SWR 캐시
+ * - 모든 document 네비 respondWith (preload 경고 제거)
  */
-/* PillTime SW: Dev(로컬)에서는 캐싱 OFF, Prod에서만 캐싱 ON */
 const IS_DEV =
   self.location.hostname === "localhost" ||
   self.location.hostname === "127.0.0.1";
 
-const CACHE_NAME = "pilltime-cache-v9";
+const CACHE_NAME = "pilltime-cache-v11";
 const APP_SHELL = [
   "/offline.html",
   "/pilltime_mark_duotone.svg",
@@ -17,25 +17,21 @@ const APP_SHELL = [
   "/icon-512.png",
 ];
 
-/* --- 공통: install/activate(캐시 준비는 prod에서만) --- */
 self.addEventListener("install", (event) => {
   if (!IS_DEV) {
     event.waitUntil(
       (async () => {
         const cache = await caches.open(CACHE_NAME);
         const urls = APP_SHELL.map((u) => new URL(u, self.location).toString());
-
         const results = await Promise.allSettled(
           urls.map((u) => fetch(u, { cache: "reload" }))
         );
-
         await Promise.all(
           results.map(async (res, i) => {
             const url = urls[i];
             if (res.status === "fulfilled" && res.value && res.value.ok) {
               await cache.put(url, res.value.clone());
             } else {
-              // 조용히 건너뜀 (로그만 남김)
               console.warn("[SW] skip precache:", url, res);
             }
           })
@@ -46,21 +42,45 @@ self.addEventListener("install", (event) => {
   self.skipWaiting();
 });
 
-/* --- fetch: 개발에선 네트워크만, 프로덕션에서만 캐싱 전략 --- */
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    (async () => {
+      // 구 캐시 제거
+      const keys = await caches.keys();
+      await Promise.all(
+        keys
+          .filter((k) => k !== CACHE_NAME && k.startsWith("pilltime-cache-"))
+          .map((k) => caches.delete(k))
+      );
+      // navigationPreload 비활성화 (경고 제거)
+      if ("navigationPreload" in self.registration) {
+        try {
+          await self.registration.navigationPreload.disable();
+        } catch {}
+      }
+      await self.clients.claim();
+    })()
+  );
+});
+
 self.addEventListener("fetch", (event) => {
-  if (IS_DEV) return; // ← 개발모드: 아무 것도 가로채지 않음
+  if (IS_DEV) return;
 
   const req = event.request;
   const url = new URL(req.url);
 
-  if (url.pathname.startsWith("/callback")) return;
-  if (url.pathname.startsWith("/login")) return;
-  if (req.mode === "navigate" && url.searchParams.has("code")) {
+  // Next 빌드/데이터/내부 API/자체 SW/매니페스트는 건드리지 않음
+  if (
+    url.pathname.startsWith("/_next/") ||
+    url.pathname.startsWith("/api/") ||
+    url.pathname === "/sw.js" ||
+    url.pathname === "/manifest.json"
+  ) {
     return;
   }
 
-  // 네비게이션 요청: 네트워크 우선 → 실패 시 캐시 → offline.html
-  if (req.mode === "navigate") {
+  // *** 모든 document 네비게이션은 respondWith로 처리 (preload 경고 제거) ***
+  if (req.mode === "navigate" || req.destination === "document") {
     event.respondWith(
       (async () => {
         try {
@@ -74,38 +94,38 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // 정적 자원만 Stale-While-Revalidate
-  if (["image", "font", "style", "script"].includes(req.destination)) {
+  // JS/CSS는 캐시 금지 (하이드레이션 보호)
+  if (req.destination === "script" || req.destination === "style") {
+    event.respondWith(fetch(req));
+    return;
+  }
+
+  // 이미지/폰트만 SWR 캐싱
+  if (req.destination === "image" || req.destination === "font") {
     event.respondWith(
       (async () => {
         const cache = await caches.open(CACHE_NAME);
         const cached = await cache.match(req);
-        const fetchPromise = fetch(req)
-          .then((res) => {
-            cache.put(req, res.clone());
-            return res;
-          })
-          .catch(() => null);
-        return cached || (await fetchPromise) || Response.error();
+        const fetched = await fetch(req).catch(() => null);
+        if (fetched && fetched.ok) {
+          const sameOrigin = url.origin === self.location.origin;
+          if (sameOrigin || fetched.type === "basic") {
+            cache.put(req, fetched.clone()).catch(() => {});
+          }
+        }
+        return cached || fetched || Response.error();
       })()
     );
   }
 });
 
-/**
- * ===== Push / Notification =====
- * - 서버(우리 /api/push/dispatch)에서 JSON.stringify(payload)로 보낸 데이터를 받는다.
- * - payload 예: { title, body, tag, data:{url,log_id}, icon, badge, image, renotify, requireInteraction, ... }
- */
+/* ===== Push / Notification ===== */
 self.addEventListener("push", (event) => {
   if (!event.data) return;
-
   let payload = {};
   try {
-    // 정상 케이스: JSON
-    payload = event.data ? event.data.json() : {};
+    payload = event.data.json();
   } catch {
-    // 예외: 텍스트로 온 경우
     payload = {};
   }
   const title = payload.title || "PillTime";
@@ -117,20 +137,15 @@ self.addEventListener("push", (event) => {
     self.registration.showNotification(title, {
       body,
       tag,
-      icon: "/icon-192.png",
-      badge: "/icon-192.png", // 안드로이드 위주
       data,
-      requireInteraction: false,
+      icon: "/icon-192.png",
+      badge: "/icon-192.png",
       renotify: false,
+      requireInteraction: false,
     })
   );
 });
 
-/**
- * notificationclick:
- * - 클릭 시 기존 탭 포커스, 없으면 새 창 오픈
- * - 서버에서 payload.data.url을 넣어주면 특정 페이지로 이동 가능(예: 캘린더)
- */
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   const url = event.notification.data?.url || "/";
